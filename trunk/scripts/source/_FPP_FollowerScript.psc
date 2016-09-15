@@ -3,6 +3,7 @@ Scriptname _FPP_FollowerScript extends ReferenceAlias
 
 ; fundamental internal state properties
 string MyName
+int MyIndex
 _FPP_Quest FPPQuest
 _FPP_IdentifyPotionThreadManager IdentifyPotionThreadManager
 
@@ -125,6 +126,7 @@ Event OnInit()
 	MyName = self.GetName()
 	FPPQuest = GetOwningQuest() as _FPP_Quest
 	IdentifyPotionThreadManager = GetOwningQuest() as _FPP_IdentifyPotionThreadManager
+	MyIndex = FPPQuest.AllFollowers.Find(self)
 	Init()
 endEvent
 
@@ -166,6 +168,9 @@ Function Maintenance()
 	endIf
 	DoingInit = false
 	SetProperties()
+	
+		MyIndex = FPPQuest.AllFollowers.Find(self)
+	
 	MyPotionWarningCounts = Utility.CreateIntArray(EffectKeywords.Length, 0)
 	GoToDeterminedState("Maintenance Complete")
 endFunction
@@ -467,7 +472,9 @@ State RefreshingPotions
 		int handleUpdated = ModEvent.Create("_FPP_Event_FollowerPotionRefreshCountUpdated")
 		if (handleUpdated)
 			ModEvent.PushString(handleUpdated, MyActorName)
+			ModEvent.PushInt(handleUpdated, MyIndex)
 			ModEvent.PushInt(handleUpdated, RefreshedPotionCount)
+			ModEvent.PushInt(handleUpdated, TotalPotionCount)
 			ModEvent.Send(handleUpdated)
 		endIf
 		
@@ -481,10 +488,11 @@ State RefreshingPotions
 			FinishInit()
 		else
 			AliasDebug("", MyActorName + " finished refreshing potions", true)
-			GoToDeterminedState("RefreshingPotions::OnPotionIdentified - Complete, all potions identified, send FollowerPotionRefreshComplete")
+			GoToDeterminedState("RefreshingPotions::OnPotionIdentified - Complete, all potions identified, send _FPP_Event_FollowerPotionRefreshComplete")
 			int handleComplete = ModEvent.Create("_FPP_Event_FollowerPotionRefreshComplete")
 			if (handleComplete)
 				ModEvent.PushString(handleComplete, MyActorName)
+				ModEvent.PushInt(handleComplete, MyIndex)
 				ModEvent.Send(handleComplete)
 			endIf
 		endIf
@@ -611,7 +619,7 @@ Function RefreshPotions()
 			endIf
 			iFormIndex += 1
 		EndWhile
-		AliasDebug("RefreshPotions - Complete, potions found and all queued, waiting on IdentifyPotionCallback")
+		AliasDebug("RefreshPotions - Complete, potions found and all queued, waiting on _FPP_Callback_PotionIdentified event(s)")
 		IdentifyPotionThreadManager.WaitAll()
 	else
 		if (DoingInit)
@@ -619,10 +627,11 @@ Function RefreshPotions()
 			FinishInit()
 		else
 			AliasDebug("", MyActorName + " has no potions to refresh", true)
-			GoToDeterminedState("RefreshPotions - Complete, no potions found to identify, sending FollowerPotionRefreshComplete event immediately")
+			GoToDeterminedState("RefreshPotions - Complete, no potions found to identify, sending _FPP_Event_FollowerPotionRefreshComplete immediately")
 			int handleComplete = ModEvent.Create("_FPP_Event_FollowerPotionRefreshComplete")
 			if (handleComplete)
 				ModEvent.PushString(handleComplete, MyActorName)
+				ModEvent.PushInt(handleComplete, MyIndex)
 				ModEvent.Send(handleComplete)
 			endIf
 		endIf
@@ -815,6 +824,7 @@ endFunction
 
 
 Function SetProperties()
+{set all internal properties, to avoid halting the thread when looking them up}
 	EFFECT_RESTOREHEALTH = FPPQuest.EFFECT_RESTOREHEALTH
 	EFFECT_RESTOREMAGICKA = FPPQuest.EFFECT_RESTOREMAGICKA
 	EFFECT_RESTORESTAMINA = FPPQuest.EFFECT_RESTORESTAMINA

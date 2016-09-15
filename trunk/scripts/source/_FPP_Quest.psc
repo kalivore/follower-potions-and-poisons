@@ -1,5 +1,10 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
+
+float Property CurrentVersion = 0.0100 AutoReadonly
+float previousVersion
+
+
 ReferenceAlias[] Property AllFollowers  Auto
 bool Property NoMoreRoom Auto Conditional
 
@@ -148,7 +153,6 @@ Potion Property PotionMagicka1 Auto
 Potion Property PotionMagicka2 Auto
 Potion Property PotionMagicka3 Auto
 
-float Property CurrentVersion = 0.0300 AutoReadonly
 bool Property XflAddOnFollow Auto
 GlobalVariable Property _FPP_ShowDebugOptions  Auto
 
@@ -166,8 +170,6 @@ bool Property DebugToFile
 		endWhile
 	endFunction
 endProperty
-
-float previousVersion
 
 int followerCount
 
@@ -326,6 +328,84 @@ bool function AddFollower(Actor akFollower)
 
 endFunction
 
+function ResetFollower(Actor akFollower)
+
+	if (akFollower == None)
+		return
+	endIf
+	
+	int i = 0
+	int iMax = AllFollowers.Length
+	ReferenceAlias thisFollowerRef
+	while (i < iMax)
+		thisFollowerRef = AllFollowers[i]
+		if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor) == akFollower)
+			_FPP_FollowerScript thisFollower = thisFollowerRef as _FPP_FollowerScript
+			
+			thisFollower.UpdateIntervalInCombat = DefaultUpdateIntervalInCombat
+			thisFollower.UpdateIntervalNonCombat = DefaultUpdateIntervalNonCombat
+			thisFollower.UpdateIntervalNoPotions = DefaultUpdateIntervalNoPotions
+			thisFollower.StatLimitsInCombat[0] = DefaultStatLimitsInCombat[0]
+			thisFollower.StatLimitsNonCombat[0] = DefaultStatLimitsNonCombat[0]
+			thisFollower.StatLimitsInCombat[1] = DefaultStatLimitsInCombat[1]
+			thisFollower.StatLimitsNonCombat[1] = DefaultStatLimitsNonCombat[1]
+			thisFollower.StatLimitsInCombat[2] = DefaultStatLimitsInCombat[2]
+			thisFollower.StatLimitsNonCombat[2] = DefaultStatLimitsNonCombat[2]
+			thisFollower.LvlDiffTrigger = DefaultLvlDiffTrigger as int
+			
+			int p = RestoreEffects.Length
+			while (p)
+				p -= 1
+				thisFollower.UsePotionOfType[RestoreEffects[p]] = DefaultUsePotionOfType[RestoreEffects[p]]
+			endWhile
+			p = FortifyEffectsStats.Length
+			while (p)
+				p -= 1
+				thisFollower.UsePotionOfType[FortifyEffectsStats[p]] = DefaultUsePotionOfType[FortifyEffectsStats[p]]
+			endWhile
+			p = FortifyEffectsWarrior.Length
+			while (p)
+				p -= 1
+				thisFollower.UsePotionOfType[FortifyEffectsWarrior[p]] = DefaultUsePotionOfType[FortifyEffectsWarrior[p]]
+			endWhile
+			p = FortifyEffectsMage.Length
+			while (p)
+				p -= 1
+				thisFollower.UsePotionOfType[FortifyEffectsMage[p]] = DefaultUsePotionOfType[FortifyEffectsMage[p]]
+			endWhile
+			p = ResistEffects.Length
+			while (p)
+				p -= 1
+				thisFollower.UsePotionOfType[ResistEffects[p]] = DefaultUsePotionOfType[ResistEffects[p]]
+			endWhile
+
+			DebugStuff("Reset " + thisFollower.ActorName + " to defaults")
+					
+		endIf
+		i += 1
+	endWhile
+
+endFunction
+
+function RefreshFollowerPotions(Actor akFollower)
+
+	if (akFollower == None)
+		return
+	endIf
+	
+	int i = 0
+	int iMax = AllFollowers.Length
+	ReferenceAlias thisFollowerRef
+	while (i < iMax)
+		thisFollowerRef = AllFollowers[i]
+		if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor) == akFollower)
+			(thisFollowerRef as _FPP_FollowerScript).RefreshPotions()
+		endIf
+		i += 1
+	endWhile
+
+endFunction
+
 function RemoveAllFollowers()
 
 	int i = 0
@@ -381,39 +461,31 @@ bool function RemoveFollower(Actor akFollower)
 
 endFunction
 
-function RefreshAllFollowerPotions()
+function AddPotionsToFollower(Actor akFollower)
 
-	DebugStuff("Refresh all follower potions")
-
-	int i = 0
-	int iMax = AllFollowers.Length
-	ReferenceAlias thisFollowerRef
-	while (i < iMax)
-		thisFollowerRef = AllFollowers[i]
-		if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
-			(thisFollowerRef as _FPP_FollowerScript).RefreshPotions()
-		endIf
-		i += 1
-	endWhile
-
-endFunction
-
-function RefreshFollowerPotions(Actor akFollower)
-
-	if (akFollower == None)
-		return
-	endIf
+	; have to add to player, then remove from player to follower, or EFF intercepts it..
+	PlayerRef.AddItem(PotionHealth1, 10, true)
+	PlayerRef.RemoveItem(PotionHealth1, 10, true, akFollower)
+	PlayerRef.AddItem(PotionHealth2, 10, true)
+	PlayerRef.RemoveItem(PotionHealth2, 10, true, akFollower)
+	PlayerRef.AddItem(PotionHealth3, 10, true)
+	PlayerRef.RemoveItem(PotionHealth3, 10, true, akFollower)
+	Utility.WaitMenuMode(0.5)
+	PlayerRef.AddItem(PotionStamina1, 10, true)
+	PlayerRef.RemoveItem(PotionStamina1, 10, true, akFollower)
+	PlayerRef.AddItem(PotionStamina2, 10, true)
+	PlayerRef.RemoveItem(PotionStamina2, 10, true, akFollower)
+	PlayerRef.AddItem(PotionStamina3, 10, true)
+	PlayerRef.RemoveItem(PotionStamina3, 10, true, akFollower)
+	Utility.WaitMenuMode(0.5)
+	PlayerRef.AddItem(PotionMagicka1, 10, true)
+	PlayerRef.RemoveItem(PotionMagicka1, 10, true, akFollower)
+	PlayerRef.AddItem(PotionMagicka2, 10, true)
+	PlayerRef.RemoveItem(PotionMagicka2, 10, true, akFollower)
+	PlayerRef.AddItem(PotionMagicka3, 10, true)
+	PlayerRef.RemoveItem(PotionMagicka3, 10, true, akFollower)
 	
-	int i = 0
-	int iMax = AllFollowers.Length
-	ReferenceAlias thisFollowerRef
-	while (i < iMax)
-		thisFollowerRef = AllFollowers[i]
-		if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor) == akFollower)
-			(thisFollowerRef as _FPP_FollowerScript).RefreshPotions()
-		endIf
-		i += 1
-	endWhile
+	DebugStuff("Potions added to follower")
 
 endFunction
 
