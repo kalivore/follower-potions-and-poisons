@@ -64,6 +64,7 @@ string C_INFO_TEXT_ADD_ON_FOLLOW = "$FPPInfoTextAddOnFollow"
 string C_INFO_TEXT_STATUS_PREFIX = "$FPPInfoText"
 string C_INFO_TEXT_ACTION_SINGLE = "$FPPInfoTextActionSingle"
 string C_INFO_TEXT_ACTION_ALL = "$FPPInfoTextActionAll"
+string C_INFO_TEXT_ACTION_ALL_ADD_POTIONS = "$FPPInfoTextActionAllWithAddPotions"
 string C_INFO_TEXT_RESET = "$FPPInfoTextReset"
 string C_INFO_TEXT_RESET_SINGLE = "$FPPInfoTextResetSingle"
 string C_INFO_TEXT_RESET_ALL = "$FPPInfoTextResetAll"
@@ -385,7 +386,11 @@ event OnOptionHighlight(int a_option)
 	elseIf (a_option == _recruitXflOID_B)
 		SetInfoText(C_INFO_TEXT_ADD_ON_FOLLOW)
 	elseIf (a_option == _actionAllOID_M)
-		SetInfoText(C_INFO_TEXT_ACTION_ALL)
+		if (FPPQuest._FPP_ShowDebugOptions.GetValue() > 0)
+			SetInfoText(C_INFO_TEXT_ACTION_ALL_ADD_POTIONS)
+		else
+			SetInfoText(C_INFO_TEXT_ACTION_ALL)
+		endIf
 	elseIf (_followerOID_M.Find(a_option) > -1)
 		_FPP_FollowerScript thisFollower = FPPQuest.AllFollowers[_followerOID_M.Find(a_option)] as _FPP_FollowerScript
 		SetInfoText(C_INFO_TEXT_STATUS_PREFIX + thisFollower.GetState())
