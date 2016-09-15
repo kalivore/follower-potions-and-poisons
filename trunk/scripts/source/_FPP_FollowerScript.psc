@@ -168,9 +168,7 @@ Function Maintenance()
 	endIf
 	DoingInit = false
 	SetProperties()
-	
-		MyIndex = FPPQuest.AllFollowers.Find(self)
-	
+
 	MyPotionWarningCounts = Utility.CreateIntArray(EffectKeywords.Length, 0)
 	GoToDeterminedState("Maintenance Complete")
 endFunction
