@@ -685,9 +685,16 @@ Function RegisterPotion(Potion akPotion, string asListName, int aiEffectType)
 	int potionIndex = thisPotionList.Find(akPotion)
 	if (potionIndex < 0)
 		int freeIndex = thisPotionList.Find(None)
-		thisPotionList[freeIndex] = akPotion
-		if (DebugToFile)
-			AliasDebug("RegisterPotion - Recognised " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ", assigned " + asListName + "[" + freeIndex + "], type " + aiEffectType + ")")
+		if (freeIndex > -1)
+			thisPotionList[freeIndex] = akPotion
+			if (DebugToFile)
+				AliasDebug("RegisterPotion - Recognised " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ", assigned " + asListName + "[" + freeIndex + "], type " + aiEffectType + ")")
+			endIf
+		else
+			AliasDebug("", MyActorName + " - can't add " + akPotion.GetName() + " potion; no more room for this type of potion!", true)
+			if (DebugToFile)
+				AliasDebug("RegisterPotion - No more room in potions array for " + akPotion.GetName() + "! (Id " + akPotion.GetFormId() + ", tried to add to " + asListName + ", type " + aiEffectType + ")")
+			endIf
 		endIf
 	else
 		if (DebugToFile)
