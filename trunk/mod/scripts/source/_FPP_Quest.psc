@@ -10,6 +10,20 @@ bool Property NoMoreRoom Auto Conditional
 
 ObjectReference Property PlayerRef  Auto  
 
+int Property C_ITEM_HAND = 0 Autoreadonly
+int Property C_ITEM_1H_SWORD = 1 Autoreadonly
+int Property C_ITEM_1H_DAGGER = 2 Autoreadonly
+int Property C_ITEM_1H_AXE = 3 Autoreadonly
+int Property C_ITEM_1H_MACE = 4 Autoreadonly
+int Property C_ITEM_2H_SWORD = 5 Autoreadonly
+int Property C_ITEM_2H_AXE_MACE = 6 Autoreadonly
+int Property C_ITEM_BOW = 7 Autoreadonly
+int Property C_ITEM_STAFF = 8 Autoreadonly
+int Property C_ITEM_SPELL = 9 Autoreadonly
+int Property C_ITEM_SHIELD = 10 Autoreadonly
+int Property C_ITEM_TORCH = 11 Autoreadonly
+int Property C_ITEM_CROSSBOW = 12 Autoreadonly
+
 int Property EFFECT_RESTOREHEALTH = 0 Autoreadonly
 int Property EFFECT_RESTORESTAMINA = 1 Autoreadonly
 int Property EFFECT_RESTOREMAGICKA = 2 Autoreadonly
@@ -113,6 +127,13 @@ Keyword Property MagicAlchWeaknessMagic Auto
 Keyword Property MagicAlchWeaknessShock Auto
 
 Keyword Property VendorItemPotion Auto
+
+Keyword Property ArmorHeavy Auto
+Keyword Property ArmorLight Auto
+
+Keyword Property MagicDamageFire Auto
+Keyword Property MagicDamageFrost Auto
+Keyword Property MagicDamageShock Auto
 
 string[] Property EffectNames Auto
 
