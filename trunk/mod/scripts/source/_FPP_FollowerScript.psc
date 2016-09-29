@@ -45,6 +45,12 @@ endProperty
 
 ; private vars set from main Quest during SetProperties()
 ; (to avoid threading issues if we made an external cal to the Quest)
+string C_SCHOOL_ALTERATION
+string C_SCHOOL_CONJURATION
+string C_SCHOOL_DESTRUCTION
+string C_SCHOOL_ILLUSION
+string C_SCHOOL_RESTORATION
+
 int C_ITEM_HAND
 int C_ITEM_1H_SWORD
 int C_ITEM_1H_DAGGER
@@ -114,8 +120,13 @@ int[] FortifyEffectsMage
 int[] ResistEffects
 
 Keyword KeywordPotion
+
 Keyword KeywordArmorHeavy
 Keyword KeywordArmorLight
+
+Keyword MagicDamageFire
+Keyword MagicDamageFrost
+Keyword MagicDamageShock
 
 ; other private vars for state
 Potion[] MyRestorePotions
@@ -665,101 +676,233 @@ function UseCombatPotions(string asState, Actor akTarget)
 	int rhItem = MyActor.GetEquippedItemType(1)
 	AliasDebug(msg + "; LH: " + lhItem + ", RH: " + rhItem)
 	if (lvlDiff > LvlDiffTrigger)
-		UseCombatPotionsActual(asState + "::UseCombatPotions", FortifyEffectsStats, "FortifyEffectsStats", MyFortifyPotions, "MyFortifyPotions")
-		UseCombatPotionsWarrior(asState + "::UseCombatPotions", lhItem, rhItem)
-		UseCombatPotionsActual(asState + "::UseCombatPotions", FortifyEffectsMage, "FortifyEffectsMage", MyFortifyPotions, "MyFortifyPotions")
-		UseCombatPotionsActual(asState + "::UseCombatPotions", ResistEffects, "ResistEffects", MyResistPotions, "MyResistPotions")
+		; by chaining these as an inline, it avoids needless calls to subsequent functions 
+		; if any one returns false (ie because you're not in combat any more)
+		UseCombatPotionsFortifyStats(asState + "::UseCombatPotions") \
+		&& UseCombatPotionsWarrior(asState + "::UseCombatPotions", lhItem, rhItem) \
+		&& UseCombatPotionsMage(asState + "::UseCombatPotions") \
+		&& UseCombatPotionsResist(asState + "::UseCombatPotions", akTarget)
 	endIf
 	IgnoreCombatStateEvents = false
 endFunction
 
-function UseCombatPotionsActual(string asState, int[] akEffectsArray, string asEffectsName, Potion[] akPotionList, string asListName)
-	string msgNofight = asState + "::UseCombatPotionsActual - no longer in combat, returning"
+bool function UseCombatPotionsFortifyStats(string asState)
+
+	string msgNofight = asState + "::UseCombatPotionsFortifyStats - no longer in combat, returning"
 	if (!MyActor.IsInCombat())
 		AliasDebug(msgNofight)
-		return
+		return false
 	endIf
-	int i = akEffectsArray.Length
+	
+	int i = FortifyEffectsStats.Length
 	while (i)
 		i -= 1
-		if (UsePotionOfType[akEffectsArray[i]] && UsePotionIfPossible(asState + "::UseCombatPotionsActual(" + asEffectsName + ")", akEffectsArray[i], akPotionList, asListName))
+		if (UsePotionOfType[FortifyEffectsStats[i]] && UsePotionIfPossible(asState + "::UseCombatPotionsFortifyStats", FortifyEffectsStats[i], MyFortifyPotions, "MyFortifyPotions"))
 			Utility.Wait(1)
 			if (!MyActor.IsInCombat())
 				AliasDebug(msgNofight)
-				return
+				return false
 			endIf
 		endIf
 	endWhile
+	
+	return true
 endFunction
 
-function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem)
+bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem)
 	
 	string msgNofight = asState + "::UseCombatPotionsWarrior - no longer in combat, returning"
 	if (!MyActor.IsInCombat())
 		AliasDebug(msgNofight)
-		return
+		return false
 	endIf
 	
-	if (UsePotionOfType[EFFECT_FORTIFYBLOCK] && \
-		(aiLHItem == C_ITEM_SHIELD || aiRHItem == C_ITEM_SHIELD) \
+	if (UsePotionOfType[EFFECT_FORTIFYBLOCK] \
+		&& (aiLHItem == C_ITEM_SHIELD || aiRHItem == C_ITEM_SHIELD) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYBLOCK, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
 			AliasDebug(msgNofight)
-			return
+			return false
 		endIf
 	endIf
 	
-	if (UsePotionOfType[EFFECT_FORTIFYHEAVYARMOR] && \
-		MyActor.WornHasKeyword(KeywordArmorHeavy) \
+	if (UsePotionOfType[EFFECT_FORTIFYHEAVYARMOR] \
+		&& MyActor.WornHasKeyword(KeywordArmorHeavy) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYHEAVYARMOR, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
 			AliasDebug(msgNofight)
-			return
+			return false
 		endIf
 	endIf
 	
-	if (UsePotionOfType[EFFECT_FORTIFYLIGHTARMOR] && \
-		MyActor.WornHasKeyword(KeywordArmorLight) \
+	if (UsePotionOfType[EFFECT_FORTIFYLIGHTARMOR] \
+		&& MyActor.WornHasKeyword(KeywordArmorLight) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYLIGHTARMOR, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
 			AliasDebug(msgNofight)
-			return
+			return false
 		endIf
 	endIf
 	
-	if (UsePotionOfType[EFFECT_FORTIFYMARKSMAN] && \
-		(aiLHItem == C_ITEM_BOW) \
+	if (UsePotionOfType[EFFECT_FORTIFYMARKSMAN] \
+		&& (aiLHItem == C_ITEM_BOW) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYMARKSMAN, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
 			AliasDebug(msgNofight)
-			return
+			return false
 		endIf
 	endIf
 	
-	if (UsePotionOfType[EFFECT_FORTIFYONEHANDED] && \
-		(aiLHItem == C_ITEM_1H_SWORD || aiLHItem == C_ITEM_1H_DAGGER || aiLHItem == C_ITEM_1H_AXE || aiLHItem == C_ITEM_1H_MACE \
+	if (UsePotionOfType[EFFECT_FORTIFYONEHANDED] \
+		&& (aiLHItem == C_ITEM_1H_SWORD || aiLHItem == C_ITEM_1H_DAGGER || aiLHItem == C_ITEM_1H_AXE || aiLHItem == C_ITEM_1H_MACE \
 			|| aiRHItem == C_ITEM_1H_SWORD || aiRHItem == C_ITEM_1H_DAGGER || aiRHItem == C_ITEM_1H_AXE || aiRHItem == C_ITEM_1H_MACE) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYONEHANDED, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
 			AliasDebug(msgNofight)
-			return
+			return false
 		endIf
 	endIf
 	
-	if (UsePotionOfType[EFFECT_FORTIFYTWOHANDED] && \
-		(aiLHItem == C_ITEM_2H_SWORD || aiLHItem == C_ITEM_2H_AXE_MACE) \
+	if (UsePotionOfType[EFFECT_FORTIFYTWOHANDED] \
+		&& (aiLHItem == C_ITEM_2H_SWORD || aiLHItem == C_ITEM_2H_AXE_MACE) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYTWOHANDED, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
 			AliasDebug(msgNofight)
-			return
+			return false
 		endIf
 	endIf
+	
+	return true
+endFunction
+
+bool function UseCombatPotionsMage(string asState)
+
+	string msgNofight = asState + "::UseCombatPotionsMage - no longer in combat, returning"
+	if (!MyActor.IsInCombat())
+		AliasDebug(msgNofight)
+		return false
+	endIf
+	
+	if (UsePotionOfType[EFFECT_FORTIFYALTERATION] \
+		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_ALTERATION, true) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYALTERATION, MyFortifyPotions, "MyFortifyPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	if (UsePotionOfType[EFFECT_FORTIFYCONJURATION] \
+		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_CONJURATION, true) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYCONJURATION, MyFortifyPotions, "MyFortifyPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	if (UsePotionOfType[EFFECT_FORTIFYDESTRUCTION] \
+		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_DESTRUCTION, true) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYDESTRUCTION, MyFortifyPotions, "MyFortifyPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	if (UsePotionOfType[EFFECT_FORTIFYILLUSION] \
+		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_ILLUSION, true) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYILLUSION, MyFortifyPotions, "MyFortifyPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	if (UsePotionOfType[EFFECT_FORTIFYRESTORATION] \
+		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_RESTORATION, true) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYRESTORATION, MyFortifyPotions, "MyFortifyPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	return true
+endFunction
+
+bool function UseCombatPotionsResist(string asState, Actor akTarget)
+
+	string msgNofight = asState + "::UseCombatPotionsResist - no longer in combat, returning"
+	if (!MyActor.IsInCombat())
+		AliasDebug(msgNofight)
+		return false
+	endIf
+	
+	bool hasFire = _Q2C_Functions.ActorHasSpellKeyword(akTarget, MagicDamageFire, true)
+	if (UsePotionOfType[EFFECT_RESISTFIRE] \
+		&& (hasFire) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTFIRE, MyResistPotions, "MyResistPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	bool hasFrost = _Q2C_Functions.ActorHasSpellKeyword(akTarget, MagicDamageFrost, true)
+	if (UsePotionOfType[EFFECT_RESISTFROST] \
+		&& (hasFrost) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTFROST, MyResistPotions, "MyResistPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	bool hasShock = _Q2C_Functions.ActorHasSpellKeyword(akTarget, MagicDamageShock, true)
+	if (UsePotionOfType[EFFECT_RESISTSHOCK] \
+		&& (hasShock) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTSHOCK, MyResistPotions, "MyResistPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	if (UsePotionOfType[EFFECT_RESISTMAGIC] \
+		&& (hasFire || hasFrost || hasShock) \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTMAGIC, MyResistPotions, "MyResistPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	if (UsePotionOfType[EFFECT_RESISTPOISON] \
+		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTPOISON, MyResistPotions, "MyResistPotions"))
+		Utility.Wait(1)
+		if (!MyActor.IsInCombat())
+			AliasDebug(msgNofight)
+			return false
+		endIf
+	endIf
+	
+	return true
 endFunction
 
 ; called from OnPotionRegister, which is triggered by thread manager when a potion is identified
@@ -924,6 +1067,12 @@ endFunction
 Function SetProperties()
 {set all internal properties, to avoid halting the thread when looking them up}
 
+	C_SCHOOL_ALTERATION = FPPQuest.C_SCHOOL_ALTERATION
+	C_SCHOOL_CONJURATION = FPPQuest.C_SCHOOL_CONJURATION
+	C_SCHOOL_DESTRUCTION = FPPQuest.C_SCHOOL_DESTRUCTION
+	C_SCHOOL_ILLUSION = FPPQuest.C_SCHOOL_ILLUSION
+	C_SCHOOL_RESTORATION = FPPQuest.C_SCHOOL_RESTORATION
+
 	C_ITEM_HAND = FPPQuest.C_ITEM_HAND
 	C_ITEM_1H_SWORD = FPPQuest.C_ITEM_1H_SWORD
 	C_ITEM_1H_DAGGER = FPPQuest.C_ITEM_1H_DAGGER
@@ -992,9 +1141,14 @@ Function SetProperties()
 	ResistEffects = FPPQuest.ResistEffects
 	
 	KeywordPotion = FPPQuest.VendorItemPotion
+	
 	KeywordArmorHeavy = FPPQuest.ArmorHeavy
 	KeywordArmorLight = FPPQuest.ArmorLight
 	
+	MagicDamageFire = FPPQuest.MagicDamageFire
+	MagicDamageFrost = FPPQuest.MagicDamageFrost
+	MagicDamageShock = FPPQuest.MagicDamageShock
+
 	DebugToFile = FPPQuest.DebugToFile
 endFunction
 

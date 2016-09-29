@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 0.0100 AutoReadonly
+float Property CurrentVersion = 0.0200 AutoReadonly
 float previousVersion
 
 
@@ -9,6 +9,12 @@ ReferenceAlias[] Property AllFollowers  Auto
 bool Property NoMoreRoom Auto Conditional
 
 ObjectReference Property PlayerRef  Auto  
+
+string Property C_SCHOOL_ALTERATION = "Alteration" Autoreadonly
+string Property C_SCHOOL_CONJURATION = "Conjuration" Autoreadonly
+string Property C_SCHOOL_DESTRUCTION = "Destruction" Autoreadonly
+string Property C_SCHOOL_ILLUSION = "Illusion" Autoreadonly
+string Property C_SCHOOL_RESTORATION = "Restoration" Autoreadonly
 
 int Property C_ITEM_HAND = 0 Autoreadonly
 int Property C_ITEM_1H_SWORD = 1 Autoreadonly
