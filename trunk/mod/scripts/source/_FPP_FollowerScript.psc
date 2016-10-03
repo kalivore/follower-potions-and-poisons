@@ -128,6 +128,9 @@ Keyword MagicDamageFire
 Keyword MagicDamageFrost
 Keyword MagicDamageShock
 
+LocationRefType LocRefTypeBoss
+
+
 ; other private vars for state
 Potion[] MyRestorePotions
 Potion[] MyFortifyPotions
@@ -663,27 +666,42 @@ Function RefreshPotions()
 endFunction
 
 function UseCombatPotions(string asState, Actor akTarget)
-	int enemyLevel = akTarget.GetLevel()
-	int lvlDiff = enemyLevel - MyActor.GetLevel()
-	string msg = asState + "::UseCombatPotions - combat with level " + enemyLevel + " " + akTarget.GetLeveledActorBase().GetName() + " (diff " + lvlDiff + ", trigger " + LvlDiffTrigger + ")"
+	string msg = asState + "::UseCombatPotions - "
 	if (IsIncapacitated())
 		;if incapacitated, not much point going further
-		AliasDebug(msg + " - incapacitated")
+		AliasDebug(msg + "incapacitated")
 		IgnoreCombatStateEvents = false
 		return
 	endIf
+	
+	int enemyLevel = akTarget.GetLevel()
+	bool isBoss = akTarget.HasRefType(LocRefTypeBoss)
+	int lvlDiff = enemyLevel - MyActor.GetLevel()
 	int lhItem = MyActor.GetEquippedItemType(0)
 	int rhItem = MyActor.GetEquippedItemType(1)
-	AliasDebug(msg + "; LH: " + lhItem + ", RH: " + rhItem)
-	if (lvlDiff > LvlDiffTrigger)
+	
+	msg += "combat with level " + enemyLevel
+	if (isBoss)
+		msg += " boss"
+	endIf
+	msg += " " + akTarget.GetLeveledActorBase().GetName() + " (diff " + lvlDiff + ", trigger " + LvlDiffTrigger + "); LH: " + lhItem + ", RH: " + rhItem + " - "
+	
+	if (ShouldUseCombatPotions(lvlDiff, isBoss))
+		AliasDebug(msg + "use potions")
 		; by chaining these as an inline, it avoids needless calls to subsequent functions 
 		; if any one returns false (ie because you're not in combat any more)
 		UseCombatPotionsFortifyStats(asState + "::UseCombatPotions") \
-		&& UseCombatPotionsWarrior(asState + "::UseCombatPotions", lhItem, rhItem) \
-		&& UseCombatPotionsMage(asState + "::UseCombatPotions") \
-		&& UseCombatPotionsResist(asState + "::UseCombatPotions", akTarget)
+			&& UseCombatPotionsWarrior(asState + "::UseCombatPotions", lhItem, rhItem) \
+			&& UseCombatPotionsMage(asState + "::UseCombatPotions") \
+			&& UseCombatPotionsResist(asState + "::UseCombatPotions", akTarget)
+	else
+		AliasDebug(msg + "not enough")
 	endIf
 	IgnoreCombatStateEvents = false
+endFunction
+
+bool function ShouldUseCombatPotions(int aiLvlDiff, bool abIsBoss)
+	return aiLvlDiff > LvlDiffTrigger
 endFunction
 
 bool function UseCombatPotionsFortifyStats(string asState)
@@ -1148,6 +1166,8 @@ Function SetProperties()
 	MagicDamageFire = FPPQuest.MagicDamageFire
 	MagicDamageFrost = FPPQuest.MagicDamageFrost
 	MagicDamageShock = FPPQuest.MagicDamageShock
+
+	LocRefTypeBoss = FPPQuest.LocRefTypeBoss
 
 	DebugToFile = FPPQuest.DebugToFile
 endFunction

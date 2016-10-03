@@ -141,6 +141,9 @@ Keyword Property MagicDamageFire Auto
 Keyword Property MagicDamageFrost Auto
 Keyword Property MagicDamageShock Auto
 
+LocationRefType Property LocRefTypeBoss Auto
+
+
 string[] Property EffectNames Auto
 
 int[] Property RestoreEffects Auto
