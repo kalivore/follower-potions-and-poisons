@@ -26,18 +26,19 @@ Function 		SetPoisonCharges(ObjectReference objRef, int charges = 1) 						globa
 ; Q2C's original functions, updated for SKSE 1.7.3
 ; Note that GetNumItemsWithKeyword groups by item type
 ; ie, a stack of ten daggers counts as ONE toward the total, NOT ten
-int Function 	GetNumItemsWithKeyword(ObjectReference objRef, Keyword key) 					global native
-Form Function 	GetNthFormWithKeyword(ObjectReference objRef, Keyword key, int KeywordIndex) 	global native
+int Function 	GetNumItemsWithKeyword(ObjectReference akObjRef, Keyword akKeyword) 					global native
+Form Function 	GetNthFormWithKeyword(ObjectReference akObjRef, Keyword akKeyword, int aiItemIndex) 	global native
 
-; these functions will return the full number of items in the container
+; I THINK these functions will return the full number of items in the container
 ; ie, a stack of ten daggers actually counts as ten items
-;int Function 	GetTotalNumItemsWithKeyword(ObjectReference objRef, Keyword key) 				global native
-;int Function 	GetTotalNumItems(ObjectReference ObjectReference) 								global native
+; not actually implemented in the plugin yet though
+;int Function 	GetTotalNumItemsWithKeyword(ObjectReference akObjRef, Keyword akKeyword) 				global native
+;int Function 	GetTotalNumItems(ObjectReference akObjRef) 												global native
 
 ; added by Kalivore - type is the SKSE itemType (eg 26 for armour, or 46 for potion)
 ; full list at http://www.creationkit.com/index.php?title=GetType_-_Form
-int Function 	GetNumItemsOfType(ObjectReference objRef, int type)			 					global native
-Form Function 	GetNthFormOfType(ObjectReference objRef, int type, int KeywordIndex) 			global native
+int Function 	GetNumItemsOfType(ObjectReference akObjRef, int aiType)			 						global native
+Form Function 	GetNthFormOfType(ObjectReference akObjRef, int aiType, int aiItemIndex) 				global native
 
 
 
@@ -45,13 +46,13 @@ Form Function 	GetNthFormOfType(ObjectReference objRef, int type, int KeywordInd
 ;     Additional spell-checking Functions
 ;          also added by Kalivore
 ;----------------------------------------
-bool Function 		ActorHasSpellSchool(Actor akActor, string asSchool, bool abSearchBase) 		global native
+bool Function 	ActorHasSpellSchool(Actor akActor, string asSchool, bool abSearchBase) 					global native
 {
 Scans the MagicEffects of the Actor's spells, returning true at the first one of the relevant school.
 Optionally will also check through the relevant ActorBase (which is more likely to be the one with the spells)
 }
 
-bool Function 		ActorBaseHasSpellSchool(ActorBase akActorBase, string asSchool) 			global native
+bool Function 	ActorBaseHasSpellSchool(ActorBase akActorBase, string asSchool) 						global native
 {
 Scans the MagicEffects of the ActorBase's spells, returning true at the first one of the relevant school.
 }
@@ -62,14 +63,14 @@ Scans the MagicEffects of the ActorBase's spells, returning true at the first on
 ;     Additional Keyword Functions
 ;       also added by Kalivore
 ;--------------------------------------
-bool Function 		ActorHasSpellKeyword(Actor akActor, Keyword akKeyword, bool abSearchBase) 	global native
+bool Function 	ActorHasSpellKeyword(Actor akActor, Keyword akKeyword, bool abSearchBase) 				global native
 {
 Scans the Actor's spells for the specified Keywords, returning true at the first one it finds
 (NOTE - although Keywords are technically applied to the Magic Effects, the game considers them as being on Spell as well)
 Optionally will also check through the relevant ActorBase (which is more likely to be the one with the spells)
 }
 
-bool Function 		ActorBaseHasSpellKeyword(ActorBase akActorBase, Keyword akKeyword) 			global native
+bool Function 	ActorBaseHasSpellKeyword(ActorBase akActorBase, Keyword akKeyword) 						global native
 {
 Scans the ActorBase's spells for the specified Keywords, returning true at the first one it finds
 (NOTE - although Keywords are technically applied to the Magic Effects, the game considers them as being on Spell as well)
