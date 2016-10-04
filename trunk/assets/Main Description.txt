@@ -1,4 +1,4 @@
-Ever found it frustrating that followers wait until the last second before using potions?  What use is a minor Restore Health if they're dead on the next hit?
+﻿Ever found it frustrating that followers wait until the last second before using potions?  What use is a minor Restore Health if they're dead on the next hit?
 
 How about all those Fortify and Resist potions that you cook up for your followers, which they totally ignore?  How annoying is it when they charge straight into battle, blissfully unaware of the advantage you've tried to provide?
 
@@ -48,25 +48,39 @@ Followers will now use Restore potions when the relevant stat drops below a conf
 
 [size=3][font=Georgia][color=#8e7cc3][b]Fortify and Resist[/b][/color][/font][/size]
 
-Followers can be set to use any or all of the following Fortify potions on starting combat:
+Followers can be set to use any or all of the following Fortify potions on starting combat, provided it makes sense for them to do so:
 
 [list]
 [*][size=2]Health, Stamina, Magicka[/size]
-[*][size=2]Heal rate, Stamina rate, Magicka rate[/size]
-[*][size=2]Marksman, Block, One-Handed, Two-Handed, Light Armour, Heavy Armour[/size]
-[*][size=2]Alteration, Conjuration, Destruction, Illusion, Restoration[/size]
-[/list]
+[size=2]
+[/size][*][size=2]Heal rate, Stamina rate, Magicka rate[/size]
+[size=2]
+[/size][*][size=2]Marksman, Block, One-Handed, Two-Handed[/size]
+[size=2][color=#d8d8d8][i]To use these, the follower must also be holding a bow/crossbow, shield, one-handed weapon or two-handed weapon respectively.[/i][/color]
+
+[/size][*][size=2]Light Armour, Heavy Armour[/size]
+[size=2][i][color=#d8d8d8]T[i]o use these, [/i]the follower must [i]also [/i]be wearing at least one item with the [/color][/i][i][color=#d8d8d8]relevant Keyword (ArmorLight/ArmorHeavy respectively)[/color][/i]
+
+[/size][*][size=2]Alteration, Conjuration, Destruction, Illusion, Restoration[/size]
+[size=2][color=#d8d8d8][i][i]To use these, [/i]the follower must also know at least one spell from the corresponding School of magic[/i][/color]
+[/size][/list]
 Additionally, they can use any or all of the following Resist potions:
 
 [list]
-[*][size=2]Fire, Frost, Shock, Magic, Poison[/size]
-[/list]
-With the MCM, you can also set, for each follower, a difference in level between them and their current enemy which will trigger them to use these.  For example, if your follower is level 6, you can tell them to only use Fortify and Resist potions if fighting an enemy of level 10 or above.
+[*][size=2]Fire, Frost, Shock[/size]
+[size=2][color=#d8d8d8][i][i][color=#d8d8d8]T[i]o use these, [/i][/color][/i]the follower's current enemy must also know at least one spell (or Shout) with the relevant Keyword (MagicDamageFire/MagicDamageFrost/MagicDamageShock, respectively)[/i][/color]
+
+[/size][*][size=2]Magic[/size]
+[size=2][i][color=#d8d8d8]If a follower uses a Resist Fire, Frost or Shock potion, they will follow up with a generic Resist Magic as well[/color][/i] 
+
+[/size][*][size=2]Poison[/size]
+[size=2][color=#d8d8d8][i]No special conditions for this - just needs to be enabled in the follower's MCM page[/i][/color][/size][/list]
+With the MCM, you can set, for each follower, a difference in level between them and their current enemy which will trigger them to use these.  For example, if your follower is level 6, you can tell them to only use Fortify and Resist potions if fighting an enemy of level 10 or above.
 
 
 
 [font=Georgia][size=4][b][center][color=#8e7cc3]MCM Menu[/color][/center][/b][/size][/font]
-The potions a follower will use, along with the trigger levels when they should use them, can be set, per-follower, in the MCM menu provided by Sky UI.  The first page of the menu is Default settings for any new followers added.  Then there is one page of settings for each currently-tracked follower, to allow you to fine-tune behaviour (no point telling a non-magic follower to use Fortify Destruction potions, after all).
+The potions a follower will use, along with the trigger levels when they should use them, can be set, per-follower, in the MCM menu provided by Sky UI.  The first page of the menu is Default settings for any new followers added.  Then there is one page of settings for each currently-tracked follower, to allow you to fine-tune behaviour.
 
 
 [font=Georgia][color=#8e7cc3][size=3][b]Status and re-scanning potions[/b][/size][/color][/font]
@@ -78,6 +92,8 @@ The last MCM page will show you the status of all currently-tracked followers, a
 [font=Georgia][size=4][b][center][color=#8e7cc3]Compatibility[/color][/center][/b][/size][/font]
 This should be compatible with pretty much everything.  No vanilla forms were touched or edited, so there should be no conflicts.  I did run this through the TES5Edit cleaning process as well, but with only a half-dozen forms, there really wasn't much for it to do.
 
+As of v0.02, followers will check their equipment and enemies for certain vanilla Keywords before using certain Fortify or Resist potions (details in the Fortify and Resist section above).  Most mod-added items and spells [i]should[/i] have these set, as they're pretty commonplace and universal.
+
 During development, I included explicit support for the following (and heartily recommend them):
 
 [list]
@@ -85,7 +101,7 @@ During development, I included explicit support for the following (and heartily 
 [size=2]If installed, followers will be tracked by this mod at the same time you first recruit them, and removed if you dismiss them.  There is also an option in the MCM to add anyone you give them 'Follow' command to.  That's mainly just a quick way to add all your existing followers - just use the Group -> Relax and Group -> Follow commands.  After that, you can disable the 'Add on Follow' option.
 
 [/size][*][size=2][url=http://www.nexusmods.com/skyrim/mods/52681]NPC Knockout Overhaul[/url] by sevencardz[/size]
-[size=2]More a kind of compatibility-by-overlapping-design: Sevencardz applies a paralysis effect when NPCs are knocked out.  Followers in this mod will not use potions if they are paralysed.  So knocked-out followers can't use potions.  Neat, huh?
+[size=2]A kind of compatibility-by-overlapping-design: Sevencardz applies a paralysis effect when NPCs are knocked out.  Followers in this mod will not use potions if they are paralysed.  So knocked-out followers can't use potions.  Neat, huh?
 
 [/size][*][size=2][url=http://www.nexusmods.com/skyrim/mods/69306]Complete Alchemy and Cooking Overhaul[/url] by Kryptopyr[/size]
 [size=2]CACO alters Restore potions to work over time, rather than immediately (I'm sure other mods do this too, but I love all the things CACO does).  Followers in this mod will not use a potion if they are already under the relevant effect - so they will wait until the Restore Health effect is finished before trying another Health potion.[/size][/list]
@@ -132,6 +148,8 @@ I took inspiration and example from several people when creating and coding this
 [*][size=2][b]Quad2Core [/b]- the "Inventory Functions" SKSE plugin was invaluable in being able to re-scan potion inventories in a reasonable amount of time.  Quad2Core's original plugin was designed for an earlier SKSE version, but thanks to them including the source code, I was able to re-work it for SKSE 1.7.3.  I tried to contact Quad2Core about hosting the updated version, but they've not been around for a while, so with the agreement of a Nexus admin, I've re-hosted it [url=http://www.nexusmods.com/skyrim/mods/78986]here[/url] (with a couple of my own tweaks and extensions).  Please feel free to use it for your own projects - but all credit is due to Quad2Core, not me.  They did the work; I just converted it.[/size]
 [size=2]
 [/size][*][size=2][b]Kryptopyr[/b] and [b]Chesko[/b] - it was delving into the multi-threaded async model in Kryptopyr's Complete Alchemy and Cooking Overhaul that led to me thinking I could use multi-threading here, and Chesko's tutorials [i]on[/i] that multi-threading approach are excellent.  I also got the approach for the real-time in-MCM progress updates from Checko's spectacular [url=http://www.nexusmods.com/skyrim/mods/11163]Frostfall[/url].[/size]
+[size=2]
+[/size][*][size=2][b]Apostrophic Labs[/b] - for the "Immortal" font used on the title page here and in the MCM[/size]
 [size=2]
 [/size][*][size=2][b]Bethesda[/b] - I guess it's only fair; they did make this game in the first place, and made it in such a way that, even now, people are still finding new and fun things to do with it..[/size]
 [size=2]
