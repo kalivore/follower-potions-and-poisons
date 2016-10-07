@@ -21,6 +21,8 @@ float Property UpdateIntervalInCombat Auto
 float Property UpdateIntervalNonCombat Auto
 float Property UpdateIntervalNoPotions Auto
 
+float[] Property WarningIntervals Auto
+
 float[] Property StatLimitsInCombat Auto
 float[] Property StatLimitsNonCombat Auto
 
@@ -66,8 +68,8 @@ int C_ITEM_TORCH
 int C_ITEM_CROSSBOW
 
 int EFFECT_RESTOREHEALTH
-int EFFECT_RESTOREMAGICKA
 int EFFECT_RESTORESTAMINA
+int EFFECT_RESTOREMAGICKA
 int EFFECT_BENEFICIAL
 int EFFECT_DAMAGEHEALTH
 int EFFECT_DAMAGEMAGICKA
@@ -137,9 +139,10 @@ Potion[] MyFortifyPotions
 Potion[] MyResistPotions
 
 float CurrentUpdateInterval
-float[] CurrentStatLimits
 int[] MyPotionWarningCounts
 int[] MyPotionWarningTriggers
+float[] MyPotionWarningTimes
+float[] CurrentStatLimits
 bool[] HasPotionOfType
 
 bool IgnoreEvents = false
@@ -198,7 +201,9 @@ Function Maintenance()
 	DoingInit = false
 	SetProperties()
 
-	MyPotionWarningCounts = Utility.CreateIntArray(EffectKeywords.Length, 0)
+	float currentHoursPassed = Game.GetRealHoursPassed()
+	MyPotionWarningCounts = Utility.CreateIntArray(5, 0)
+	MyPotionWarningTimes = Utility.CreateFloatArray(5, currentHoursPassed)
 	GoToDeterminedState("Maintenance Complete")
 endFunction
 
@@ -438,9 +443,8 @@ State Incapacitated
 			AliasDebug(msg + " - still incapacitated")
 			RegisterForSingleUpdate(UpdateIntervalNonCombat)
 		else
-			string newState = DetermineState()
-			AliasDebug(msg + " - woken up, go to " + newState)
-			GoToState(newState)
+			AliasDebug(msg + " - woken up, go to PendingUpdate")
+			GoToState("PendingUpdate")
 		endIf
 	endEvent
 
@@ -963,8 +967,8 @@ bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akP
 	string msg = asState + "::UsePotionIfPossible (" + aiEffectType + ": " + effectName + ") - "
 	bool potionUsed = false
 	if (!HasPotionOfType[aiEffectType])
-		IncAndCheckLimit(aiEffectType)
-		msg += "no " + effectName + " potions (warning " + MyPotionWarningCounts[aiEffectType] + ")"
+		WarnNoPotions(asState + "::UsePotionIfPossible", aiEffectType, effectName, asListName)
+		msg += "no " + effectName + " potions"
 	elseif (IsInCooldown(aiEffectType))
 		msg += effectName + " potion still taking effect"
 	else
@@ -974,19 +978,36 @@ bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akP
 			potionUsed = true
 		else
 			HasPotionOfType[aiEffectType] = false
-			IncAndCheckLimit(aiEffectType)
-			msg += "no " + effectName  + " potions (warning " + MyPotionWarningCounts[aiEffectType] + ")"
+			WarnNoPotions(asState + "::UsePotionIfPossible", aiEffectType, effectName, asListName)
+			msg += "no " + effectName  + " potions"
 		endIf
 	endIf
 	AliasDebug(msg)
 	return potionUsed
 endFunction
 
-function IncAndCheckLimit(int aiEffectType)
-	MyPotionWarningCounts[aiEffectType] = MyPotionWarningCounts[aiEffectType] + 1
-	if (MyPotionWarningCounts[aiEffectType] >= MyPotionWarningTriggers[aiEffectType])
-		AliasDebug("no " + EffectNames[aiEffectType] + " potions", MyActorName + " has no " + EffectNames[aiEffectType] + " potions to use!", false)
-		MyPotionWarningCounts[aiEffectType] = 0
+function WarnNoPotions(string asState, int aiEffectType, string asEffectName, string asListName)
+	float currentHoursPassed = Game.GetRealHoursPassed()
+	int index
+	string potionName
+	if (aiEffectType == EFFECT_RESTOREHEALTH || aiEffectType == EFFECT_RESTORESTAMINA || aiEffectType == EFFECT_RESTOREMAGICKA)
+		index = aiEffectType
+		potionName = asEffectName
+	elseif (asListName == "MyFortifyPotions")
+		index = 3
+		potionName = "Fortify"
+	elseif (asListName == "MyResistPotions")
+		index = 4
+		potionName = "Resist"
+	endIf
+	MyPotionWarningCounts[index] = MyPotionWarningCounts[index] + 1
+	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
+	if (MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
+		AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
+		MyPotionWarningCounts[index] = 0
+		MyPotionWarningTimes[index] = currentHoursPassed
+	else
+		AliasDebug(asState + "::WarnNoPotions - no " + asEffectName + " potions (warning " + MyPotionWarningCounts[index] + ", last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
 	endif
 endFunction
 
@@ -1106,8 +1127,8 @@ Function SetProperties()
 	C_ITEM_CROSSBOW = FPPQuest.C_ITEM_CROSSBOW
 
 	EFFECT_RESTOREHEALTH = FPPQuest.EFFECT_RESTOREHEALTH
-	EFFECT_RESTOREMAGICKA = FPPQuest.EFFECT_RESTOREMAGICKA
 	EFFECT_RESTORESTAMINA = FPPQuest.EFFECT_RESTORESTAMINA
+	EFFECT_RESTOREMAGICKA = FPPQuest.EFFECT_RESTOREMAGICKA
 	EFFECT_BENEFICIAL = FPPQuest.EFFECT_BENEFICIAL
 	EFFECT_DAMAGEHEALTH = FPPQuest.EFFECT_DAMAGEHEALTH
 	EFFECT_DAMAGEMAGICKA = FPPQuest.EFFECT_DAMAGEMAGICKA
@@ -1177,16 +1198,26 @@ Function SetDefaults()
 	UpdateIntervalNonCombat = FPPQuest.DefaultUpdateIntervalNonCombat
 	UpdateIntervalNoPotions = FPPQuest.DefaultUpdateIntervalNoPotions
 
+	WarningIntervals = FPPQuest.GetDefaultWarningIntervals()
+
 	StatLimitsInCombat = FPPQuest.GetDefaultStatLimits(true)
 	StatLimitsNonCombat = FPPQuest.GetDefaultStatLimits(false)
 
 	LvlDiffTrigger = FPPQuest.DefaultLvlDiffTrigger as int
 
-	MyPotionWarningTriggers = Utility.CreateIntArray(EffectKeywords.Length, 10)
-	HasPotionOfType = FPPQuest.CreateBoolArray(EffectKeywords.Length, false)
 	UsePotionOfType = FPPQuest.GetDefaultUsePotionsOfTypes()
+	
+	ResetPotionWarningTriggers()
+	ResetHasPotionOfType()
 endFunction
 
+Function ResetPotionWarningTriggers()
+	MyPotionWarningTriggers = Utility.CreateIntArray(5, 10)
+endFunction
+
+Function ResetHasPotionOfType()
+	HasPotionOfType = FPPQuest.CreateBoolArray(EffectKeywords.Length, false)
+endFunction
 
 string function GetStringPercentage(string asActorValue)
 	return ((MyActor.GetActorValuePercentage(asActorValue) * 100) as int) + "%"

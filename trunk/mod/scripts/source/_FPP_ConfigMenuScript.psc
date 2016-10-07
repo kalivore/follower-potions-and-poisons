@@ -5,9 +5,10 @@ ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase
 ; History
 ;
 ; 1 - Initial version
+; 2 - Added Warning Intervals for when No Potion
 
 int function GetVersion()
-	return 1
+	return 2
 endFunction
 
 
@@ -35,6 +36,7 @@ string C_FORMAT_PLACEHOLDER_PERCENT = "$FPPFormatPlaceholderPercent"
 string C_FORMAT_PLACEHOLDER_LEVELS = "$FPPFormatPlaceholderLevels"
 string C_HEADER_LABEL_UPDATE_INTERVALS = "$FPPHeaderLabelUpdateIntervals"
 string C_HEADER_LABEL_RESTORE_POTIONS = "$FPPHeaderLabelRestorePotions"
+string C_HEADER_LABEL_WARNING_INTERVALS = "$FPPHeaderLabelWarningIntervals"
 string C_HEADER_LABEL_FORTIFY_RESIST_POTIONS = "$FPPHeaderLabelFortifyResistPotions"
 string C_HEADER_LABEL_ACTIONS = "$FPPHeaderLabelActions"
 string C_MENU_OPTION_CANCEL = "$FPPMenuOptionCancel"
@@ -51,6 +53,8 @@ string C_OPTION_LABEL_ACTIONS_ALL = "$FPPOptionLabelActionsAll"
 string C_OPTION_LABEL_UPDATE_IN_COMBAT = "$FPPOptionLabelUpdateInCombat"
 string C_OPTION_LABEL_UPDATE_NON_COMBAT = "$FPPOptionLabelUpdateNonCombat"
 string C_OPTION_LABEL_UPDATE_NO_POTIONS = "$FPPOptionLabelUpdateNoPotions"
+string C_OPTION_LABEL_WARNING_RESTORE = "$FPPOptionLabelWarningRestore"
+string C_OPTION_LABEL_WARNING_FORTIFY_RESIST = "$FPPOptionLabelWarningFortifyResist"
 string C_OPTION_LABEL_HEALTH_IN_COMBAT = "$FPPOptionLabelHealthInCombat"
 string C_OPTION_LABEL_HEALTH_NON_COMBAT = "$FPPOptionLabelHealthNonCombat"
 string C_OPTION_LABEL_STAMINA_IN_COMBAT = "$FPPOptionLabelStaminaInCombat"
@@ -80,6 +84,8 @@ string C_INFO_TEXT_ADD_POTIONS_ALL = "$FPPInfoTextAddPotionsAll"
 string C_INFO_TEXT_UPDATE_IN_COMBAT = "$FPPInfoTextUpdateInCombat"
 string C_INFO_TEXT_UPDATE_NON_COMBAT = "$FPPInfoTextUpdateNonCombat"
 string C_INFO_TEXT_UPDATE_NO_POTIONS = "$FPPInfoTextUpdateNoPotions"
+string C_INFO_TEXT_WARNING_RESTORE = "$FPPInfoTextWarningRestore"
+string C_INFO_TEXT_WARNING_FORTIFY_RESIST = "$FPPInfoTextWarningFortifyResist"
 string C_INFO_TEXT_HEALTH_IN_COMBAT = "$FPPInfoTextHealthInCombat"
 string C_INFO_TEXT_HEALTH_NON_COMBAT = "$FPPInfoTextHealthNonCombat"
 string C_INFO_TEXT_STAMINA_IN_COMBAT = "$FPPInfoTextStaminaInCombat"
@@ -133,6 +139,8 @@ int			_usePotionResistPoisonOID_B
 int			_updateIntervalInCombatOID_S
 int			_updateIntervalNonCombatOID_S
 int			_updateIntervalNoPotionsOID_S
+int			_warningIntervalRestoreOID_S
+int			_warningIntervalFortifyResistOID_S
 int			_healthLimitInCombatOID_S
 int			_healthLimitNonCombatOID_S
 int			_staminaLimitInCombatOID_S
@@ -152,6 +160,8 @@ bool updatingFollowerPotions
 float _defaultUpdateIntervalInCombat = 1.0
 float _defaultUpdateIntervalNonCombat = 10.0
 float _defaultUpdateIntervalNoPotions = 180.0
+float _defaultWarningIntervalRestore = 30.0
+float _defaultWarningIntervalFortifyResist = 180.0
 float _defaultHealthLimitInCombat = 0.6
 float _defaultHealthLimitNonCombat = 1.0
 float _defaultStaminaLimitInCombat = 0.6
@@ -181,7 +191,7 @@ endEvent
 ; @overrides SKI_ConfigBase
 event OnConfigInit()
 	
-	sliderVals = new float[10]
+	sliderVals = new float[12]
 	boolVals = new bool[25]
 
 	_followerOID_M = new int[15]
@@ -265,7 +275,7 @@ event OnPageReset(string a_page)
 	
 		follower = None
 		SetOptions(FPPQuest.DefaultUpdateIntervalInCombat, FPPQuest.DefaultUpdateIntervalNonCombat, FPPQuest.DefaultUpdateIntervalNoPotions, \
-					FPPQuest.DefaultStatLimitsInCombat, FPPQuest.DefaultStatLimitsNonCombat, FPPQuest.DefaultLvlDiffTrigger, \
+					FPPQuest.DefaultWarningIntervals, FPPQuest.DefaultStatLimitsInCombat, FPPQuest.DefaultStatLimitsNonCombat, FPPQuest.DefaultLvlDiffTrigger, \
 					FPPQuest.DefaultUsePotionOfType, false)
 		
 	elseIf (a_page != C_PAGE_NOT_SET)
@@ -279,7 +289,7 @@ event OnPageReset(string a_page)
 		
 		follower = FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript
 		SetOptions(follower.UpdateIntervalInCombat, follower.UpdateIntervalNonCombat, follower.UpdateIntervalNoPotions, \
-					follower.StatLimitsInCombat, follower.StatLimitsNonCombat, follower.LvlDiffTrigger, \
+					follower.WarningIntervals, follower.StatLimitsInCombat, follower.StatLimitsNonCombat, follower.LvlDiffTrigger, \
 					follower.UsePotionOfType, true)
 		
 	else
@@ -334,8 +344,14 @@ event OnPageReset(string a_page)
 
 	AddEmptyOption()
 	
+	AddHeaderOption(C_HEADER_LABEL_WARNING_INTERVALS)
 	
-	SetCursorPosition(1) ; Move to the top of the right-hand pane
+	_warningIntervalRestoreOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_RESTORE, sliderVals[10], C_FORMAT_PLACEHOLDER_SECONDS)
+	_warningIntervalFortifyResistOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_FORTIFY_RESIST, sliderVals[11], C_FORMAT_PLACEHOLDER_SECONDS)
+	
+	
+	; Move to the top of the right-hand pane
+	SetCursorPosition(1)
 
 	AddHeaderOption(C_HEADER_LABEL_FORTIFY_RESIST_POTIONS)
 	
@@ -412,6 +428,10 @@ event OnOptionHighlight(int a_option)
 		SetInfoText(C_INFO_TEXT_MAGICKA_IN_COMBAT)
 	elseIf (a_option == _magickaLimitNonCombatOID_S)
 		SetInfoText(C_INFO_TEXT_MAGICKA_NON_COMBAT)
+	elseIf (a_option == _warningIntervalRestoreOID_S)
+		SetInfoText(C_INFO_TEXT_WARNING_RESTORE)
+	elseIf (a_option == _warningIntervalFortifyResistOID_S)
+		SetInfoText(C_INFO_TEXT_WARNING_FORTIFY_RESIST)
 	elseIf (a_option == _lvlDiffTriggerOID_S)
 		SetInfoText(C_INFO_TEXT_ENEMY_OVER)
 	endIf
@@ -809,6 +829,18 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogRange(0, 100)
 		SetSliderDialogInterval(1)
 		
+	elseIf a_option == _warningIntervalRestoreOID_S
+		SetSliderDialogStartValue(sliderVals[10])
+		SetSliderDialogDefaultValue(_defaultWarningIntervalRestore)
+		SetSliderDialogRange(10, 900)
+		SetSliderDialogInterval(1)
+		
+	elseIf a_option == _warningIntervalFortifyResistOID_S
+		SetSliderDialogStartValue(sliderVals[11])
+		SetSliderDialogDefaultValue(_defaultWarningIntervalFortifyResist)
+		SetSliderDialogRange(10, 900)
+		SetSliderDialogInterval(1)
+		
 	elseIf a_option == _lvlDiffTriggerOID_S
 		SetSliderDialogStartValue(sliderVals[9])
 		SetSliderDialogDefaultValue(_defaultLvlDiffTrigger)
@@ -911,6 +943,31 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		else
 			FPPQuest.DefaultLvlDiffTrigger = sliderVals[9]
 		endIf
+		
+	elseIf a_option == _warningIntervalRestoreOID_S
+		sliderVals[10] = a_value
+		SetSliderOptionValue(a_option, sliderVals[10], C_FORMAT_PLACEHOLDER_SECONDS)
+		if (follower)
+			follower.WarningIntervals[0] = sliderVals[10]
+			follower.WarningIntervals[1] = sliderVals[10]
+			follower.WarningIntervals[2] = sliderVals[10]
+		else
+			FPPQuest.DefaultWarningIntervals[0] = sliderVals[10]
+			FPPQuest.DefaultWarningIntervals[1] = sliderVals[10]
+			FPPQuest.DefaultWarningIntervals[2] = sliderVals[10]
+		endIf
+		
+	elseIf a_option == _warningIntervalFortifyResistOID_S
+		sliderVals[11] = a_value
+		SetSliderOptionValue(a_option, sliderVals[11], C_FORMAT_PLACEHOLDER_SECONDS)
+		if (follower)
+			follower.WarningIntervals[3] = sliderVals[11]
+			follower.WarningIntervals[4] = sliderVals[11]
+		else
+			FPPQuest.DefaultWarningIntervals[3] = sliderVals[11]
+			FPPQuest.DefaultWarningIntervals[4] = sliderVals[11]
+		endIf
+		
 	endIf
 endEvent
 
@@ -1089,7 +1146,7 @@ string Function FormatString(string asTemplate, string asEffectName)
 endFunction
 
 Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat, float UpdateIntervalNoPotions, \
-					float[] StatLimitsInCombat, float[] StatLimitsNonCombat, float LvlDiffTrigger, \
+					float[] WarningIntervals, float[] StatLimitsInCombat, float[] StatLimitsNonCombat, float LvlDiffTrigger, \
 					bool[] UsePotionOfType, bool isFollower)
 
 	sliderVals[0] = UpdateIntervalInCombat
@@ -1102,6 +1159,8 @@ Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat,
 	sliderVals[7] = StatLimitsInCombat[2]
 	sliderVals[8] = StatLimitsNonCombat[2]
 	sliderVals[9] = LvlDiffTrigger
+	sliderVals[10] = WarningIntervals[0]
+	sliderVals[11] = WarningIntervals[3]
 	
 	int p = FPPQuest.RestoreEffects.Length
 	while (p)

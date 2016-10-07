@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 0.0200 AutoReadonly
+float Property CurrentVersion = 0.0201 AutoReadonly
 float previousVersion
 
 
@@ -164,6 +164,8 @@ float Property DefaultUpdateIntervalInCombat Auto
 float Property DefaultUpdateIntervalNonCombat Auto
 float Property DefaultUpdateIntervalNoPotions Auto
 
+float[] Property DefaultWarningIntervals Auto
+
 float[] Property DefaultStatLimitsInCombat Auto
 float[] Property DefaultStatLimitsNonCombat Auto
 
@@ -218,10 +220,28 @@ endEvent
 
 function Update()
 
-	if (CurrentVersion != PreviousVersion)
+	int iPreviousVersion = (PreviousVersion * 10000) as int
+	int iCurrentVersion = (CurrentVersion * 10000) as int
+	if (iCurrentVersion != iPreviousVersion)
 
 		; version-specific updates
-
+		if (iPreviousVersion < 00201)
+			; set DefaultWarningIntervals
+			SetDefaultWarningIntervals()
+			
+			; set WarningIntervalInCombat for all current followers
+			int i = 0
+			int iMax = AllFollowers.Length
+			ReferenceAlias thisFollowerRef
+			while (i < iMax)
+				thisFollowerRef = AllFollowers[i]
+				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
+					(thisFollowerRef as _FPP_FollowerScript).WarningIntervals = GetDefaultWarningIntervals()
+					(thisFollowerRef as _FPP_FollowerScript).ResetPotionWarningTriggers()
+				endIf
+				i += 1
+			endWhile
+		endIf
 
 		; notify current version
 		string msg = "Follower Potions"
@@ -375,11 +395,12 @@ function ResetFollower(Actor akFollower)
 			thisFollower.UpdateIntervalInCombat = DefaultUpdateIntervalInCombat
 			thisFollower.UpdateIntervalNonCombat = DefaultUpdateIntervalNonCombat
 			thisFollower.UpdateIntervalNoPotions = DefaultUpdateIntervalNoPotions
+			thisFollower.WarningIntervals = GetDefaultWarningIntervals()
 			thisFollower.StatLimitsInCombat[0] = DefaultStatLimitsInCombat[0]
-			thisFollower.StatLimitsNonCombat[0] = DefaultStatLimitsNonCombat[0]
 			thisFollower.StatLimitsInCombat[1] = DefaultStatLimitsInCombat[1]
-			thisFollower.StatLimitsNonCombat[1] = DefaultStatLimitsNonCombat[1]
 			thisFollower.StatLimitsInCombat[2] = DefaultStatLimitsInCombat[2]
+			thisFollower.StatLimitsNonCombat[0] = DefaultStatLimitsNonCombat[0]
+			thisFollower.StatLimitsNonCombat[1] = DefaultStatLimitsNonCombat[1]
 			thisFollower.StatLimitsNonCombat[2] = DefaultStatLimitsNonCombat[2]
 			thisFollower.LvlDiffTrigger = DefaultLvlDiffTrigger as int
 			
@@ -410,7 +431,7 @@ function ResetFollower(Actor akFollower)
 			endWhile
 
 			DebugStuff("Reset " + thisFollower.ActorName + " to defaults")
-					
+			
 		endIf
 		i += 1
 	endWhile
@@ -517,33 +538,6 @@ function AddPotionsToFollower(Actor akFollower)
 	
 	DebugStuff("Potions added to follower")
 
-endFunction
-
-
-; need to return a copy of this array, rather than ref to array itself
-float[] function GetDefaultStatLimits(bool abForInCombat)
-	float[] array = new float[3]
-	if (abForInCombat)
-		array[EFFECT_RESTOREHEALTH] = DefaultStatLimitsInCombat[EFFECT_RESTOREHEALTH]
-		array[EFFECT_RESTORESTAMINA] = DefaultStatLimitsInCombat[EFFECT_RESTORESTAMINA]
-		array[EFFECT_RESTOREMAGICKA] = DefaultStatLimitsInCombat[EFFECT_RESTOREMAGICKA]
-	else
-		array[EFFECT_RESTOREHEALTH] = DefaultStatLimitsNonCombat[EFFECT_RESTOREHEALTH]
-		array[EFFECT_RESTORESTAMINA] = DefaultStatLimitsNonCombat[EFFECT_RESTORESTAMINA]
-		array[EFFECT_RESTOREMAGICKA] = DefaultStatLimitsNonCombat[EFFECT_RESTOREMAGICKA]
-	endIf
-	return array
-endFunction
-
-; as per above, need to copy & return this
-bool[] function GetDefaultUsePotionsOfTypes()
-	bool[] array = CreateBoolArray(DefaultUsePotionOfType.Length, true)
-	int i = array.Length
-	while(i)
-		i -= 1
-		array[i] = DefaultUsePotionOfType[i]
-	endWhile
-	return array
 endFunction
 
 
@@ -716,6 +710,8 @@ Function SetDefaults()
 	DefaultUpdateIntervalNonCombat = 10.0
 	DefaultUpdateIntervalNoPotions = 180.0
 
+	SetDefaultWarningIntervals()
+	
 	DefaultStatLimitsInCombat = new float[3]
 	DefaultStatLimitsInCombat[EFFECT_RESTOREHEALTH] = 0.6
 	DefaultStatLimitsInCombat[EFFECT_RESTORESTAMINA] = 0.6
@@ -727,11 +723,57 @@ Function SetDefaults()
 	DefaultStatLimitsNonCombat[EFFECT_RESTOREMAGICKA] = 0.3
 
 	DefaultLvlDiffTrigger = 5.0
-	
+
 	DefaultUsePotionOfType = CreateBoolArray(EffectKeywords.Length, false)
 	DefaultUsePotionOfType[EFFECT_RESTOREHEALTH] = true
 	DefaultUsePotionOfType[EFFECT_RESTORESTAMINA] = true
 	DefaultUsePotionOfType[EFFECT_RESTOREMAGICKA] = true
 
 	DebugToFile = false
+endFunction
+
+; need to return a copy of this array, rather than ref to array itself
+float[] function GetDefaultStatLimits(bool abForInCombat)
+	float[] array = new float[3]
+	if (abForInCombat)
+		array[EFFECT_RESTOREHEALTH] = DefaultStatLimitsInCombat[EFFECT_RESTOREHEALTH]
+		array[EFFECT_RESTORESTAMINA] = DefaultStatLimitsInCombat[EFFECT_RESTORESTAMINA]
+		array[EFFECT_RESTOREMAGICKA] = DefaultStatLimitsInCombat[EFFECT_RESTOREMAGICKA]
+	else
+		array[EFFECT_RESTOREHEALTH] = DefaultStatLimitsNonCombat[EFFECT_RESTOREHEALTH]
+		array[EFFECT_RESTORESTAMINA] = DefaultStatLimitsNonCombat[EFFECT_RESTORESTAMINA]
+		array[EFFECT_RESTOREMAGICKA] = DefaultStatLimitsNonCombat[EFFECT_RESTOREMAGICKA]
+	endIf
+	return array
+endFunction
+
+; as per above, need to copy & return this
+bool[] function GetDefaultUsePotionsOfTypes()
+	bool[] array = CreateBoolArray(DefaultUsePotionOfType.Length, true)
+	int i = array.Length
+	while(i)
+		i -= 1
+		array[i] = DefaultUsePotionOfType[i]
+	endWhile
+	return array
+endFunction
+
+; as per above, need to copy & return this
+float[] function GetDefaultWarningIntervals()
+	float[] array = new float[5]
+	array[EFFECT_RESTOREHEALTH] = DefaultWarningIntervals[EFFECT_RESTOREHEALTH]
+	array[EFFECT_RESTORESTAMINA] = DefaultWarningIntervals[EFFECT_RESTORESTAMINA]
+	array[EFFECT_RESTOREMAGICKA] = DefaultWarningIntervals[EFFECT_RESTOREMAGICKA]
+	array[3] = DefaultWarningIntervals[3]
+	array[4] = DefaultWarningIntervals[4]
+	return array
+endFunction
+
+float[] function SetDefaultWarningIntervals()
+	DefaultWarningIntervals = new float[5]
+	DefaultWarningIntervals[EFFECT_RESTOREHEALTH] = 30.0
+	DefaultWarningIntervals[EFFECT_RESTORESTAMINA] = 30.0
+	DefaultWarningIntervals[EFFECT_RESTOREMAGICKA] = 30.0
+	DefaultWarningIntervals[3] = 180.0
+	DefaultWarningIntervals[4] = 180.0
 endFunction
