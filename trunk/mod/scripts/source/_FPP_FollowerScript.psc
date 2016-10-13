@@ -1030,7 +1030,7 @@ endFunction
 bool function TryFirstPotionThatExists(int aiEffectType, Potion[] akPotionList, string asListName)
 	int potionIndex = 0
 	while (potionIndex < akPotionList.Length)
-		Potion thisPotion = akPotionList[potionIndex]
+		Potion thisPotion = akPotionList[potionIndex] as Potion
 		;string m = asListName + "[" + potionIndex + "]:"
 		if (thisPotion != None && !thisPotion.IsHostile() && thisPotion.HasKeyword(EffectKeywords[aiEffectType]))
 			int potionCount = MyActor.GetItemCount(thisPotion)

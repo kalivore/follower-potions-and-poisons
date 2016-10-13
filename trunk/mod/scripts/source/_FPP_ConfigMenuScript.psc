@@ -44,11 +44,10 @@ string C_MENU_OPTION_RESET = "$FPPMenuOptionReset"
 string C_MENU_OPTION_REFRESH = "$FPPMenuOptionRefresh"
 string C_MENU_OPTION_REMOVE = "$FPPMenuOptionRemove"
 string C_MENU_OPTION_ADD_POTIONS = "$FPPMenuOptionAddPotions"
-string C_OPTION_LABEL_DEBUG = "$FPPOptionLabelDebug"
 string C_OPTION_LABEL_NO_FOLLOWER = "$FPPOptionLabelNoFollower"
-string C_OPTION_LABEL_CURRENT_STATE = "$FPPOptionLabelCurrentState"
+string C_OPTION_LABEL_DEBUG = "$FPPOptionLabelDebug"
 string C_OPTION_LABEL_ADD_ON_FOLLOW = "$FPPOptionLabelAddOnFollow"
-string C_OPTION_LABEL_ADD_POTIONS = "$FPPOptionLabelAddPotions"
+string C_OPTION_LABEL_CURRENT_VERSION = "$FPPOptionLabelCurrentVersion"
 string C_OPTION_LABEL_ACTIONS_ALL = "$FPPOptionLabelActionsAll"
 string C_OPTION_LABEL_UPDATE_IN_COMBAT = "$FPPOptionLabelUpdateInCombat"
 string C_OPTION_LABEL_UPDATE_NON_COMBAT = "$FPPOptionLabelUpdateNonCombat"
@@ -78,9 +77,6 @@ string C_INFO_TEXT_REMOVE_ALL = "$FPPInfoTextRemoveAll"
 string C_INFO_TEXT_REFRESH = "$FPPInfoTextRefresh"
 string C_INFO_TEXT_REFRESH_SINGLE = "$FPPInfoTextRefreshSingle"
 string C_INFO_TEXT_REFRESH_ALL = "$FPPInfoTextRefreshAll"
-string C_INFO_TEXT_ADD_POTIONS = "$FPPInfoTextAddPotions"
-string C_INFO_TEXT_ADD_POTIONS_SINGLE = "$FPPInfoTextAddPotionsSingle"
-string C_INFO_TEXT_ADD_POTIONS_ALL = "$FPPInfoTextAddPotionsAll"
 string C_INFO_TEXT_UPDATE_IN_COMBAT = "$FPPInfoTextUpdateInCombat"
 string C_INFO_TEXT_UPDATE_NON_COMBAT = "$FPPInfoTextUpdateNonCombat"
 string C_INFO_TEXT_UPDATE_NO_POTIONS = "$FPPInfoTextUpdateNoPotions"
@@ -105,7 +101,7 @@ string C_CONFIRM_ADD_POTIONS_ALL = "$FPPConfirmAddPotionsAll"
 ; OIDs (T:Text B:Toggle S:Slider M:Menu, C:Color, K:Key)
 int			_debugOID_B
 int			_recruitXflOID_B
-int			_addPotionsOID_T
+int			_currentVersionOID_T
 
 int			_actionAllOID_M
 int[]		_followerOID_M
@@ -242,6 +238,10 @@ event OnPageReset(string a_page)
 		follower = None
 		_debugOID_B	= AddToggleOption(C_OPTION_LABEL_DEBUG, FPPQuest.DebugToFile)
 		_recruitXflOID_B = AddToggleOption(C_OPTION_LABEL_ADD_ON_FOLLOW, FPPQuest.XflAddOnFollow)
+		
+		AddEmptyOption()
+		
+		_recruitXflOID_B = AddTextOption(C_OPTION_LABEL_CURRENT_VERSION, FPPQuest.GetVersionAsString(FPPQuest.CurrentVersion), OPTION_FLAG_DISABLED)
 		
 		SetCursorPosition(1) ; Move to the top of the right-hand pane
 
