@@ -30,6 +30,8 @@ int Property LvlDiffTrigger Auto
 
 bool[] Property UsePotionOfType Auto
 
+int Property IdentifyPotionEffects Auto
+
 bool Property DebugToFile Auto
 
 int Property PotionCountRefreshed
@@ -52,6 +54,13 @@ string C_SCHOOL_CONJURATION
 string C_SCHOOL_DESTRUCTION
 string C_SCHOOL_ILLUSION
 string C_SCHOOL_RESTORATION
+
+int C_IDENTIFY_RESTORE
+int C_IDENTIFY_FORTIFY
+int C_IDENTIFY_RESIST
+int C_IDENTIFY_FIRST
+int C_IDENTIFY_SECOND
+int C_IDENTIFY_THIRD
 
 int C_ITEM_HAND
 int C_ITEM_1H_SWORD
@@ -268,7 +277,7 @@ Event OnItemAdded(Form akBaseItem, int aiItemCount, ObjectReference akItemRefere
 	if (thisPotion == None || thisPotion.IsFood() || thisPotion.IsHostile())
 		return
 	endIf
-	IdentifyPotionThreadManager.IdentifyPotionAsync(true, MyActorName, thisPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects)
+	IdentifyPotionThreadManager.IdentifyPotionAsync(true, MyActorName, thisPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects, IdentifyPotionEffects, C_IDENTIFY_RESTORE, C_IDENTIFY_FORTIFY, C_IDENTIFY_RESIST, C_IDENTIFY_FIRST, C_IDENTIFY_SECOND, C_IDENTIFY_THIRD)
 	IdentifyPotionThreadManager.WaitAny()
 	;AliasDebug("OnItemAdded - " + thisPotion.GetName() + " sent for identification")
 endEvent
@@ -455,7 +464,7 @@ State Incapacitated
 endState
 
 State HaveNoPotions
-	;Shouldn't really need to do much here, as OnPotionIdentified will get you out of this, if you receive a usable potion
+	; Shouldn't really need to do much here, as OnPotionIdentified will get you out of this, if you receive a usable potion
 
  	Event OnBeginState()
 		AliasDebug("HaveNoPotions::Begin - update in " + UpdateIntervalNoPotions)
@@ -646,7 +655,7 @@ Function RefreshPotions()
 		While iFormIndex < TotalPotionCount
 			Potion foundPotion = _Q2C_Functions.GetNthFormOfType(MyActor, 46, iFormIndex) as Potion
 			if (foundPotion != None)
-				IdentifyPotionThreadManager.IdentifyPotionAsync(false, MyActorName, foundPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects)
+				IdentifyPotionThreadManager.IdentifyPotionAsync(false, MyActorName, foundPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects, IdentifyPotionEffects, C_IDENTIFY_RESTORE, C_IDENTIFY_FORTIFY, C_IDENTIFY_RESIST, C_IDENTIFY_FIRST, C_IDENTIFY_SECOND, C_IDENTIFY_THIRD)
 			endIf
 			iFormIndex += 1
 		EndWhile
@@ -1112,6 +1121,13 @@ Function SetProperties()
 	C_SCHOOL_ILLUSION = FPPQuest.C_SCHOOL_ILLUSION
 	C_SCHOOL_RESTORATION = FPPQuest.C_SCHOOL_RESTORATION
 
+	C_IDENTIFY_RESTORE = FPPQuest.C_IDENTIFY_RESTORE
+	C_IDENTIFY_FORTIFY = FPPQuest.C_IDENTIFY_FORTIFY
+	C_IDENTIFY_RESIST = FPPQuest.C_IDENTIFY_RESIST
+	C_IDENTIFY_FIRST = FPPQuest.C_IDENTIFY_FIRST
+	C_IDENTIFY_SECOND = FPPQuest.C_IDENTIFY_SECOND
+	C_IDENTIFY_THIRD = FPPQuest.C_IDENTIFY_THIRD
+
 	C_ITEM_HAND = FPPQuest.C_ITEM_HAND
 	C_ITEM_1H_SWORD = FPPQuest.C_ITEM_1H_SWORD
 	C_ITEM_1H_DAGGER = FPPQuest.C_ITEM_1H_DAGGER
@@ -1206,6 +1222,8 @@ Function SetDefaults()
 	LvlDiffTrigger = FPPQuest.DefaultLvlDiffTrigger as int
 
 	UsePotionOfType = FPPQuest.GetDefaultUsePotionsOfTypes()
+	
+	IdentifyPotionEffects = FPPQuest.DefaultIdentifyPotionEffects
 	
 	ResetPotionWarningTriggers()
 	ResetHasPotionOfType()

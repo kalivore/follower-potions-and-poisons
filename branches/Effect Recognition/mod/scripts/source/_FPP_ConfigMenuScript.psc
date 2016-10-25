@@ -6,9 +6,10 @@ ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase
 ;
 ; 1 - Initial version
 ; 2 - Added Warning Intervals for when No Potion
+; 3 - Added options for how to identify potions
 
 int function GetVersion()
-	return 2
+	return 3
 endFunction
 
 
@@ -39,11 +40,19 @@ string C_HEADER_LABEL_RESTORE_POTIONS = "$FPPHeaderLabelRestorePotions"
 string C_HEADER_LABEL_WARNING_INTERVALS = "$FPPHeaderLabelWarningIntervals"
 string C_HEADER_LABEL_FORTIFY_RESIST_POTIONS = "$FPPHeaderLabelFortifyResistPotions"
 string C_HEADER_LABEL_ACTIONS = "$FPPHeaderLabelActions"
+string C_HEADER_LABEL_POTION_IDENT = "$FPPHeaderLabelPotionIdent"
 string C_MENU_OPTION_CANCEL = "$FPPMenuOptionCancel"
 string C_MENU_OPTION_RESET = "$FPPMenuOptionReset"
 string C_MENU_OPTION_REFRESH = "$FPPMenuOptionRefresh"
 string C_MENU_OPTION_REMOVE = "$FPPMenuOptionRemove"
 string C_MENU_OPTION_ADD_POTIONS = "$FPPMenuOptionAddPotions"
+string C_MENU_OPTION_EFFECTS_ALL = "$FPPMenuOptionEffectsAll"
+string C_MENU_OPTION_EFFECTS_RESTORE = "$FPPMenuOptionEffectsRestore"
+string C_MENU_OPTION_EFFECTS_FORTIFY = "$FPPMenuOptionEffectsFortify"
+string C_MENU_OPTION_EFFECTS_RESIST = "$FPPMenuOptionEffectsResist"
+string C_MENU_OPTION_EFFECTS_FIRST = "$FPPMenuOptionEffectsFirst"
+string C_MENU_OPTION_EFFECTS_SECOND = "$FPPMenuOptionEffectsSecond"
+string C_MENU_OPTION_EFFECTS_THIRD = "$FPPMenuOptionEffectsThird"
 string C_OPTION_LABEL_NO_FOLLOWER = "$FPPOptionLabelNoFollower"
 string C_OPTION_LABEL_DEBUG = "$FPPOptionLabelDebug"
 string C_OPTION_LABEL_ADD_ON_FOLLOW = "$FPPOptionLabelAddOnFollow"
@@ -61,6 +70,7 @@ string C_OPTION_LABEL_STAMINA_NON_COMBAT = "$FPPOptionLabelStaminaNonCombat"
 string C_OPTION_LABEL_MAGICKA_IN_COMBAT = "$FPPOptionLabelMagickaInCombat"
 string C_OPTION_LABEL_MAGICKA_NON_COMBAT = "$FPPOptionLabelMagickaNonCombat"
 string C_OPTION_LABEL_ENEMY_OVER = "$FPPOptionLabelEnemyOver"
+string C_OPTION_LABEL_POTION_IDENT = "$FPPOptionLabelPotionIdent"
 string C_OPTION_VALUE_SELECT_ACTION = "$FPPOptionValueSelectAction"
 string C_INFO_TEXT_DEBUG = "$FPPInfoTextDebug"
 string C_INFO_TEXT_ADD_ON_FOLLOW = "$FPPInfoTextAddOnFollow"
@@ -89,6 +99,7 @@ string C_INFO_TEXT_STAMINA_NON_COMBAT = "$FPPInfoTextStaminaNonCombat"
 string C_INFO_TEXT_MAGICKA_IN_COMBAT = "$FPPInfoTextMagickaInCombat"
 string C_INFO_TEXT_MAGICKA_NON_COMBAT = "$FPPInfoTextMagickaNonCombat"
 string C_INFO_TEXT_ENEMY_OVER = "$FPPInfoTextEnemyOver"
+string C_INFO_TEXT_POTION_IDENT = "$FPPInfoTextPotionIdent"
 string C_CONFIRM_RESET_SINGLE = "$FPPConfirmResetSingle"
 string C_CONFIRM_RESET_ALL = "$FPPConfirmResetAll"
 string C_CONFIRM_REMOVE_SINGLE = "$FPPConfirmRemoveSingle"
@@ -144,6 +155,7 @@ int			_staminaLimitNonCombatOID_S
 int			_magickaLimitInCombatOID_S
 int			_magickaLimitNonCombatOID_S
 int			_lvlDiffTriggerOID_S
+int			_potionIdentOID_M
 
 
 ; State
@@ -171,6 +183,7 @@ _FPP_Quest Property FPPQuest Auto
 float[] sliderVals
 bool[] boolVals
 string[] actionOptions
+string[] potionIdentOptions
 
 _FPP_FollowerScript follower
 
@@ -241,7 +254,11 @@ event OnPageReset(string a_page)
 		
 		AddEmptyOption()
 		
-		_recruitXflOID_B = AddTextOption(C_OPTION_LABEL_CURRENT_VERSION, FPPQuest.GetVersionAsString(FPPQuest.CurrentVersion), OPTION_FLAG_DISABLED)
+		_potionIdentOID_M = AddMenuOption(C_OPTION_LABEL_POTION_IDENT, FPPQuest.DefaultIdentifyPotionEffects)
+		
+		AddEmptyOption()
+		
+		_currentVersionOID_T = AddTextOption(C_OPTION_LABEL_CURRENT_VERSION, FPPQuest.GetVersionAsString(FPPQuest.CurrentVersion), OPTION_FLAG_DISABLED)
 		
 		SetCursorPosition(1) ; Move to the top of the right-hand pane
 
@@ -434,23 +451,31 @@ event OnOptionHighlight(int a_option)
 		SetInfoText(C_INFO_TEXT_WARNING_FORTIFY_RESIST)
 	elseIf (a_option == _lvlDiffTriggerOID_S)
 		SetInfoText(C_INFO_TEXT_ENEMY_OVER)
+	elseIf (a_option == _potionIdentOID_M)
+		SetInfoText(C_INFO_TEXT_POTION_IDENT)
 	endIf
 endEvent
 
 ; @implements SKI_ConfigBase
 event OnOptionMenuOpen(int a_option)
 	{Called when the user selects a menu option}
-	;if (a_option == _actionAllOID_M)
+	if (a_option == _actionAllOID_M)
 		SetMenuDialogStartIndex(0)
 		SetMenuDialogDefaultIndex(0)
 		SetMenuDialogOptions(actionOptions)
-	;endIf
+	elseIf (a_option == _potionIdentOID_M)
+		SetMenuDialogStartIndex(0)
+		SetMenuDialogDefaultIndex(0)
+		SetMenuDialogOptions(potionIdentOptions)
+	endIf
 endEvent
 
 ; @implements SKI_ConfigBase
 event OnOptionMenuAccept(int a_option, int a_index)
 	{Called when the user accepts a new menu entry}
-	if (a_option == _actionAllOID_M)
+	if (a_option == _potionIdentOID_M)
+		SetPotionIdentMethod(a_index)
+	elseIf (a_option == _actionAllOID_M)
 		if (a_index == 0)
 			return
 		elseIf (a_index == 1)
@@ -1068,6 +1093,24 @@ Function AddPotionsToFollower(_FPP_FollowerScript akFppFollower)
 
 endFunction
 
+Function SetPotionIdentMethod(int aiSelectedIndex)
+	
+	int potionIdent = Math.Pow(2.0, aiSelectedIndex as float) as int
+	if (aiSelectedIndex == 0)
+		; special case - identify all
+		potionIdent = FPPQuest.C_IDENTIFY_RESTORE + FPPQuest.C_IDENTIFY_FORTIFY + FPPQuest.C_IDENTIFY_RESIST
+	endIf
+	
+	int followerIndex = FPPQuest.AllFollowers.Length
+	while (followerIndex)
+		followerIndex -= 1
+		if (FPPQuest.AllFollowers[followerIndex] && FPPQuest.AllFollowers[followerIndex].GetReference() as Actor != None)
+			(FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript).IdentifyPotionEffects = potionIdent
+		endIf
+	endWhile
+	
+endFunction
+
 
 Function EnableFollowerOptions()
 	SetOptionFlags(_actionAllOID_M, OPTION_FLAG_NONE)
@@ -1122,6 +1165,15 @@ Function RedrawFollowerPages()
 		actionOptions[2] = C_MENU_OPTION_REFRESH
 		actionOptions[3] = C_MENU_OPTION_REMOVE
 	endIf
+	
+	potionIdentOptions = new string[7]
+	potionIdentOptions[0] = C_MENU_OPTION_EFFECTS_ALL
+	potionIdentOptions[1] = C_MENU_OPTION_EFFECTS_RESTORE
+	potionIdentOptions[2] = C_MENU_OPTION_EFFECTS_FORTIFY
+	potionIdentOptions[3] = C_MENU_OPTION_EFFECTS_RESIST
+	potionIdentOptions[4] = C_MENU_OPTION_EFFECTS_FIRST
+	potionIdentOptions[5] = C_MENU_OPTION_EFFECTS_SECOND
+	potionIdentOptions[6] = C_MENU_OPTION_EFFECTS_THIRD
 
 endFunction
 
