@@ -659,7 +659,7 @@ Function RefreshPotions()
 			endIf
 			iFormIndex += 1
 		EndWhile
-		AliasDebug("RefreshPotions - Complete, potions found and all queued, waiting on _FPP_Callback_PotionIdentified event(s)")
+		AliasDebug("RefreshPotions - Complete, " + TotalPotionCount + " potions found and all queued, waiting on _FPP_Callback_PotionIdentified event(s)")
 		IdentifyPotionThreadManager.WaitAll()
 	else
 		if (DoingInit)

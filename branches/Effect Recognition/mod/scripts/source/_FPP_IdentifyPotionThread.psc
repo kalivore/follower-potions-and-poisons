@@ -88,19 +88,17 @@ endEvent
  
 ; Called from Event OnIdentifyPotion
 Function IdentifyPotion()
-	if (ThisPotion == None)
+	if (ThisPotion == None || ThisPotion.IsFood() || ThisPotion.IsHostile())
 		return
 	endIf
 	
-	bool multiEffect = ThisPotion.GetNumEffects() > 1
+	bool playerMade = Math.RightShift(ThisPotion.GetFormId(), 24) >= 255
 	int i = 0
-	if (!multiEffect || IdentifyPotionEffects < C_IDENTIFY_FIRST)
+	if (!playerMade || IdentifyPotionEffects < C_IDENTIFY_FIRST)
 	
-		if (multiEffect)
-			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion - finding by relevant effects, method " + IdentifyPotionEffects)
-		endIf
+		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effects (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
 		
-		if (!multiEffect || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
+		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
 			i = RestoreEffects.Length
 			while (i)
 				i -= 1
@@ -110,7 +108,7 @@ Function IdentifyPotion()
 			endWhile
 		endIf
 			
-		if (!multiEffect || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
+		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
 			i = FortifyEffectsStats.Length
 			while (i)
 				i -= 1
@@ -135,7 +133,7 @@ Function IdentifyPotion()
 			endWhile
 		endIf
 			
-		if (!multiEffect || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
+		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
 			i = ResistEffects.Length
 			while (i)
 				i -= 1
@@ -144,7 +142,7 @@ Function IdentifyPotion()
 				endIf
 			endWhile
 		endIf
-	else
+	elseIf (playerMade)
 		; OK, let's find these effects
 		MagicEffect[] effects = ThisPotion.GetMagicEffects()
 		int getEffect = 0
@@ -160,8 +158,8 @@ Function IdentifyPotion()
 		endIf
 		
 		; adjust for 0-based indexing
+		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + effects.Length + ")")
 		getEffect -= 1
-		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion - finding by single effect (index " + getEffect + ")")
 		
 		if (getEffect < 0)
 			; gee, something went wrong there..
@@ -216,7 +214,6 @@ Function IdentifyPotion()
 			endIf
 		endWhile
 	endIf
-	
 	
 endFunction
 

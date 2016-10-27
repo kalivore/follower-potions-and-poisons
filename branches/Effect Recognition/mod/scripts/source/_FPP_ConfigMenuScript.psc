@@ -257,14 +257,23 @@ event OnPageReset(string a_page)
 		
 		AddEmptyOption()
 		
+		AddHeaderOption(C_HEADER_LABEL_POTION_IDENT)
+		
 		_potionIdentOID_M = AddMenuOption(C_OPTION_LABEL_POTION_IDENT, potionIdentOptions[potionIdentIndex])
 		
+		; enough empty options to put Version at the bottom of the left-hand pane (can't be bothered to figure out the SetCursorPosition!)
+		AddEmptyOption()
+		AddEmptyOption()
+		AddEmptyOption()
+		AddEmptyOption()
+		AddEmptyOption()
 		AddEmptyOption()
 		
 		_currentVersionOID_T = AddTextOption(C_OPTION_LABEL_CURRENT_VERSION, FPPQuest.GetVersionAsString(FPPQuest.CurrentVersion), OPTION_FLAG_DISABLED)
 		
+		
 		SetCursorPosition(1) ; Move to the top of the right-hand pane
-
+		
 		AddHeaderOption(C_HEADER_LABEL_ACTIONS)
 		
 		_actionAllOID_M = AddMenuOption(C_OPTION_LABEL_ACTIONS_ALL, C_OPTION_VALUE_SELECT_ACTION)
