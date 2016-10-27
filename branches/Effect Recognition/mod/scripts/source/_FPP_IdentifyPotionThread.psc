@@ -96,7 +96,7 @@ Function IdentifyPotion()
 	int i = 0
 	if (!playerMade || IdentifyPotionEffects < C_IDENTIFY_FIRST)
 	
-		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effects (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+		;Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effects (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
 		
 		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
 			i = RestoreEffects.Length
@@ -158,7 +158,7 @@ Function IdentifyPotion()
 		endIf
 		
 		; adjust for 0-based indexing
-		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + effects.Length + ")")
+		;Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + effects.Length + ")")
 		getEffect -= 1
 		
 		if (getEffect < 0)
