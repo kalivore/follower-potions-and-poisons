@@ -177,11 +177,14 @@ float _defaultStaminaLimitNonCombat = 0.3
 float _defaultMagickaLimitInCombat = 0.6
 float _defaultMagickaLimitNonCombat = 0.3
 float _defaultLvlDiffTrigger = 5.0
+int _defaultPotionIdent = 0
 
 _FPP_Quest Property FPPQuest Auto
 
 float[] sliderVals
 bool[] boolVals
+int potionIdentIndex
+
 string[] actionOptions
 string[] potionIdentOptions
 
@@ -254,7 +257,7 @@ event OnPageReset(string a_page)
 		
 		AddEmptyOption()
 		
-		_potionIdentOID_M = AddMenuOption(C_OPTION_LABEL_POTION_IDENT, FPPQuest.DefaultIdentifyPotionEffects)
+		_potionIdentOID_M = AddMenuOption(C_OPTION_LABEL_POTION_IDENT, potionIdentOptions[potionIdentIndex])
 		
 		AddEmptyOption()
 		
@@ -459,14 +462,14 @@ endEvent
 ; @implements SKI_ConfigBase
 event OnOptionMenuOpen(int a_option)
 	{Called when the user selects a menu option}
-	if (a_option == _actionAllOID_M)
+	if (a_option == _potionIdentOID_M)
+		SetMenuDialogStartIndex(potionIdentIndex)
+		SetMenuDialogDefaultIndex(_defaultPotionIdent)
+		SetMenuDialogOptions(potionIdentOptions)
+	elseIf (a_option == _actionAllOID_M || _followerOID_M.Find(a_option) > -1)
 		SetMenuDialogStartIndex(0)
 		SetMenuDialogDefaultIndex(0)
 		SetMenuDialogOptions(actionOptions)
-	elseIf (a_option == _potionIdentOID_M)
-		SetMenuDialogStartIndex(0)
-		SetMenuDialogDefaultIndex(0)
-		SetMenuDialogOptions(potionIdentOptions)
 	endIf
 endEvent
 
@@ -474,7 +477,9 @@ endEvent
 event OnOptionMenuAccept(int a_option, int a_index)
 	{Called when the user accepts a new menu entry}
 	if (a_option == _potionIdentOID_M)
-		SetPotionIdentMethod(a_index)
+		potionIdentIndex = a_index
+		SetMenuOptionValue(_potionIdentOID_M, potionIdentOptions[potionIdentIndex])
+		SetPotionIdentMethod(potionIdentIndex)
 	elseIf (a_option == _actionAllOID_M)
 		if (a_index == 0)
 			return
@@ -1095,11 +1100,15 @@ endFunction
 
 Function SetPotionIdentMethod(int aiSelectedIndex)
 	
-	int potionIdent = Math.Pow(2.0, aiSelectedIndex as float) as int
+	int potionIdent = Math.Pow(2.0, (aiSelectedIndex - 1) as float) as int
 	if (aiSelectedIndex == 0)
 		; special case - identify all
 		potionIdent = FPPQuest.C_IDENTIFY_RESTORE + FPPQuest.C_IDENTIFY_FORTIFY + FPPQuest.C_IDENTIFY_RESIST
 	endIf
+	
+	;FPPQuest.DebugStuff("MCM::SetPotionIdentMethod - set to " + potionIdent)
+	
+	FPPQuest.DefaultIdentifyPotionEffects = potionIdent
 	
 	int followerIndex = FPPQuest.AllFollowers.Length
 	while (followerIndex)

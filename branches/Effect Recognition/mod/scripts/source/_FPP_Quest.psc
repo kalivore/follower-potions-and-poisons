@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 0.0201 AutoReadonly
+float Property CurrentVersion = 0.0300 AutoReadonly
 float previousVersion
 
 

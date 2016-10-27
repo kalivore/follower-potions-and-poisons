@@ -92,10 +92,15 @@ Function IdentifyPotion()
 		return
 	endIf
 	
+	bool multiEffect = ThisPotion.GetNumEffects() > 1
 	int i = 0
-	if (IdentifyPotionEffects < C_IDENTIFY_FIRST)
-		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion - finding relevant effects")
-		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
+	if (!multiEffect || IdentifyPotionEffects < C_IDENTIFY_FIRST)
+	
+		if (multiEffect)
+			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion - finding by relevant effects, method " + IdentifyPotionEffects)
+		endIf
+		
+		if (!multiEffect || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
 			i = RestoreEffects.Length
 			while (i)
 				i -= 1
@@ -105,7 +110,7 @@ Function IdentifyPotion()
 			endWhile
 		endIf
 			
-		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
+		if (!multiEffect || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
 			i = FortifyEffectsStats.Length
 			while (i)
 				i -= 1
@@ -130,7 +135,7 @@ Function IdentifyPotion()
 			endWhile
 		endIf
 			
-		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
+		if (!multiEffect || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
 			i = ResistEffects.Length
 			while (i)
 				i -= 1
