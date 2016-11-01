@@ -93,62 +93,33 @@ Function IdentifyPotion()
 	endIf
 	
 	bool playerMade = Math.RightShift(ThisPotion.GetFormId(), 24) >= 255
+	bool identByEffectType = IdentifyPotionEffects < C_IDENTIFY_FIRST
 	int i = 0
-	if (!playerMade || IdentifyPotionEffects < C_IDENTIFY_FIRST)
+	if (!playerMade || identByEffectType)
 	
-		;Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effects (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
 		
-		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
-			i = RestoreEffects.Length
-			while (i)
-				i -= 1
-				if (ThisPotion.HasKeyword(EffectKeywords[RestoreEffects[i]]))
-					RegisterPotion("MyRestorePotions", RestoreEffects[i])
-				endIf
-			endWhile
+		if (!identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
+			CheckFormEffects(RestoreEffects, ThisPotion, "MyRestorePotions", false)
 		endIf
 			
-		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
-			i = FortifyEffectsStats.Length
-			while (i)
-				i -= 1
-				if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsStats[i]]))
-					RegisterPotion("MyFortifyPotions", FortifyEffectsStats[i])
-				endIf
-			endWhile
-			i = FortifyEffectsWarrior.Length
-			while (i)
-				i -= 1
-				if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsWarrior[i]]))
-					RegisterPotion("MyFortifyPotions", FortifyEffectsWarrior[i])
-				endIf
-			endWhile
-			
-			i = FortifyEffectsMage.Length
-			while (i)
-				i -= 1
-				if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsMage[i]]))
-					RegisterPotion("MyFortifyPotions", FortifyEffectsMage[i])
-				endIf
-			endWhile
+		if (!identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
+			CheckFormEffects(FortifyEffectsStats, ThisPotion, "MyFortifyPotions", false)
+			CheckFormEffects(FortifyEffectsWarrior, ThisPotion, "MyFortifyPotions", false)
+			CheckFormEffects(FortifyEffectsMage, ThisPotion, "MyFortifyPotions", false)
 		endIf
 			
-		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
-			i = ResistEffects.Length
-			while (i)
-				i -= 1
-				if (ThisPotion.HasKeyword(EffectKeywords[ResistEffects[i]]))
-					RegisterPotion("MyResistPotions", ResistEffects[i])
-				endIf
-			endWhile
+		if (!identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
+			CheckFormEffects(ResistEffects, ThisPotion, "MyResistPotions", false)
 		endIf
-	elseIf (playerMade)
+	else
 		; OK, let's find these effects
 		MagicEffect[] effects = ThisPotion.GetMagicEffects()
+		int numEffects = effects.Length
 		int getEffect = 0
-		if (effects.Length < 3 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0 \
-			|| effects.Length < 2 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
-			getEffect = effects.Length
+		if (numEffects < 3 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0 \
+			|| numEffects < 2 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
+			getEffect = numEffects
 		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0)
 			getEffect = 3
 		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
@@ -157,8 +128,8 @@ Function IdentifyPotion()
 			getEffect = 1
 		endIf
 		
+		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + numEffects + ")")
 		; adjust for 0-based indexing
-		;Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + effects.Length + ")")
 		getEffect -= 1
 		
 		if (getEffect < 0)
@@ -169,52 +140,39 @@ Function IdentifyPotion()
 		; get relevant effect, and return at first keyword match
 		MagicEffect thisEffect = effects[getEffect]
 		
-		i = RestoreEffects.Length
-		while (i)
-			i -= 1
-			if (thisEffect.HasKeyword(EffectKeywords[RestoreEffects[i]]))
-				RegisterPotion("MyRestorePotions", RestoreEffects[i])
-				return
-			endIf
-		endWhile
-	
-		i = FortifyEffectsStats.Length
-		while (i)
-			i -= 1
-			if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsStats[i]]))
-				RegisterPotion("MyFortifyPotions", FortifyEffectsStats[i])
-				return
-			endIf
-		endWhile
-		
-		i = FortifyEffectsWarrior.Length
-		while (i)
-			i -= 1
-			if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsWarrior[i]]))
-				RegisterPotion("MyFortifyPotions", FortifyEffectsWarrior[i])
-				return
-			endIf
-		endWhile
-		
-		i = FortifyEffectsMage.Length
-		while (i)
-			i -= 1
-			if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsMage[i]]))
-				RegisterPotion("MyFortifyPotions", FortifyEffectsMage[i])
-				return
-			endIf
-		endWhile
-	
-		i = ResistEffects.Length
-		while (i)
-			i -= 1
-			if (ThisPotion.HasKeyword(EffectKeywords[ResistEffects[i]]))
-				RegisterPotion("MyResistPotions", ResistEffects[i])
-				return
-			endIf
-		endWhile
+		if (CheckFormEffects(RestoreEffects, thisEffect, "MyRestorePotions", true))
+			return
+		endIf
+
+		if (CheckFormEffects(FortifyEffectsStats, thisEffect, "MyFortifyPotions", true))
+			return
+		endIf
+		if (CheckFormEffects(FortifyEffectsWarrior, thisEffect, "MyFortifyPotions", true))
+			return
+		endIf
+		if (CheckFormEffects(FortifyEffectsMage, thisEffect, "MyFortifyPotions", true))
+			return
+		endIf
+
+		if (CheckFormEffects(ResistEffects, thisEffect, "MyResistPotions", true))
+			return
+		endIf
 	endIf
 	
+endFunction
+
+bool Function CheckFormEffects(int[] akEffectsArray, Form akFormToCheck, string asListName, bool abReturnOnFirst)
+	int i = akEffectsArray.Length
+	while (i)
+		i -= 1
+		if (akFormToCheck.HasKeyword(EffectKeywords[akEffectsArray[i]]))
+			RegisterPotion(asListName, akEffectsArray[i])
+			if (abReturnOnFirst)
+				return true
+			endIf
+		endIf
+	endWhile
+	return !abReturnOnFirst
 endFunction
 
 Function RegisterPotion(string asListName, int aiEffectType)
