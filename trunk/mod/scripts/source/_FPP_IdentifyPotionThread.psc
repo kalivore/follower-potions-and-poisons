@@ -1,10 +1,10 @@
 Scriptname _FPP_IdentifyPotionThread extends Quest
 
-;Thread variables
+; Thread variables
 bool threadQueued = false
 bool threadBusy = false
  
-;Variables you need to get things done go here 
+; Variables you need to get things done go here 
 string ActorName
 Potion ThisPotion
 Keyword[] EffectKeywords
@@ -13,14 +13,22 @@ int[] FortifyEffectsStats
 int[] FortifyEffectsWarrior
 int[] FortifyEffectsMage
 int[] ResistEffects
+int IdentifyPotionEffects
+int C_IDENTIFY_RESTORE
+int C_IDENTIFY_FORTIFY
+int C_IDENTIFY_RESIST
+int C_IDENTIFY_FIRST
+int C_IDENTIFY_SECOND
+int C_IDENTIFY_THIRD
 
-;Thread queuing and set-up
-function GetAsync(string asActorName, Potion akPotion, Keyword[] akEffectKeywords, int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects)
+; Thread queuing and set-up
+function GetAsync(string asActorName, Potion akPotion, Keyword[] akEffectKeywords, int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects, \
+					int aiIdentifyPotionEffects, int aiC_IDENTIFY_RESTORE, int aiC_IDENTIFY_FORTIFY, int aiC_IDENTIFY_RESIST, int aiC_IDENTIFY_FIRST, int aiC_IDENTIFY_SECOND, int aiC_IDENTIFY_THIRD)
  
-    ;Let the Thread Manager know that this thread is busy
+    ; Let the Thread Manager know that this thread is busy
     threadQueued = true
  
-    ;Store our passed-in parameters to member variables
+    ; Store our passed-in parameters to member variables
 	ActorName = asActorName
 	ThisPotion = akPotion
 	EffectKeywords = akEffectKeywords
@@ -29,15 +37,22 @@ function GetAsync(string asActorName, Potion akPotion, Keyword[] akEffectKeyword
 	FortifyEffectsWarrior = akFortifyEffectsWarrior
 	FortifyEffectsMage = akFortifyEffectsMage
 	ResistEffects = akResistEffects
+	IdentifyPotionEffects = aiIdentifyPotionEffects
+	C_IDENTIFY_RESTORE = aiC_IDENTIFY_RESTORE
+	C_IDENTIFY_FORTIFY = aiC_IDENTIFY_FORTIFY
+	C_IDENTIFY_RESIST = aiC_IDENTIFY_RESIST
+	C_IDENTIFY_FIRST = aiC_IDENTIFY_FIRST
+	C_IDENTIFY_SECOND = aiC_IDENTIFY_SECOND
+	C_IDENTIFY_THIRD = aiC_IDENTIFY_THIRD
 
 endFunction
  
-;Allows the Thread Manager to determine if this thread is available
+; Allows the Thread Manager to determine if this thread is available
 bool function Queued()
 	return threadQueued
 endFunction
  
-;For Thread Manager troubleshooting.
+;F or Thread Manager troubleshooting.
 bool function ForceUnlock()
     ClearThreadVars()
     threadBusy = false
@@ -45,7 +60,7 @@ bool function ForceUnlock()
     return true
 endFunction
  
-;The actual set of code we want to multithread.
+; The actual set of code we want to multithread.
 Event OnIdentifyPotion()
 	;Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotionThread - OnIdentifyPotion: queued: " + threadQueued + ", busy: " + threadBusy)
 	if (!threadQueued)
@@ -57,60 +72,149 @@ Event OnIdentifyPotion()
 	
 	threadBusy = true
 	
-	;OK, let's get some work done!
+	; OK, let's get some work done!
 	IdentifyPotion()
 
-	;OK, we're done - raise event to return results
+	; OK, we're done - raise event to return results
 	RaiseEvent_IdentifyPotionCallback()
 
-	;Set all variables back to default
+	; Set all variables back to default
 	ClearThreadVars()
 
-	;Make the thread available to the Thread Manager again
+	; Make the thread available to the Thread Manager again
 	threadBusy = false
 	threadQueued = false
 endEvent
  
-;Called from Event OnIdentifyPotion
+; Called from Event OnIdentifyPotion
 Function IdentifyPotion()
-	if (ThisPotion == None)
+	if (ThisPotion == None || ThisPotion.IsFood() || ThisPotion.IsHostile())
 		return
 	endIf
-	int i = RestoreEffects.Length
-	while (i)
-		i -= 1
-		if (ThisPotion.HasKeyword(EffectKeywords[RestoreEffects[i]]))
-			RegisterPotion("MyRestorePotions", RestoreEffects[i])
+	
+	bool playerMade = Math.RightShift(ThisPotion.GetFormId(), 24) >= 255
+	int i = 0
+	if (!playerMade || IdentifyPotionEffects < C_IDENTIFY_FIRST)
+	
+		;Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effects (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+		
+		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
+			i = RestoreEffects.Length
+			while (i)
+				i -= 1
+				if (ThisPotion.HasKeyword(EffectKeywords[RestoreEffects[i]]))
+					RegisterPotion("MyRestorePotions", RestoreEffects[i])
+				endIf
+			endWhile
 		endIf
-	endWhile
-	i = FortifyEffectsStats.Length
-	while (i)
-		i -= 1
-		if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsStats[i]]))
-			RegisterPotion("MyFortifyPotions", FortifyEffectsStats[i])
+			
+		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
+			i = FortifyEffectsStats.Length
+			while (i)
+				i -= 1
+				if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsStats[i]]))
+					RegisterPotion("MyFortifyPotions", FortifyEffectsStats[i])
+				endIf
+			endWhile
+			i = FortifyEffectsWarrior.Length
+			while (i)
+				i -= 1
+				if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsWarrior[i]]))
+					RegisterPotion("MyFortifyPotions", FortifyEffectsWarrior[i])
+				endIf
+			endWhile
+			
+			i = FortifyEffectsMage.Length
+			while (i)
+				i -= 1
+				if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsMage[i]]))
+					RegisterPotion("MyFortifyPotions", FortifyEffectsMage[i])
+				endIf
+			endWhile
 		endIf
-	endWhile
-	i = FortifyEffectsWarrior.Length
-	while (i)
-		i -= 1
-		if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsWarrior[i]]))
-			RegisterPotion("MyFortifyPotions", FortifyEffectsWarrior[i])
+			
+		if (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
+			i = ResistEffects.Length
+			while (i)
+				i -= 1
+				if (ThisPotion.HasKeyword(EffectKeywords[ResistEffects[i]]))
+					RegisterPotion("MyResistPotions", ResistEffects[i])
+				endIf
+			endWhile
 		endIf
-	endWhile
-	i = FortifyEffectsMage.Length
-	while (i)
-		i -= 1
-		if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsMage[i]]))
-			RegisterPotion("MyFortifyPotions", FortifyEffectsMage[i])
+	elseIf (playerMade)
+		; OK, let's find these effects
+		MagicEffect[] effects = ThisPotion.GetMagicEffects()
+		int getEffect = 0
+		if (effects.Length < 3 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0 \
+			|| effects.Length < 2 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
+			getEffect = effects.Length
+		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0)
+			getEffect = 3
+		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
+			getEffect = 2
+		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FIRST) != 0)
+			getEffect = 1
 		endIf
-	endWhile
-	i = ResistEffects.Length
-	while (i)
-		i -= 1
-		if (ThisPotion.HasKeyword(EffectKeywords[ResistEffects[i]]))
-			RegisterPotion("MyResistPotions", ResistEffects[i])
+		
+		; adjust for 0-based indexing
+		;Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + effects.Length + ")")
+		getEffect -= 1
+		
+		if (getEffect < 0)
+			; gee, something went wrong there..
+			return
 		endIf
-	endWhile
+		
+		; get relevant effect, and return at first keyword match
+		MagicEffect thisEffect = effects[getEffect]
+		
+		i = RestoreEffects.Length
+		while (i)
+			i -= 1
+			if (thisEffect.HasKeyword(EffectKeywords[RestoreEffects[i]]))
+				RegisterPotion("MyRestorePotions", RestoreEffects[i])
+				return
+			endIf
+		endWhile
+	
+		i = FortifyEffectsStats.Length
+		while (i)
+			i -= 1
+			if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsStats[i]]))
+				RegisterPotion("MyFortifyPotions", FortifyEffectsStats[i])
+				return
+			endIf
+		endWhile
+		
+		i = FortifyEffectsWarrior.Length
+		while (i)
+			i -= 1
+			if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsWarrior[i]]))
+				RegisterPotion("MyFortifyPotions", FortifyEffectsWarrior[i])
+				return
+			endIf
+		endWhile
+		
+		i = FortifyEffectsMage.Length
+		while (i)
+			i -= 1
+			if (ThisPotion.HasKeyword(EffectKeywords[FortifyEffectsMage[i]]))
+				RegisterPotion("MyFortifyPotions", FortifyEffectsMage[i])
+				return
+			endIf
+		endWhile
+	
+		i = ResistEffects.Length
+		while (i)
+			i -= 1
+			if (ThisPotion.HasKeyword(EffectKeywords[ResistEffects[i]]))
+				RegisterPotion("MyResistPotions", ResistEffects[i])
+				return
+			endIf
+		endWhile
+	endIf
+	
 endFunction
 
 Function RegisterPotion(string asListName, int aiEffectType)

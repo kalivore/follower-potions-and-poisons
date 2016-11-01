@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 0.0201 AutoReadonly
+float Property CurrentVersion = 0.0300 AutoReadonly
 float previousVersion
 
 
@@ -15,6 +15,13 @@ string Property C_SCHOOL_CONJURATION = "Conjuration" Autoreadonly
 string Property C_SCHOOL_DESTRUCTION = "Destruction" Autoreadonly
 string Property C_SCHOOL_ILLUSION = "Illusion" Autoreadonly
 string Property C_SCHOOL_RESTORATION = "Restoration" Autoreadonly
+
+int Property C_IDENTIFY_RESTORE = 1 Autoreadonly
+int Property C_IDENTIFY_FORTIFY = 2 Autoreadonly
+int Property C_IDENTIFY_RESIST = 4 Autoreadonly
+int Property C_IDENTIFY_FIRST = 8 Autoreadonly
+int Property C_IDENTIFY_SECOND = 16 Autoreadonly
+int Property C_IDENTIFY_THIRD = 32 Autoreadonly
 
 int Property C_ITEM_HAND = 0 Autoreadonly
 int Property C_ITEM_1H_SWORD = 1 Autoreadonly
@@ -85,6 +92,14 @@ int Property EFFECT_BENEFICIAL = 41 Autoreadonly
 int Property EFFECT_DURATIONBASED = 42 Autoreadonly
 int Property EFFECT_HARMFUL = 43 Autoreadonly
 
+int Property XFL_PLUGIN_EVENT_CLEAR_ALL = -1 Autoreadonly
+int Property XFL_PLUGIN_EVENT_WAIT = 0x04 Autoreadonly
+int Property XFL_PLUGIN_EVENT_SANDBOX = 0x05 Autoreadonly
+int Property XFL_PLUGIN_EVENT_FOLLOW = 0x03 Autoreadonly
+int Property XFL_PLUGIN_EVENT_ADD_FOLLOWER = 0x00 Autoreadonly
+int Property XFL_PLUGIN_EVENT_REMOVE_FOLLOWER = 0x01 Autoreadonly
+int Property XFL_PLUGIN_EVENT_REMOVE_DEAD_FOLLOWER = 0x02 Autoreadonly
+
 
 Keyword[] Property EffectKeywords Auto
 Keyword Property MagicAlchBeneficial Auto
@@ -152,14 +167,6 @@ int[] Property FortifyEffectsWarrior Auto
 int[] Property FortifyEffectsMage Auto
 int[] Property ResistEffects Auto
 
-int Property XFL_PLUGIN_EVENT_CLEAR_ALL = -1 Autoreadonly
-int Property XFL_PLUGIN_EVENT_WAIT = 0x04 Autoreadonly
-int Property XFL_PLUGIN_EVENT_SANDBOX = 0x05 Autoreadonly
-int Property XFL_PLUGIN_EVENT_FOLLOW = 0x03 Autoreadonly
-int Property XFL_PLUGIN_EVENT_ADD_FOLLOWER = 0x00 Autoreadonly
-int Property XFL_PLUGIN_EVENT_REMOVE_FOLLOWER = 0x01 Autoreadonly
-int Property XFL_PLUGIN_EVENT_REMOVE_DEAD_FOLLOWER = 0x02 Autoreadonly
-
 float Property DefaultUpdateIntervalInCombat Auto
 float Property DefaultUpdateIntervalNonCombat Auto
 float Property DefaultUpdateIntervalNoPotions Auto
@@ -172,6 +179,8 @@ float[] Property DefaultStatLimitsNonCombat Auto
 float Property DefaultLvlDiffTrigger Auto
 
 bool[] Property DefaultUsePotionOfType Auto
+
+int Property DefaultIdentifyPotionEffects Auto
 
 Message Property _FPP_InfoMessage Auto
 
@@ -220,12 +229,17 @@ endEvent
 
 function Update()
 
+	; floating-point math is hard..  let's go shopping!
 	int iPreviousVersion = (PreviousVersion * 10000) as int
 	int iCurrentVersion = (CurrentVersion * 10000) as int
+	
 	if (iCurrentVersion != iPreviousVersion)
 
+		;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; version-specific updates
+		;;;;;;;;;;;;;;;;;;;;;;;;;;
 		if (iPreviousVersion < 00201)
+		
 			; set DefaultWarningIntervals
 			SetDefaultWarningIntervals()
 			
@@ -241,7 +255,30 @@ function Update()
 				endIf
 				i += 1
 			endWhile
+			
 		endIf
+		
+		if (iPreviousVersion < 00300)
+		
+			; set DefaultIdentifyPotionEffects (to identify everything, which is previous standard behaviour)
+			DefaultIdentifyPotionEffects = C_IDENTIFY_RESTORE + C_IDENTIFY_FORTIFY + C_IDENTIFY_RESIST
+			
+			; set UsePotionOfType for all current followers
+			int i = 0
+			int iMax = AllFollowers.Length
+			ReferenceAlias thisFollowerRef
+			while (i < iMax)
+				thisFollowerRef = AllFollowers[i]
+				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
+					(thisFollowerRef as _FPP_FollowerScript).IdentifyPotionEffects = DefaultIdentifyPotionEffects
+				endIf
+				i += 1
+			endWhile
+		
+		endIf
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; end version-specific updates
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 		; notify current version
 		string msg = "Follower Potions"
