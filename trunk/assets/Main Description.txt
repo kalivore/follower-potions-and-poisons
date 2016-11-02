@@ -6,11 +6,13 @@ This mod aims to change all that, allowing followers to use their potions intell
 
 
 [line]
-[center][font=Courier New][color=#ff0000][size=5][b]- [ CURRENTLY IN BETA ] -[/b][/size][/color]
+[center][font=Courier New][color=#ff0000][size=5][b]- [ NEARLY OUT OF BETA! ] -[/b][/size][/color]
 
-[color=#dd0000]Please note, this is the first release of my first mod, and as such I'm considering it still in beta stage.  It is feature-complete (though there is still more I would like to do), and I consider it usable [i]enough[/i] to see how it performs on other people's systems.  That said, it is still untested on anything other than my machine.
+[color=#dd0000]This is my first mod, but feedback so far on it has been positive, and I'm feeling pretty comfortable about releasing a proper v1 in the (reasonably!) near future.
 
-This mod may change significantly before a final release - as such, please [b]ONLY[/b] install it on a savegame you are happy to revert if necessary.
+I'd like to express my huge thanks for all the messages and feedback I've got on this. I was very nervous taking my first steps into the modding world, but the welcome and the well-wishing has been wonderful.  Thank you all, enormously :D
+
+Having said all that, it may still change significantly before a final release though!  As such, please [b]ONLY[/b] install it on a savegame you are happy to revert if necessary.
 
 And for the love of Talos, make (and keep!) a backup of your save before installing this.[/color][/font][/center]
 [line]
@@ -176,9 +178,13 @@ As I might have mentioned(!), this is a beta.  There are a few things I'm aware 
 
 [font=Georgia][color=#8e7cc3][size=3][b]Potions with Condition-triggered Magic Effects[/b][/size][/color][/font]
 
-I have recently found that there is a weakness in the way potion effects are treated.  If a potion has multiple Magic Effects attached, but the effects have Conditions attached, [b]the mod will still recognise these effects[/b].  This potentially means that a follower might use a potion, only to find it has no result, as the effect they were expecting is blocked by its condition.
+I have recently found that there is a weakness in the way potion effects are treated.  If a potion has multiple Magic Effects attached, but the effects have Conditions attached, [b]the mod will still recognise all these effects[/b].  This potentially means that a follower might use a potion, only to find the effect they were expecting is blocked by its condition, and so has no result.
 
-In fairness, I have not seen any examples of this so far in any mod I'm using, so it's only a theoretical situation at present.  I just wanted to be up-front and honest about the possibility.
+In fairness, this would only be an issue if there were a separate effect which [i]only[/i] existed behind a condition.  For example, a potion which restores Health - but [b]also[/b] has a fortify Stamina Regeneration effect, with a condition check that the day is Fredas (because hey, TTIF, right?).  The mod cannot detect and evaluate this condition, so the potion will be treated as though it had the normal Restore Health [i]and[/i] Fortify Stamina Regeneration effects, whatever day it is.
+
+I don't think there's anything I can do about this, I'm afraid :(  The finding-a-potion-to-use code is probably [b]the[/b] most time- and performance-critical part of the whole mod, and extra code to look up and check effect conditions (of which there could be many) would be too much to do..
+
+I should say that I have not seen any examples of a just-conditional effect in any mod I'm using (so far!), so it's only a theoretical situation at present.  However, I wanted to be up-front about the possibility.
 
 
 [font=Georgia][size=5][b][center][color=#8e7cc3]Credits and Thanks[/color][/center][/b][/size][/font]

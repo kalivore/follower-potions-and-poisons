@@ -4,7 +4,8 @@ Scriptname _FPP_IdentifyPotionThread extends Quest
 bool threadQueued = false
 bool threadBusy = false
  
-; Variables you need to get things done go here 
+; Variables you need to get things done go here
+bool WriteDebug
 string ActorName
 Potion ThisPotion
 Keyword[] EffectKeywords
@@ -22,13 +23,14 @@ int C_IDENTIFY_SECOND
 int C_IDENTIFY_THIRD
 
 ; Thread queuing and set-up
-function GetAsync(string asActorName, Potion akPotion, Keyword[] akEffectKeywords, int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects, \
+function GetAsync(bool abDebug, string asActorName, Potion akPotion, Keyword[] akEffectKeywords, int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects, \
 					int aiIdentifyPotionEffects, int aiC_IDENTIFY_RESTORE, int aiC_IDENTIFY_FORTIFY, int aiC_IDENTIFY_RESIST, int aiC_IDENTIFY_FIRST, int aiC_IDENTIFY_SECOND, int aiC_IDENTIFY_THIRD)
  
     ; Let the Thread Manager know that this thread is busy
     threadQueued = true
  
     ; Store our passed-in parameters to member variables
+	WriteDebug = abDebug
 	ActorName = asActorName
 	ThisPotion = akPotion
 	EffectKeywords = akEffectKeywords
@@ -52,7 +54,7 @@ bool function Queued()
 	return threadQueued
 endFunction
  
-;F or Thread Manager troubleshooting.
+; For Thread Manager troubleshooting.  I should probably use this somewhere..
 bool function ForceUnlock()
     ClearThreadVars()
     threadBusy = false
@@ -97,7 +99,9 @@ Function IdentifyPotion()
 	int i = 0
 	if (!playerMade || identByEffectType)
 	
-		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+		if (WriteDebug)
+			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+		endIf
 		
 		if (!identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
 			CheckFormEffects(RestoreEffects, ThisPotion, "MyRestorePotions", false)
@@ -128,7 +132,10 @@ Function IdentifyPotion()
 			getEffect = 1
 		endIf
 		
-		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + numEffects + ")")
+		if (WriteDebug)
+			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + numEffects + ")")
+		endIf
+		
 		; adjust for 0-based indexing
 		getEffect -= 1
 		
@@ -193,6 +200,7 @@ endFunction
 
 function ClearThreadVars()
 	;Reset all thread variables to default state
+	WriteDebug = false
 	ActorName = None
 	ThisPotion = None
 	EffectKeywords = new Keyword[1]
