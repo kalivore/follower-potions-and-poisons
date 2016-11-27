@@ -821,7 +821,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYALTERATION] \
-		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_ALTERATION, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_ALTERATION, -1, -1, true) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYALTERATION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -831,7 +831,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYCONJURATION] \
-		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_CONJURATION, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_CONJURATION, -1, -1, true) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYCONJURATION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -841,7 +841,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYDESTRUCTION] \
-		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_DESTRUCTION, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_DESTRUCTION, -1, -1, true) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYDESTRUCTION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -851,7 +851,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYILLUSION] \
-		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_ILLUSION, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_ILLUSION, -1, -1, true) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYILLUSION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -861,7 +861,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYRESTORATION] \
-		&& _Q2C_Functions.ActorHasSpellSchool(MyActor, C_SCHOOL_RESTORATION, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_RESTORATION, -1, -1, true) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYRESTORATION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -881,7 +881,9 @@ bool function UseCombatPotionsResist(string asState, Actor akTarget)
 		return false
 	endIf
 	
-	bool hasFire = _Q2C_Functions.ActorHasSpellKeyword(akTarget, MagicDamageFire, true)
+	ActorBase akTargetBase = aktarget.GetLeveledActorBase()
+	
+	bool hasFire = _Q2C_Functions.ActorHasSpell(akTarget, MagicDamageFire) || _Q2C_Functions.ActorBaseHasShout(akTargetBase, MagicDamageFire)
 	if (UsePotionOfType[EFFECT_RESISTFIRE] \
 		&& (hasFire) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTFIRE, MyResistPotions, "MyResistPotions"))
@@ -892,7 +894,7 @@ bool function UseCombatPotionsResist(string asState, Actor akTarget)
 		endIf
 	endIf
 	
-	bool hasFrost = _Q2C_Functions.ActorHasSpellKeyword(akTarget, MagicDamageFrost, true)
+	bool hasFrost = _Q2C_Functions.ActorHasSpell(akTarget, MagicDamageFrost) || _Q2C_Functions.ActorBaseHasShout(akTargetBase, MagicDamageFrost)
 	if (UsePotionOfType[EFFECT_RESISTFROST] \
 		&& (hasFrost) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTFROST, MyResistPotions, "MyResistPotions"))
@@ -903,7 +905,7 @@ bool function UseCombatPotionsResist(string asState, Actor akTarget)
 		endIf
 	endIf
 	
-	bool hasShock = _Q2C_Functions.ActorHasSpellKeyword(akTarget, MagicDamageShock, true)
+	bool hasShock = _Q2C_Functions.ActorHasSpell(akTarget, MagicDamageShock) || _Q2C_Functions.ActorBaseHasShout(akTargetBase, MagicDamageShock)
 	if (UsePotionOfType[EFFECT_RESISTSHOCK] \
 		&& (hasShock) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsResist", EFFECT_RESISTSHOCK, MyResistPotions, "MyResistPotions"))
