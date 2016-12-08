@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 0.0300 AutoReadonly
+float Property CurrentVersion = 1.0000 AutoReadonly
 float previousVersion
 
 
@@ -338,7 +338,7 @@ function Maintenance()
 
 	UpdateNoMoreRoom()
 
-	DebugStuff("Maintenance complete", "maintenance complete", true)
+	DebugStuff("Maintenance complete")
 
 endFunction
 
