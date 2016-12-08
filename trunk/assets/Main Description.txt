@@ -6,15 +6,13 @@ This mod aims to change all that, allowing followers to use their potions intell
 
 
 [line]
-[center][font=Courier New][color=#ff0000][size=5][b]- [ NEARLY OUT OF BETA! ] -[/b][/size][/color]
+[center][font=Courier New][color=#ff0000][size=5][b]- [ (: !!OUT OF BETA!! :) ] -[/b][/size][/color]
 
-[color=#dd0000]This is my first mod, but feedback so far on it has been positive, and I'm feeling pretty comfortable about releasing a proper v1 in the (reasonably!) near future.
+[color=#dd0000]This is my first mod, and I'd like to express my huge thanks for all the messages and feedback I've got on this. I was very nervous taking my first steps into the modding world, but the welcome and the well-wishing has been wonderful.  Thank you all, enormously :D
 
-I'd like to express my huge thanks for all the messages and feedback I've got on this. I was very nervous taking my first steps into the modding world, but the welcome and the well-wishing has been wonderful.  Thank you all, enormously :D
+Having been in Beta for a couple of months now, and having had positive feedback from people using it in the real world, I reckon I'm happy to say this is ready for a proper release.  Woo!
 
-Having said all that, it may still change significantly before a final release though!  As such, please [b]ONLY[/b] install it on a savegame you are happy to revert if necessary.
-
-And for the love of Talos, make (and keep!) a backup of your save before installing this.[/color][/font][/center]
+Of course, as with any mod, for the love of Talos, make (and keep!) a backup of your save before installing this.[/color][/font][/center]
 [line]
 
 
@@ -165,12 +163,12 @@ For avoidance of doubt: this [i]is[/i], out-and-out, a scripted mod.  I tried to
 
 In my testing, performance has generally been good, even on quite a script-heavy game.  For info, my test method was to recruit a dozen followers, give them all a couple of dozen potions, manually spawn twenty or so bandits at Fort Greymoor, toggle God Mode on (important, that bit!), and then Leeroy-Jenkins the hell outta it.  Oh, and I chucked a couple of dragons in the mix for good measure.  We still won.
 
-Of course, everyone's mileage [i]will[/i] vary, which is another reason for this being a beta - please feed back to me your experiences with this.
+Of course, everyone's mileage [i]will[/i] vary - please feed back to me your experiences with this.
 
 
 
 [font=Georgia][size=5][b][center][color=#8e7cc3]Known Issues and Future Plans[/color][/center][/b][/size][/font]
-As I might have mentioned(!), this is a beta.  There are a few things I'm aware of and intend to change in future versions, including (but not limited to):
+There are still a few things I'm aware of and intend to change in future versions, including (but not limited to):
 
 [list]
 [*][size=2]The annoying 'gloop' noise whenever a follower drinks a potion.  I hope there's a way to suppress that, cos it kinda bugs me.[/size]
