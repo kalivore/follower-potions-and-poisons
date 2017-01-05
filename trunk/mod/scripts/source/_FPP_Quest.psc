@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 1.0000 AutoReadonly
+float Property CurrentVersion = 1.0100 AutoReadonly
 float previousVersion
 
 
@@ -158,6 +158,8 @@ Keyword Property MagicDamageShock Auto
 
 LocationRefType Property LocRefTypeBoss Auto
 
+Race[] Property AvailableTriggerRaces Auto
+
 
 string[] Property EffectNames Auto
 
@@ -177,6 +179,7 @@ float[] Property DefaultStatLimitsInCombat Auto
 float[] Property DefaultStatLimitsNonCombat Auto
 
 float Property DefaultLvlDiffTrigger Auto
+bool[] Property DefaultTriggerRaces Auto
 
 bool[] Property DefaultUsePotionOfType Auto
 
@@ -271,6 +274,25 @@ function Update()
 				thisFollowerRef = AllFollowers[i]
 				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
 					(thisFollowerRef as _FPP_FollowerScript).IdentifyPotionEffects = DefaultIdentifyPotionEffects
+				endIf
+				i += 1
+			endWhile
+		
+		endIf
+		
+		if (iPreviousVersion < 10100)
+		
+			; set DefaultTriggerRaces
+			SetDefaultTriggerRaces()
+			
+			; set TriggerRaces for all current followers
+			int i = 0
+			int iMax = AllFollowers.Length
+			ReferenceAlias thisFollowerRef
+			while (i < iMax)
+				thisFollowerRef = AllFollowers[i]
+				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
+					(thisFollowerRef as _FPP_FollowerScript).TriggerRaces = GetDefaultTriggerRaces()
 				endIf
 				i += 1
 			endWhile
@@ -440,6 +462,7 @@ function ResetFollower(Actor akFollower)
 			thisFollower.StatLimitsNonCombat[1] = DefaultStatLimitsNonCombat[1]
 			thisFollower.StatLimitsNonCombat[2] = DefaultStatLimitsNonCombat[2]
 			thisFollower.LvlDiffTrigger = DefaultLvlDiffTrigger as int
+			thisFollower.TriggerRaces = GetDefaultTriggerRaces()
 			
 			int p = RestoreEffects.Length
 			while (p)
@@ -760,6 +783,7 @@ Function SetDefaults()
 	DefaultStatLimitsNonCombat[EFFECT_RESTOREMAGICKA] = 0.3
 
 	DefaultLvlDiffTrigger = 5.0
+	SetDefaultTriggerRaces()
 
 	DefaultUsePotionOfType = CreateBoolArray(EffectKeywords.Length, false)
 	DefaultUsePotionOfType[EFFECT_RESTOREHEALTH] = true
@@ -806,11 +830,26 @@ float[] function GetDefaultWarningIntervals()
 	return array
 endFunction
 
-float[] function SetDefaultWarningIntervals()
+function SetDefaultWarningIntervals()
 	DefaultWarningIntervals = new float[5]
 	DefaultWarningIntervals[EFFECT_RESTOREHEALTH] = 30.0
 	DefaultWarningIntervals[EFFECT_RESTORESTAMINA] = 30.0
 	DefaultWarningIntervals[EFFECT_RESTOREMAGICKA] = 30.0
 	DefaultWarningIntervals[3] = 180.0
 	DefaultWarningIntervals[4] = 180.0
+endFunction
+
+; as per above, need to copy & return this
+bool[] function GetDefaultTriggerRaces()
+	bool[] array = CreateBoolArray(DefaultTriggerRaces.Length, true)
+	int i = array.Length
+	while(i)
+		i -= 1
+		array[i] = DefaultTriggerRaces[i]
+	endWhile
+	return array
+endFunction
+
+function SetDefaultTriggerRaces()
+	DefaultTriggerRaces = CreateBoolArray(AvailableTriggerRaces.Length, true)
 endFunction

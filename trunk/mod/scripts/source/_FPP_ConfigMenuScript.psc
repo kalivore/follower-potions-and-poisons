@@ -7,9 +7,10 @@ ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase
 ; 1 - Initial version
 ; 2 - Added Warning Intervals for when No Potion
 ; 3 - Added options for how to identify potions
+; 4 - Added Trigger Races for when to use potions
 
 int function GetVersion()
-	return 3
+	return 4
 endFunction
 
 
@@ -71,6 +72,12 @@ string C_OPTION_LABEL_MAGICKA_IN_COMBAT = "$FPPOptionLabelMagickaInCombat"
 string C_OPTION_LABEL_MAGICKA_NON_COMBAT = "$FPPOptionLabelMagickaNonCombat"
 string C_OPTION_LABEL_ENEMY_OVER = "$FPPOptionLabelEnemyOver"
 string C_OPTION_LABEL_POTION_IDENT = "$FPPOptionLabelPotionIdent"
+string C_OPTION_LABEL_TRIGGER_RACE_DRAGON = "$FPPOptionLabelTriggerRaceDragon"
+string C_OPTION_LABEL_TRIGGER_RACE_DRAGON_ALDUIN = "$FPPOptionLabelTriggerRaceDragonAlduin"
+string C_OPTION_LABEL_TRIGGER_RACE_DRAGON_UNDEAD = "$FPPOptionLabelTriggerRaceDragonUndead"
+string C_OPTION_LABEL_TRIGGER_RACE_DRAGON_PRIEST = "$FPPOptionLabelTriggerRaceDragonPriest"
+string C_OPTION_LABEL_TRIGGER_RACE_GIANT = "$FPPOptionLabelTriggerRaceGiant"
+string C_OPTION_LABEL_TRIGGER_RACE_MAMMOTH = "$FPPOptionLabelTriggerRaceMammoth"
 string C_OPTION_VALUE_SELECT_ACTION = "$FPPOptionValueSelectAction"
 string C_INFO_TEXT_DEBUG = "$FPPInfoTextDebug"
 string C_INFO_TEXT_ADD_ON_FOLLOW = "$FPPInfoTextAddOnFollow"
@@ -155,6 +162,12 @@ int			_staminaLimitNonCombatOID_S
 int			_magickaLimitInCombatOID_S
 int			_magickaLimitNonCombatOID_S
 int			_lvlDiffTriggerOID_S
+int			_triggerRaceDragonOID_B
+int			_triggerRaceDragonAlduinOID_B
+int			_triggerRaceDragonUndeadOID_B
+int			_triggerRaceDragonPriestOID_B
+int			_triggerRaceGiantOID_B
+int			_triggerRaceMammothOID_B
 int			_potionIdentOID_M
 
 
@@ -177,12 +190,13 @@ float _defaultStaminaLimitNonCombat = 0.3
 float _defaultMagickaLimitInCombat = 0.6
 float _defaultMagickaLimitNonCombat = 0.3
 float _defaultLvlDiffTrigger = 5.0
-int _defaultPotionIdent = 0
+int   _defaultPotionIdent = 0
 
 _FPP_Quest Property FPPQuest Auto
 
 float[] sliderVals
 bool[] boolVals
+bool[] triggerRaceVals
 int potionIdentIndex
 
 string[] actionOptions
@@ -208,6 +222,8 @@ event OnConfigInit()
 
 	_followerOID_M = new int[15]
 	
+	triggerRaceVals = new bool[6]
+
 	RedrawFollowerPages()
 endEvent
 
@@ -304,7 +320,7 @@ event OnPageReset(string a_page)
 	
 		follower = None
 		SetOptions(FPPQuest.DefaultUpdateIntervalInCombat, FPPQuest.DefaultUpdateIntervalNonCombat, FPPQuest.DefaultUpdateIntervalNoPotions, \
-					FPPQuest.DefaultWarningIntervals, FPPQuest.DefaultStatLimitsInCombat, FPPQuest.DefaultStatLimitsNonCombat, FPPQuest.DefaultLvlDiffTrigger, \
+					FPPQuest.DefaultWarningIntervals, FPPQuest.DefaultStatLimitsInCombat, FPPQuest.DefaultStatLimitsNonCombat, FPPQuest.DefaultLvlDiffTrigger, FPPQuest.DefaultTriggerRaces, \
 					FPPQuest.DefaultUsePotionOfType, false)
 		
 	elseIf (a_page != C_PAGE_NOT_SET)
@@ -318,7 +334,7 @@ event OnPageReset(string a_page)
 		
 		follower = FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript
 		SetOptions(follower.UpdateIntervalInCombat, follower.UpdateIntervalNonCombat, follower.UpdateIntervalNoPotions, \
-					follower.WarningIntervals, follower.StatLimitsInCombat, follower.StatLimitsNonCombat, follower.LvlDiffTrigger, \
+					follower.WarningIntervals, follower.StatLimitsInCombat, follower.StatLimitsNonCombat, follower.LvlDiffTrigger, follower.TriggerRaces, \
 					follower.UsePotionOfType, true)
 		
 	else
@@ -385,6 +401,13 @@ event OnPageReset(string a_page)
 	AddHeaderOption(C_HEADER_LABEL_FORTIFY_RESIST_POTIONS)
 	
 	_lvlDiffTriggerOID_S = AddSliderOption(C_OPTION_LABEL_ENEMY_OVER, sliderVals[9], C_FORMAT_PLACEHOLDER_LEVELS)
+	
+	_triggerRaceDragonOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON, triggerRaceVals[0])
+	_triggerRaceDragonAlduinOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON_ALDUIN, triggerRaceVals[1])
+	_triggerRaceDragonUndeadOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON_UNDEAD, triggerRaceVals[2])
+	_triggerRaceDragonPriestOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON_PRIEST, triggerRaceVals[3])
+	_triggerRaceGiantOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_GIANT, triggerRaceVals[4])
+	_triggerRaceMammothOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_MAMMOTH, triggerRaceVals[5])
 	
 	AddEmptyOption()
 
@@ -799,6 +822,60 @@ event OnOptionSelect(int a_option)
 			follower.UsePotionOfType[24] = boolVals[24]
 		else
 			FPPQuest.DefaultUsePotionOfType[24] = boolVals[24]
+		endIf
+
+	elseIf (a_option == _triggerRaceDragonOID_B)
+		triggerRaceVals[0] = !triggerRaceVals[0]
+		SetToggleOptionValue(a_option, triggerRaceVals[0])
+		if (follower)
+			follower.TriggerRaces[0] = triggerRaceVals[0]
+		else
+			FPPQuest.DefaultTriggerRaces[0] = triggerRaceVals[0]
+		endIf
+
+	elseIf (a_option == _triggerRaceDragonAlduinOID_B)
+		triggerRaceVals[1] = !triggerRaceVals[1]
+		SetToggleOptionValue(a_option, triggerRaceVals[1])
+		if (follower)
+			follower.TriggerRaces[1] = triggerRaceVals[1]
+		else
+			FPPQuest.DefaultTriggerRaces[1] = triggerRaceVals[1]
+		endIf
+
+	elseIf (a_option == _triggerRaceDragonUndeadOID_B)
+		triggerRaceVals[2] = !triggerRaceVals[2]
+		SetToggleOptionValue(a_option, triggerRaceVals[2])
+		if (follower)
+			follower.TriggerRaces[2] = triggerRaceVals[2]
+		else
+			FPPQuest.DefaultTriggerRaces[2] = triggerRaceVals[2]
+		endIf
+
+	elseIf (a_option == _triggerRaceDragonPriestOID_B)
+		triggerRaceVals[3] = !triggerRaceVals[3]
+		SetToggleOptionValue(a_option, triggerRaceVals[3])
+		if (follower)
+			follower.TriggerRaces[3] = triggerRaceVals[3]
+		else
+			FPPQuest.DefaultTriggerRaces[3] = triggerRaceVals[3]
+		endIf
+
+	elseIf (a_option == _triggerRaceGiantOID_B)
+		triggerRaceVals[4] = !triggerRaceVals[4]
+		SetToggleOptionValue(a_option, triggerRaceVals[4])
+		if (follower)
+			follower.TriggerRaces[4] = triggerRaceVals[4]
+		else
+			FPPQuest.DefaultTriggerRaces[4] = triggerRaceVals[4]
+		endIf
+
+	elseIf (a_option == _triggerRaceMammothOID_B)
+		triggerRaceVals[5] = !triggerRaceVals[5]
+		SetToggleOptionValue(a_option, triggerRaceVals[5])
+		if (follower)
+			follower.TriggerRaces[5] = triggerRaceVals[5]
+		else
+			FPPQuest.DefaultTriggerRaces[5] = triggerRaceVals[5]
 		endIf
 	endIf
 endEvent
@@ -1216,7 +1293,7 @@ string Function FormatString(string asTemplate, string asEffectName)
 endFunction
 
 Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat, float UpdateIntervalNoPotions, \
-					float[] WarningIntervals, float[] StatLimitsInCombat, float[] StatLimitsNonCombat, float LvlDiffTrigger, \
+					float[] WarningIntervals, float[] StatLimitsInCombat, float[] StatLimitsNonCombat, float LvlDiffTrigger, bool[] TriggerRaces, \
 					bool[] UsePotionOfType, bool isFollower)
 
 	sliderVals[0] = UpdateIntervalInCombat
@@ -1231,6 +1308,13 @@ Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat,
 	sliderVals[9] = LvlDiffTrigger
 	sliderVals[10] = WarningIntervals[0]
 	sliderVals[11] = WarningIntervals[3]
+	
+	triggerRaceVals[0] = TriggerRaces[0]
+	triggerRaceVals[1] = TriggerRaces[1]
+	triggerRaceVals[2] = TriggerRaces[2]
+	triggerRaceVals[3] = TriggerRaces[3]
+	triggerRaceVals[4] = TriggerRaces[4]
+	triggerRaceVals[5] = TriggerRaces[5]
 	
 	int p = FPPQuest.RestoreEffects.Length
 	while (p)

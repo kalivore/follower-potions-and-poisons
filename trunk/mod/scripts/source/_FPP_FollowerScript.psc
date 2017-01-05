@@ -27,6 +27,7 @@ float[] Property StatLimitsInCombat Auto
 float[] Property StatLimitsNonCombat Auto
 
 int Property LvlDiffTrigger Auto
+bool[] Property TriggerRaces Auto
 
 bool[] Property UsePotionOfType Auto
 
@@ -141,6 +142,7 @@ Keyword MagicDamageShock
 
 LocationRefType LocRefTypeBoss
 
+Race[] AvailableTriggerRaces
 
 ; other private vars for state
 Potion[] MyRestorePotions
@@ -301,7 +303,7 @@ Event OnPotionIdentified(Form akSender, string asActorName)
 endEvent
 
 Event OnDying(Actor akKiller)
-	FppQuest.RemoveFollower(MyActor)
+	FPPQuest.RemoveFollower(MyActor)
 endEvent
 
 ; generic safety 'resume normal-ish operations' 
@@ -688,18 +690,19 @@ function UseCombatPotions(string asState, Actor akTarget)
 	endIf
 	
 	int enemyLevel = akTarget.GetLevel()
+	Race enemyRace = akTarget.GetRace()
 	bool isBoss = akTarget.HasRefType(LocRefTypeBoss)
 	int lvlDiff = enemyLevel - MyActor.GetLevel()
 	int lhItem = MyActor.GetEquippedItemType(0)
 	int rhItem = MyActor.GetEquippedItemType(1)
 	
-	msg += "combat with level " + enemyLevel
+	msg += "combat with level " + enemyLevel + " " + enemyRace.GetName()
 	if (isBoss)
 		msg += " boss"
 	endIf
 	msg += " " + akTarget.GetLeveledActorBase().GetName() + " (diff " + lvlDiff + ", trigger " + LvlDiffTrigger + "); LH: " + lhItem + ", RH: " + rhItem + " - "
 	
-	if (ShouldUseCombatPotions(lvlDiff, isBoss))
+	if (ShouldUseCombatPotions(lvlDiff, enemyRace, isBoss))
 		AliasDebug(msg + "use potions")
 		; by chaining these as an inline, it avoids needless calls to subsequent functions 
 		; if any one returns false (ie because you're not in combat any more)
@@ -713,8 +716,20 @@ function UseCombatPotions(string asState, Actor akTarget)
 	IgnoreCombatStateEvents = false
 endFunction
 
-bool function ShouldUseCombatPotions(int aiLvlDiff, bool abIsBoss)
-	return aiLvlDiff > LvlDiffTrigger
+bool function ShouldUseCombatPotions(int aiLvlDiff, Race akEnemyRace, bool abIsBoss)
+	
+	; simplest check first
+	if (aiLvlDiff > LvlDiffTrigger)
+		return true
+	endIf
+	
+	int i = AvailableTriggerRaces.Find(akEnemyRace)
+	if (i < 0)
+		return false
+	endIf
+	
+	return TriggerRaces[i]
+
 endFunction
 
 bool function UseCombatPotionsFortifyStats(string asState)
@@ -1208,6 +1223,8 @@ Function SetProperties()
 
 	LocRefTypeBoss = FPPQuest.LocRefTypeBoss
 
+	AvailableTriggerRaces = FPPQuest.AvailableTriggerRaces
+
 	DebugToFile = FPPQuest.DebugToFile
 endFunction
 
@@ -1222,6 +1239,7 @@ Function SetDefaults()
 	StatLimitsNonCombat = FPPQuest.GetDefaultStatLimits(false)
 
 	LvlDiffTrigger = FPPQuest.DefaultLvlDiffTrigger as int
+	TriggerRaces = FPPQuest.GetDefaultTriggerRaces()
 
 	UsePotionOfType = FPPQuest.GetDefaultUsePotionsOfTypes()
 	
