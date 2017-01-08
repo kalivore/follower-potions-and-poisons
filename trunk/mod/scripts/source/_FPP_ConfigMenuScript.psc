@@ -72,12 +72,11 @@ string C_OPTION_LABEL_MAGICKA_IN_COMBAT = "$FPPOptionLabelMagickaInCombat"
 string C_OPTION_LABEL_MAGICKA_NON_COMBAT = "$FPPOptionLabelMagickaNonCombat"
 string C_OPTION_LABEL_ENEMY_OVER = "$FPPOptionLabelEnemyOver"
 string C_OPTION_LABEL_POTION_IDENT = "$FPPOptionLabelPotionIdent"
+string C_OPTION_LABEL_DUMMY_TRIGGER_RACES = "$FPPOptionLabelDummyTriggerRaces"
 string C_OPTION_LABEL_TRIGGER_RACE_DRAGON = "$FPPOptionLabelTriggerRaceDragon"
-string C_OPTION_LABEL_TRIGGER_RACE_DRAGON_ALDUIN = "$FPPOptionLabelTriggerRaceDragonAlduin"
-string C_OPTION_LABEL_TRIGGER_RACE_DRAGON_UNDEAD = "$FPPOptionLabelTriggerRaceDragonUndead"
 string C_OPTION_LABEL_TRIGGER_RACE_DRAGON_PRIEST = "$FPPOptionLabelTriggerRaceDragonPriest"
 string C_OPTION_LABEL_TRIGGER_RACE_GIANT = "$FPPOptionLabelTriggerRaceGiant"
-string C_OPTION_LABEL_TRIGGER_RACE_MAMMOTH = "$FPPOptionLabelTriggerRaceMammoth"
+string C_OPTION_LABEL_TRIGGER_RACE_VAMPIRE_LORD = "$FPPOptionLabelTriggerRaceVampireLord"
 string C_OPTION_VALUE_SELECT_ACTION = "$FPPOptionValueSelectAction"
 string C_INFO_TEXT_DEBUG = "$FPPInfoTextDebug"
 string C_INFO_TEXT_ADD_ON_FOLLOW = "$FPPInfoTextAddOnFollow"
@@ -163,11 +162,9 @@ int			_magickaLimitInCombatOID_S
 int			_magickaLimitNonCombatOID_S
 int			_lvlDiffTriggerOID_S
 int			_triggerRaceDragonOID_B
-int			_triggerRaceDragonAlduinOID_B
-int			_triggerRaceDragonUndeadOID_B
 int			_triggerRaceDragonPriestOID_B
 int			_triggerRaceGiantOID_B
-int			_triggerRaceMammothOID_B
+int			_triggerRaceVampLordOID_B
 int			_potionIdentOID_M
 
 
@@ -222,7 +219,7 @@ event OnConfigInit()
 
 	_followerOID_M = new int[15]
 	
-	triggerRaceVals = new bool[6]
+	triggerRaceVals = new bool[4]
 
 	RedrawFollowerPages()
 endEvent
@@ -402,12 +399,11 @@ event OnPageReset(string a_page)
 	
 	_lvlDiffTriggerOID_S = AddSliderOption(C_OPTION_LABEL_ENEMY_OVER, sliderVals[9], C_FORMAT_PLACEHOLDER_LEVELS)
 	
+	AddTextOption(C_OPTION_LABEL_DUMMY_TRIGGER_RACES, C_STRING_EMPTY, OPTION_FLAG_DISABLED)
 	_triggerRaceDragonOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON, triggerRaceVals[0])
-	_triggerRaceDragonAlduinOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON_ALDUIN, triggerRaceVals[1])
-	_triggerRaceDragonUndeadOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON_UNDEAD, triggerRaceVals[2])
-	_triggerRaceDragonPriestOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON_PRIEST, triggerRaceVals[3])
-	_triggerRaceGiantOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_GIANT, triggerRaceVals[4])
-	_triggerRaceMammothOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_MAMMOTH, triggerRaceVals[5])
+	_triggerRaceDragonPriestOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_DRAGON_PRIEST, triggerRaceVals[1])
+	_triggerRaceGiantOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_GIANT, triggerRaceVals[2])
+	_triggerRaceVampLordOID_B = AddToggleOption(C_OPTION_LABEL_TRIGGER_RACE_VAMPIRE_LORD, triggerRaceVals[3])
 	
 	AddEmptyOption()
 
@@ -833,7 +829,7 @@ event OnOptionSelect(int a_option)
 			FPPQuest.DefaultTriggerRaces[0] = triggerRaceVals[0]
 		endIf
 
-	elseIf (a_option == _triggerRaceDragonAlduinOID_B)
+	elseIf (a_option == _triggerRaceDragonPriestOID_B)
 		triggerRaceVals[1] = !triggerRaceVals[1]
 		SetToggleOptionValue(a_option, triggerRaceVals[1])
 		if (follower)
@@ -842,7 +838,7 @@ event OnOptionSelect(int a_option)
 			FPPQuest.DefaultTriggerRaces[1] = triggerRaceVals[1]
 		endIf
 
-	elseIf (a_option == _triggerRaceDragonUndeadOID_B)
+	elseIf (a_option == _triggerRaceGiantOID_B)
 		triggerRaceVals[2] = !triggerRaceVals[2]
 		SetToggleOptionValue(a_option, triggerRaceVals[2])
 		if (follower)
@@ -851,31 +847,13 @@ event OnOptionSelect(int a_option)
 			FPPQuest.DefaultTriggerRaces[2] = triggerRaceVals[2]
 		endIf
 
-	elseIf (a_option == _triggerRaceDragonPriestOID_B)
+	elseIf (a_option == _triggerRaceVampLordOID_B)
 		triggerRaceVals[3] = !triggerRaceVals[3]
 		SetToggleOptionValue(a_option, triggerRaceVals[3])
 		if (follower)
 			follower.TriggerRaces[3] = triggerRaceVals[3]
 		else
 			FPPQuest.DefaultTriggerRaces[3] = triggerRaceVals[3]
-		endIf
-
-	elseIf (a_option == _triggerRaceGiantOID_B)
-		triggerRaceVals[4] = !triggerRaceVals[4]
-		SetToggleOptionValue(a_option, triggerRaceVals[4])
-		if (follower)
-			follower.TriggerRaces[4] = triggerRaceVals[4]
-		else
-			FPPQuest.DefaultTriggerRaces[4] = triggerRaceVals[4]
-		endIf
-
-	elseIf (a_option == _triggerRaceMammothOID_B)
-		triggerRaceVals[5] = !triggerRaceVals[5]
-		SetToggleOptionValue(a_option, triggerRaceVals[5])
-		if (follower)
-			follower.TriggerRaces[5] = triggerRaceVals[5]
-		else
-			FPPQuest.DefaultTriggerRaces[5] = triggerRaceVals[5]
 		endIf
 	endIf
 endEvent
@@ -1313,8 +1291,6 @@ Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat,
 	triggerRaceVals[1] = TriggerRaces[1]
 	triggerRaceVals[2] = TriggerRaces[2]
 	triggerRaceVals[3] = TriggerRaces[3]
-	triggerRaceVals[4] = TriggerRaces[4]
-	triggerRaceVals[5] = TriggerRaces[5]
 	
 	int p = FPPQuest.RestoreEffects.Length
 	while (p)

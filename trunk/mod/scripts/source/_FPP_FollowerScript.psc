@@ -143,6 +143,7 @@ Keyword MagicDamageShock
 LocationRefType LocRefTypeBoss
 
 Race[] AvailableTriggerRaces
+int[] TriggerRaceMappings
 
 ; other private vars for state
 Potion[] MyRestorePotions
@@ -728,7 +729,7 @@ bool function ShouldUseCombatPotions(int aiLvlDiff, Race akEnemyRace, bool abIsB
 		return false
 	endIf
 	
-	return TriggerRaces[i]
+	return TriggerRaces[TriggerRaceMappings[i]]
 
 endFunction
 
@@ -1224,6 +1225,7 @@ Function SetProperties()
 	LocRefTypeBoss = FPPQuest.LocRefTypeBoss
 
 	AvailableTriggerRaces = FPPQuest.AvailableTriggerRaces
+	TriggerRaceMappings = FPPQuest.TriggerRaceMappings
 
 	DebugToFile = FPPQuest.DebugToFile
 endFunction

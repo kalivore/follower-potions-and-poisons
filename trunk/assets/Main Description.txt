@@ -5,20 +5,9 @@ How about all those Fortify and Resist potions that you cook up for your followe
 This mod aims to change all that, allowing followers to use their potions intelligently, and keep them in the fight longer.
 
 
-[line]
-[center][font=Courier New][color=#ff0000][size=5][b]- [ (: !!OUT OF BETA!! :) ] -[/b][/size][/color]
-
-[color=#dd0000]This is my first mod, and I'd like to express my huge thanks for all the messages and feedback I've got on this. I was very nervous taking my first steps into the modding world, but the welcome and the well-wishing has been wonderful.  Thank you all, enormously :D
-
-Having been in Beta for a couple of months now, and having had positive feedback from people using it in the real world, I reckon I'm happy to say this is ready for a proper release.  Woo!
-
-Of course, as with any mod, for the love of Talos, make (and keep!) a backup of your save before installing this.[/color][/font][/center]
-[line]
-
-
 [font=Georgia][color=#8e7cc3][size=3][b]Installing[/b][/size][/color][/font]
 
-No special procedure - install normally with a mod manager (I recommend [url=http://www.nexusmods.com/skyrim/mods/1334/]Mod Organizer[/url]), or manually if that's how you roll.
+No special procedure - install normally with a mod manager (I recommend [url=http://www.nexusmods.com/skyrim/mods/1334/]Mod Organizer[/url]), or manually if that's how you roll.  Of course, as with any mod, for the love of Talos, make (and keep!) a backup of your save before installing this.
 
 [b]Requires:[/b]
 
@@ -28,7 +17,7 @@ No special procedure - install normally with a mod manager (I recommend [url=htt
 [*][size=2]This mod also uses the [url=http://www.nexusmods.com/skyrim/mods/78986]Inventory Functions[/url] SKSE plugin.  This was originally by Quad2Core, but did not work with SKSE 1.7.3.  I have updated the plugin, and it is included in this mod.  It's also hosted standalone, in case it's handy to anyone else.[/size]
 [/list]
 
-[font=Georgia][color=#8e7cc3][size=3][b]Telling followers to use potions[/b][/size][/color][/font]
+[font=Georgia][color=#8e7cc3][size=3][b]Telling followers to use potions, or STOP using potions[/b][/size][/color][/font]
 
 Any NPC in the Current Follower Faction will have a new dialogue option: "[i]Concerning potions..[/i]".  Select this to tell them to start, or stop, using potions in their inventory.  A maximum of fifteen followers can be tracked by this mod - any more than that, and they're on their own.
 
@@ -77,7 +66,9 @@ Additionally, they can use any or all of the following Resist potions:
 [color=#d8d8d8][i]No special conditions for this - just needs to be enabled in the follower's MCM page[/i][/color]
 [/list]
 
-With the MCM, you can set, for each follower, a difference in level between them and their current enemy which will trigger them to use these.  For example, if your follower is level 6, you can tell them to only use Fortify and Resist potions if fighting an enemy of level 10 or above.
+With the MCM, you can set, for each follower, a difference in level between them and their current enemy which will trigger them to use these.  For example, if your follower is level 6, a level difference of 4 means they will only use Fortify and Resist potions if fighting an enemy of level 10 or above.
+
+Additionally, they can be set to always use these potions when fighting particular enemy types: Dragons, Dragon Priests, Giants, and Vampire Lords.  I added this cos I noticed some enemies will be matched to your (and therefore your followers') current level, but are still very powerful.
 
 
 
@@ -124,7 +115,7 @@ The last MCM page will also show you the status of all currently-tracked followe
 [font=Georgia][size=5][b][center][color=#8e7cc3]Compatibility[/color][/center][/b][/size][/font]
 This should be compatible with pretty much everything.  No vanilla forms were touched or edited, so there should be no conflicts.  I did run this through the TES5Edit cleaning process as well, but with only a half-dozen forms, there really wasn't much for it to do.
 
-As of v0.02, followers will check their equipment and enemies for certain vanilla Keywords before using certain Fortify or Resist potions (details in the Fortify and Resist section above).  Most mod-added items and spells [i]should[/i] have these set, as they're pretty commonplace and universal.
+Note that followers will check their equipment and enemies for certain vanilla Keywords before using certain Fortify or Resist potions (details in the Fortify and Resist section above).  Most mod-added items and spells [i]should[/i] have these set, as they're pretty commonplace and universal.
 
 
 [font=Georgia][color=#8e7cc3][size=3][b]Suggested mods[/b][/size][/color][/font]
@@ -171,7 +162,7 @@ Of course, everyone's mileage [i]will[/i] vary - please feed back to me your exp
 There are still a few things I'm aware of and intend to change in future versions, including (but not limited to):
 
 [list]
-[*][size=2]The annoying 'gloop' noise whenever a follower drinks a potion.  I hope there's a way to suppress that, cos it kinda bugs me.[/size]
+[*][size=2]The annoying 'gloop' noise whenever a follower drinks a potion.  I [b]still[/b] haven't figured out a way to suppress that (the various 'silent' flags on EquipItem don't seem to work), and it kinda bugs me.[/size]
 [/list]
 
 [font=Georgia][color=#8e7cc3][size=3][b]Potions with Condition-triggered Magic Effects[/b][/size][/color][/font]

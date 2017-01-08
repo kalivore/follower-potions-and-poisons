@@ -4,6 +4,8 @@ Scriptname _FPP_Quest extends Quest Conditional
 float Property CurrentVersion = 1.0100 AutoReadonly
 float previousVersion
 
+bool DawnguardLoaded
+bool DragonbornLoaded
 
 ReferenceAlias[] Property AllFollowers  Auto
 bool Property NoMoreRoom Auto Conditional
@@ -159,6 +161,7 @@ Keyword Property MagicDamageShock Auto
 LocationRefType Property LocRefTypeBoss Auto
 
 Race[] Property AvailableTriggerRaces Auto
+int[] Property TriggerRaceMappings Auto
 
 
 string[] Property EffectNames Auto
@@ -282,6 +285,9 @@ function Update()
 		
 		if (iPreviousVersion < 10100)
 		
+			; set AvailableTriggerRaces
+			SetAvailableTriggerRaces()
+			
 			; set DefaultTriggerRaces
 			SetDefaultTriggerRaces()
 			
@@ -338,6 +344,21 @@ function Maintenance()
 	
 	; used by this script
 	RegisterForModEvent("XFL_System_PluginEvent", "OnXflPluginEvent")
+
+	; Check for new DLC
+	int dlc1 = Game.GetModByName("Dawnguard.esm")
+	if (!DawnguardLoaded && dlc1 > 0 && dlc1 < 255)
+		AddDawnguardTriggerRaces()
+		DebugStuff("Adding Dawnguard races to triggers")
+		DawnguardLoaded = true
+	endIf
+
+	int dlc2 = Game.GetModByName("Dragonborn.esm")
+	if (!DragonbornLoaded && dlc2 > 0 && dlc2 < 255)
+		AddDragonbornTriggerRaces()
+		DebugStuff("Adding Dragonborn races to triggers")
+		DragonbornLoaded = true
+	endIf
 
 	; Maintenance for registered followers
 	Actor followerActor
@@ -765,6 +786,42 @@ Function SetProperties()
 	ResistEffects[4] = EFFECT_RESISTPOISON
 endFunction
 
+Function SetAvailableTriggerRaces()
+	AvailableTriggerRaces = new Race[10]
+	TriggerRaceMappings = new int[10]
+	
+	AvailableTriggerRaces[00] = Game.GetFormFromFile(0x00012e82, "Skyrim.esm") as Race ; Dragon
+	TriggerRaceMappings[00] = 0
+	AvailableTriggerRaces[01] = Game.GetFormFromFile(0x001052a3, "Skyrim.esm") as Race ; Undead Dragon
+	TriggerRaceMappings[01] = 0
+	AvailableTriggerRaces[02] = Game.GetFormFromFile(0x000e7713, "Skyrim.esm") as Race ; Alduin
+	TriggerRaceMappings[02] = 0
+	
+	AvailableTriggerRaces[03] = Game.GetFormFromFile(0x000131ef, "Skyrim.esm") as Race ; Dragon Priest
+	TriggerRaceMappings[03] = 1
+	
+	AvailableTriggerRaces[04] = Game.GetFormFromFile(0x000131f9, "Skyrim.esm") as Race ; Giant
+	TriggerRaceMappings[04] = 2
+endFunction
+
+Function AddDawnguardTriggerRaces()
+	AvailableTriggerRaces[05] = Game.GetFormFromFile(0x000117de, "Dawnguard.esm") as Race ; Durnehviir
+	TriggerRaceMappings[05] = 0
+	
+	AvailableTriggerRaces[06] = Game.GetFormFromFile(0x0000283a, "Dawnguard.esm") as Race ; Vampire Lord
+	TriggerRaceMappings[06] = 3
+	AvailableTriggerRaces[07] = Game.GetFormFromFile(0x0000377d, "Dawnguard.esm") as Race ; Snow Elf
+	TriggerRaceMappings[07] = 3
+endFunction
+
+Function AddDragonbornTriggerRaces()
+	AvailableTriggerRaces[08] = Game.GetFormFromFile(0x0001cad8, "Dragonborn.esm") as Race ; Karstaag
+	TriggerRaceMappings[08] = 2
+	
+	AvailableTriggerRaces[09] = Game.GetFormFromFile(0x0003911a, "Dragonborn.esm") as Race ; Dragon Priests
+	TriggerRaceMappings[09] = 1
+endFunction
+
 Function SetDefaults()
 	DefaultUpdateIntervalInCombat = 1.0
 	DefaultUpdateIntervalNonCombat = 10.0
@@ -851,5 +908,5 @@ bool[] function GetDefaultTriggerRaces()
 endFunction
 
 function SetDefaultTriggerRaces()
-	DefaultTriggerRaces = CreateBoolArray(AvailableTriggerRaces.Length, true)
+	DefaultTriggerRaces = CreateBoolArray(TriggerRaceMappings.Length, true)
 endFunction
