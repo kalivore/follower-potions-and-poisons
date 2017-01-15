@@ -21,6 +21,7 @@ float Property UpdateIntervalInCombat Auto
 float Property UpdateIntervalNonCombat Auto
 float Property UpdateIntervalNoPotions Auto
 
+bool[] Property EnableWarnings Auto
 float[] Property WarningIntervals Auto
 
 float[] Property StatLimitsInCombat Auto
@@ -837,7 +838,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYALTERATION] \
-		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_ALTERATION, -1, -1, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, _Q2C_Functions.SpellSchoolAlteration()) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYALTERATION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -847,7 +848,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYCONJURATION] \
-		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_CONJURATION, -1, -1, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, _Q2C_Functions.SpellSchoolConjuration()) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYCONJURATION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -857,7 +858,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYDESTRUCTION] \
-		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_DESTRUCTION, -1, -1, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, _Q2C_Functions.SpellSchoolDestruction()) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYDESTRUCTION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -867,7 +868,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYILLUSION] \
-		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_ILLUSION, -1, -1, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, _Q2C_Functions.SpellSchoolIllusion()) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYILLUSION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -877,7 +878,7 @@ bool function UseCombatPotionsMage(string asState)
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYRESTORATION] \
-		&& _Q2C_Functions.ActorHasSpell(MyActor, None, C_SCHOOL_RESTORATION, -1, -1, true) \
+		&& _Q2C_Functions.ActorHasSpell(MyActor, None, _Q2C_Functions.SpellSchoolRestoration()) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsMage", EFFECT_FORTIFYRESTORATION, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -1029,12 +1030,16 @@ function WarnNoPotions(string asState, int aiEffectType, string asEffectName, st
 	endIf
 	MyPotionWarningCounts[index] = MyPotionWarningCounts[index] + 1
 	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
-	if (MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
-		AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
-		MyPotionWarningCounts[index] = 0
-		MyPotionWarningTimes[index] = currentHoursPassed
+	if (EnableWarnings[index])
+		if (EnableWarnings[index] &&  MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
+			AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
+			MyPotionWarningCounts[index] = 0
+			MyPotionWarningTimes[index] = currentHoursPassed
+		else
+			AliasDebug(asState + "::WarnNoPotions - no " + asEffectName + " potions (warning " + MyPotionWarningCounts[index] + ", last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
+		endif
 	else
-		AliasDebug(asState + "::WarnNoPotions - no " + asEffectName + " potions (warning " + MyPotionWarningCounts[index] + ", last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
+		AliasDebug(asState + "::WarnNoPotions - warnings disabled for " + asEffectName + " potions")
 	endif
 endFunction
 
@@ -1235,6 +1240,7 @@ Function SetDefaults()
 	UpdateIntervalNonCombat = FPPQuest.DefaultUpdateIntervalNonCombat
 	UpdateIntervalNoPotions = FPPQuest.DefaultUpdateIntervalNoPotions
 
+	EnableWarnings = FPPQuest.GetDefaultEnableWarnings()
 	WarningIntervals = FPPQuest.GetDefaultWarningIntervals()
 
 	StatLimitsInCombat = FPPQuest.GetDefaultStatLimits(true)

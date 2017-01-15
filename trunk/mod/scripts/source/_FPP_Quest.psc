@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 1.0100 AutoReadonly
+float Property CurrentVersion = 1.0200 AutoReadonly
 float previousVersion
 
 bool DawnguardLoaded
@@ -176,6 +176,7 @@ float Property DefaultUpdateIntervalInCombat Auto
 float Property DefaultUpdateIntervalNonCombat Auto
 float Property DefaultUpdateIntervalNoPotions Auto
 
+bool[] Property DefaultEnableWarnings Auto
 float[] Property DefaultWarningIntervals Auto
 
 float[] Property DefaultStatLimitsInCombat Auto
@@ -299,6 +300,25 @@ function Update()
 				thisFollowerRef = AllFollowers[i]
 				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
 					(thisFollowerRef as _FPP_FollowerScript).TriggerRaces = GetDefaultTriggerRaces()
+				endIf
+				i += 1
+			endWhile
+		
+		endIf
+		
+		if (iPreviousVersion < 10200)
+		
+			; set DefaultEnableWarnings
+			SetDefaultEnableWarnings()
+			
+			; set EnableWarnings for all current followers
+			int i = 0
+			int iMax = AllFollowers.Length
+			ReferenceAlias thisFollowerRef
+			while (i < iMax)
+				thisFollowerRef = AllFollowers[i]
+				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
+					(thisFollowerRef as _FPP_FollowerScript).EnableWarnings = GetDefaultEnableWarnings()
 				endIf
 				i += 1
 			endWhile
@@ -827,6 +847,7 @@ Function SetDefaults()
 	DefaultUpdateIntervalNonCombat = 10.0
 	DefaultUpdateIntervalNoPotions = 180.0
 
+	SetDefaultEnableWarnings()
 	SetDefaultWarningIntervals()
 	
 	DefaultStatLimitsInCombat = new float[3]
@@ -909,4 +930,18 @@ endFunction
 
 function SetDefaultTriggerRaces()
 	DefaultTriggerRaces = CreateBoolArray(TriggerRaceMappings.Length, true)
+endFunction
+
+bool[] function GetDefaultEnableWarnings()
+	bool[] array = CreateBoolArray(DefaultEnableWarnings.Length, true)
+	int i = array.Length
+	while(i)
+		i -= 1
+		array[i] = DefaultEnableWarnings[i]
+	endWhile
+	return array
+endFunction
+
+function SetDefaultEnableWarnings()
+	DefaultEnableWarnings = CreateBoolArray(6, true)
 endFunction

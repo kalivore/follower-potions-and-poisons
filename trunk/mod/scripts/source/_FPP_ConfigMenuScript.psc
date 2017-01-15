@@ -1,4 +1,4 @@
-ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase  
+ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase
 
 ; SCRIPT VERSION ----------------------------------------------------------------------------------
 ;
@@ -8,9 +8,10 @@ ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase
 ; 2 - Added Warning Intervals for when No Potion
 ; 3 - Added options for how to identify potions
 ; 4 - Added Trigger Races for when to use potions
+; 5 - Added toggle options for Warning Intervals
 
 int function GetVersion()
-	return 4
+	return 5
 endFunction
 
 
@@ -61,8 +62,11 @@ string C_OPTION_LABEL_CURRENT_VERSION = "$FPPOptionLabelCurrentVersion"
 string C_OPTION_LABEL_ACTIONS_ALL = "$FPPOptionLabelActionsAll"
 string C_OPTION_LABEL_UPDATE_IN_COMBAT = "$FPPOptionLabelUpdateInCombat"
 string C_OPTION_LABEL_UPDATE_NON_COMBAT = "$FPPOptionLabelUpdateNonCombat"
+string C_OPTION_LABEL_ENABLE_WARNING_NO_POTIONS = "$FPPOptionLabelEnableWarningNoPotions"
 string C_OPTION_LABEL_UPDATE_NO_POTIONS = "$FPPOptionLabelUpdateNoPotions"
+string C_OPTION_LABEL_ENABLE_WARNING_RESTORE = "$FPPOptionLabelEnableWarningRestore"
 string C_OPTION_LABEL_WARNING_RESTORE = "$FPPOptionLabelWarningRestore"
+string C_OPTION_LABEL_ENABLE_WARNING_FORTIFY_RESIST = "$FPPOptionLabelEnableWarningFortifyResist"
 string C_OPTION_LABEL_WARNING_FORTIFY_RESIST = "$FPPOptionLabelWarningFortifyResist"
 string C_OPTION_LABEL_HEALTH_IN_COMBAT = "$FPPOptionLabelHealthInCombat"
 string C_OPTION_LABEL_HEALTH_NON_COMBAT = "$FPPOptionLabelHealthNonCombat"
@@ -151,8 +155,11 @@ int			_usePotionResistPoisonOID_B
 
 int			_updateIntervalInCombatOID_S
 int			_updateIntervalNonCombatOID_S
+int			_enableWarningNoPotionsOID_B
 int			_updateIntervalNoPotionsOID_S
+int			_enableWarningIntervalRestoreOID_B
 int			_warningIntervalRestoreOID_S
+int			_enableWarningIntervalFortifyResistOID_B
 int			_warningIntervalFortifyResistOID_S
 int			_healthLimitInCombatOID_S
 int			_healthLimitNonCombatOID_S
@@ -193,6 +200,7 @@ _FPP_Quest Property FPPQuest Auto
 
 float[] sliderVals
 bool[] boolVals
+bool[] enableWarningsBoolVals
 bool[] triggerRaceVals
 int potionIdentIndex
 
@@ -216,6 +224,7 @@ event OnConfigInit()
 	
 	sliderVals = new float[12]
 	boolVals = new bool[25]
+	enableWarningsBoolVals = new bool[3]
 
 	_followerOID_M = new int[15]
 	
@@ -317,7 +326,7 @@ event OnPageReset(string a_page)
 	
 		follower = None
 		SetOptions(FPPQuest.DefaultUpdateIntervalInCombat, FPPQuest.DefaultUpdateIntervalNonCombat, FPPQuest.DefaultUpdateIntervalNoPotions, \
-					FPPQuest.DefaultWarningIntervals, FPPQuest.DefaultStatLimitsInCombat, FPPQuest.DefaultStatLimitsNonCombat, FPPQuest.DefaultLvlDiffTrigger, FPPQuest.DefaultTriggerRaces, \
+					FPPQuest.DefaultEnableWarnings, FPPQuest.DefaultWarningIntervals, FPPQuest.DefaultStatLimitsInCombat, FPPQuest.DefaultStatLimitsNonCombat, FPPQuest.DefaultLvlDiffTrigger, FPPQuest.DefaultTriggerRaces, \
 					FPPQuest.DefaultUsePotionOfType, false)
 		
 	elseIf (a_page != C_PAGE_NOT_SET)
@@ -331,7 +340,7 @@ event OnPageReset(string a_page)
 		
 		follower = FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript
 		SetOptions(follower.UpdateIntervalInCombat, follower.UpdateIntervalNonCombat, follower.UpdateIntervalNoPotions, \
-					follower.WarningIntervals, follower.StatLimitsInCombat, follower.StatLimitsNonCombat, follower.LvlDiffTrigger, follower.TriggerRaces, \
+					follower.EnableWarnings, follower.WarningIntervals, follower.StatLimitsInCombat, follower.StatLimitsNonCombat, follower.LvlDiffTrigger, follower.TriggerRaces, \
 					follower.UsePotionOfType, true)
 		
 	else
@@ -382,14 +391,31 @@ event OnPageReset(string a_page)
 	
 	_updateIntervalInCombatOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_IN_COMBAT, sliderVals[0], C_FORMAT_PLACEHOLDER_SECONDS)
 	_updateIntervalNonCombatOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_NON_COMBAT, sliderVals[1], C_FORMAT_PLACEHOLDER_SECONDS)
-	_updateIntervalNoPotionsOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_NO_POTIONS, sliderVals[2], C_FORMAT_PLACEHOLDER_SECONDS)
 
 	AddEmptyOption()
 	
 	AddHeaderOption(C_HEADER_LABEL_WARNING_INTERVALS)
 	
-	_warningIntervalRestoreOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_RESTORE, sliderVals[10], C_FORMAT_PLACEHOLDER_SECONDS)
-	_warningIntervalFortifyResistOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_FORTIFY_RESIST, sliderVals[11], C_FORMAT_PLACEHOLDER_SECONDS)
+	_enableWarningIntervalRestoreOID_B = AddToggleOption(C_OPTION_LABEL_ENABLE_WARNING_RESTORE, enableWarningsBoolVals[0])
+	if (enableWarningsBoolVals[0])
+		_warningIntervalRestoreOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_RESTORE, sliderVals[10], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_NONE)
+	else
+		_warningIntervalRestoreOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_RESTORE, sliderVals[10], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_DISABLED)
+	endIf
+	
+	_enableWarningIntervalFortifyResistOID_B = AddToggleOption(C_OPTION_LABEL_ENABLE_WARNING_FORTIFY_RESIST, enableWarningsBoolVals[1])
+	if (enableWarningsBoolVals[1])
+		_warningIntervalFortifyResistOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_FORTIFY_RESIST, sliderVals[11], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_NONE)
+	else
+		_warningIntervalFortifyResistOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_FORTIFY_RESIST, sliderVals[11], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_DISABLED)
+	endIf
+
+	_enableWarningNoPotionsOID_B = AddToggleOption(C_OPTION_LABEL_ENABLE_WARNING_NO_POTIONS, enableWarningsBoolVals[2])
+	if (enableWarningsBoolVals[2])
+		_updateIntervalNoPotionsOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_NO_POTIONS, sliderVals[2], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_NONE)
+	else
+		_updateIntervalNoPotionsOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_NO_POTIONS, sliderVals[2], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_DISABLED)
+	endIf
 	
 	
 	; Move to the top of the right-hand pane
@@ -855,6 +881,55 @@ event OnOptionSelect(int a_option)
 		else
 			FPPQuest.DefaultTriggerRaces[3] = triggerRaceVals[3]
 		endIf
+
+	elseIf (a_option == _enableWarningIntervalRestoreOID_B)
+		enableWarningsBoolVals[0] = !enableWarningsBoolVals[0]
+		SetToggleOptionValue(a_option, enableWarningsBoolVals[0])
+		if (enableWarningsBoolVals[0])
+			SetOptionFlags(_warningIntervalRestoreOID_S, OPTION_FLAG_NONE)
+		else
+			SetOptionFlags(_warningIntervalRestoreOID_S, OPTION_FLAG_DISABLED)
+		endIf
+		if (follower)
+			follower.EnableWarnings[0] = enableWarningsBoolVals[0]
+			follower.EnableWarnings[1] = enableWarningsBoolVals[0]
+			follower.EnableWarnings[2] = enableWarningsBoolVals[0]
+		else
+			FPPQuest.DefaultEnableWarnings[0] = enableWarningsBoolVals[0]
+			FPPQuest.DefaultEnableWarnings[1] = enableWarningsBoolVals[0]
+			FPPQuest.DefaultEnableWarnings[2] = enableWarningsBoolVals[0]
+		endIf
+
+	elseIf (a_option == _enableWarningIntervalFortifyResistOID_B)
+		enableWarningsBoolVals[1] = !enableWarningsBoolVals[1]
+		SetToggleOptionValue(a_option, enableWarningsBoolVals[1])
+		if (enableWarningsBoolVals[1])
+			SetOptionFlags(_warningIntervalFortifyResistOID_S, OPTION_FLAG_NONE)
+		else
+			SetOptionFlags(_warningIntervalFortifyResistOID_S, OPTION_FLAG_DISABLED)
+		endIf
+		if (follower)
+			follower.EnableWarnings[3] = enableWarningsBoolVals[1]
+			follower.EnableWarnings[4] = enableWarningsBoolVals[1]
+		else
+			FPPQuest.DefaultEnableWarnings[3] = enableWarningsBoolVals[1]
+			FPPQuest.DefaultEnableWarnings[4] = enableWarningsBoolVals[1]
+		endIf
+
+	elseIf (a_option == _enableWarningNoPotionsOID_B)
+		enableWarningsBoolVals[2] = !enableWarningsBoolVals[2]
+		SetToggleOptionValue(a_option, enableWarningsBoolVals[2])
+		if (enableWarningsBoolVals[2])
+			SetOptionFlags(_updateIntervalNoPotionsOID_S, OPTION_FLAG_NONE)
+		else
+			SetOptionFlags(_updateIntervalNoPotionsOID_S, OPTION_FLAG_DISABLED)
+		endIf
+		if (follower)
+			follower.EnableWarnings[5] = enableWarningsBoolVals[2]
+		else
+			FPPQuest.DefaultEnableWarnings[5] = enableWarningsBoolVals[2]
+		endIf
+
 	endIf
 endEvent
 
@@ -1271,7 +1346,7 @@ string Function FormatString(string asTemplate, string asEffectName)
 endFunction
 
 Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat, float UpdateIntervalNoPotions, \
-					float[] WarningIntervals, float[] StatLimitsInCombat, float[] StatLimitsNonCombat, float LvlDiffTrigger, bool[] TriggerRaces, \
+					bool[] EnableWarningIntervals, float[] WarningIntervals, float[] StatLimitsInCombat, float[] StatLimitsNonCombat, float LvlDiffTrigger, bool[] TriggerRaces, \
 					bool[] UsePotionOfType, bool isFollower)
 
 	sliderVals[0] = UpdateIntervalInCombat
@@ -1286,6 +1361,10 @@ Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat,
 	sliderVals[9] = LvlDiffTrigger
 	sliderVals[10] = WarningIntervals[0]
 	sliderVals[11] = WarningIntervals[3]
+	
+	enableWarningsBoolVals[0] = EnableWarningIntervals[0]
+	enableWarningsBoolVals[1] = EnableWarningIntervals[3]
+	enableWarningsBoolVals[2] = EnableWarningIntervals[5]
 	
 	triggerRaceVals[0] = TriggerRaces[0]
 	triggerRaceVals[1] = TriggerRaces[1]
