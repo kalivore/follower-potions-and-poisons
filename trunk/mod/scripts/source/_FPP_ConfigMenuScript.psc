@@ -956,12 +956,6 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogRange(1, 20)
 		SetSliderDialogInterval(1)
 		
-	elseIf a_option == _updateIntervalNoPotionsOID_S
-		SetSliderDialogStartValue(sliderVals[2])
-		SetSliderDialogDefaultValue(_defaultUpdateIntervalNoPotions)
-		SetSliderDialogRange(30, 600)
-		SetSliderDialogInterval(1)
-		
 	elseIf a_option == _healthLimitInCombatOID_S
 		SetSliderDialogStartValue(sliderVals[3] * 100)
 		SetSliderDialogDefaultValue(_defaultHealthLimitInCombat * 100)
@@ -1007,6 +1001,12 @@ event OnOptionSliderOpen(int a_option)
 	elseIf a_option == _warningIntervalFortifyResistOID_S
 		SetSliderDialogStartValue(sliderVals[11])
 		SetSliderDialogDefaultValue(_defaultWarningIntervalFortifyResist)
+		SetSliderDialogRange(10, 900)
+		SetSliderDialogInterval(1)
+		
+	elseIf a_option == _updateIntervalNoPotionsOID_S
+		SetSliderDialogStartValue(sliderVals[2])
+		SetSliderDialogDefaultValue(_defaultUpdateIntervalNoPotions)
 		SetSliderDialogRange(10, 900)
 		SetSliderDialogInterval(1)
 		
