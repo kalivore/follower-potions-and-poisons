@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 1.0200 AutoReadonly
+float Property CurrentVersion = 2.0000 AutoReadonly
 float previousVersion
 
 bool DawnguardLoaded
@@ -104,11 +104,11 @@ int Property XFL_PLUGIN_EVENT_REMOVE_DEAD_FOLLOWER = 0x02 Autoreadonly
 
 
 Keyword[] Property EffectKeywords Auto
-Keyword Property MagicAlchBeneficial Auto
-Keyword Property MagicAlchDamageHealth Auto
-Keyword Property MagicAlchDamageMagicka Auto
-Keyword Property MagicAlchDamageStamina Auto
 Keyword Property MagicAlchDurationBased Auto
+Keyword Property MagicAlchBeneficial Auto
+Keyword Property MagicAlchRestoreHealth Auto
+Keyword Property MagicAlchRestoreMagicka Auto
+Keyword Property MagicAlchRestoreStamina Auto
 Keyword Property MagicAlchFortifyAlchemy Auto
 Keyword Property MagicAlchFortifyAlteration Auto
 Keyword Property MagicAlchFortifyBlock Auto
@@ -135,15 +135,15 @@ Keyword Property MagicAlchFortifySpeechcraft Auto
 Keyword Property MagicAlchFortifyStamina Auto
 Keyword Property MagicAlchFortifyStaminaRate Auto
 Keyword Property MagicAlchFortifyTwoHanded Auto
-Keyword Property MagicAlchHarmful Auto
 Keyword Property MagicAlchResistFire Auto
 Keyword Property MagicAlchResistFrost Auto
 Keyword Property MagicAlchResistMagic Auto
 Keyword Property MagicAlchResistPoison Auto
 Keyword Property MagicAlchResistShock Auto
-Keyword Property MagicAlchRestoreHealth Auto
-Keyword Property MagicAlchRestoreMagicka Auto
-Keyword Property MagicAlchRestoreStamina Auto
+Keyword Property MagicAlchHarmful Auto
+Keyword Property MagicAlchDamageHealth Auto
+Keyword Property MagicAlchDamageMagicka Auto
+Keyword Property MagicAlchDamageStamina Auto
 Keyword Property MagicAlchWeaknessFire Auto
 Keyword Property MagicAlchWeaknessFrost Auto
 Keyword Property MagicAlchWeaknessMagic Auto
@@ -171,6 +171,8 @@ int[] Property FortifyEffectsStats Auto
 int[] Property FortifyEffectsWarrior Auto
 int[] Property FortifyEffectsMage Auto
 int[] Property ResistEffects Auto
+
+int[] Property PoisonEffects Auto
 
 float Property DefaultUpdateIntervalInCombat Auto
 float Property DefaultUpdateIntervalNonCombat Auto
@@ -319,6 +321,22 @@ function Update()
 				thisFollowerRef = AllFollowers[i]
 				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
 					(thisFollowerRef as _FPP_FollowerScript).EnableWarnings = GetDefaultEnableWarnings()
+				endIf
+				i += 1
+			endWhile
+		
+		endIf
+		
+		if (iPreviousVersion < 20000)
+		
+			; set MyPoisons for all current followers
+			int i = 0
+			int iMax = AllFollowers.Length
+			ReferenceAlias thisFollowerRef
+			while (i < iMax)
+				thisFollowerRef = AllFollowers[i]
+				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
+					(thisFollowerRef as _FPP_FollowerScript).ClearPoisonLists()
 				endIf
 				i += 1
 			endWhile
@@ -725,14 +743,11 @@ Function SetProperties()
 	EffectKeywords[EFFECT_WEAKNESSMAGIC] = MagicAlchWeaknessMagic
 	EffectKeywords[EFFECT_WEAKNESSSHOCK] = MagicAlchWeaknessShock
 	
+	EffectNames[EFFECT_DURATIONBASED] = "Duration Based"
 	EffectNames[EFFECT_RESTOREHEALTH] = "Restore Health"
 	EffectNames[EFFECT_RESTORESTAMINA] = "Restore Stamina"
 	EffectNames[EFFECT_RESTOREMAGICKA] = "Restore Magicka"
 	EffectNames[EFFECT_BENEFICIAL] = "Beneficial"
-	EffectNames[EFFECT_DAMAGEHEALTH] = "Damage Health"
-	EffectNames[EFFECT_DAMAGEMAGICKA] = "Damage Magicka"
-	EffectNames[EFFECT_DAMAGESTAMINA] = "Damage Stamina"
-	EffectNames[EFFECT_DURATIONBASED] = "Duration Based"
 	EffectNames[EFFECT_FORTIFYALCHEMY] = "Fortify Alchemy"
 	EffectNames[EFFECT_FORTIFYALTERATION] = "Fortify Alteration"
 	EffectNames[EFFECT_FORTIFYBLOCK] = "Fortify Block"
@@ -759,12 +774,15 @@ Function SetProperties()
 	EffectNames[EFFECT_FORTIFYSTAMINA] = "Fortify Stamina"
 	EffectNames[EFFECT_FORTIFYSTAMINARATE] = "Fortify Stamina Rate"
 	EffectNames[EFFECT_FORTIFYTWOHANDED] = "Fortify Two-Handed"
-	EffectNames[EFFECT_HARMFUL] = "Harmful"
 	EffectNames[EFFECT_RESISTFIRE] = "Resist Fire"
 	EffectNames[EFFECT_RESISTFROST] = "Resist Frost"
 	EffectNames[EFFECT_RESISTMAGIC] = "Resist Magic"
 	EffectNames[EFFECT_RESISTPOISON] = "Resist Poison"
 	EffectNames[EFFECT_RESISTSHOCK] = "Resist Shock"
+	EffectNames[EFFECT_HARMFUL] = "Poison"
+	EffectNames[EFFECT_DAMAGEHEALTH] = "Damage Health"
+	EffectNames[EFFECT_DAMAGEMAGICKA] = "Damage Magicka"
+	EffectNames[EFFECT_DAMAGESTAMINA] = "Damage Stamina"
 	EffectNames[EFFECT_WEAKNESSFIRE] = "Weakness to Fire"
 	EffectNames[EFFECT_WEAKNESSFROST] = "Weakness to Frost"
 	EffectNames[EFFECT_WEAKNESSMAGIC] = "Weakness to Magic"
@@ -804,6 +822,9 @@ Function SetProperties()
 	ResistEffects[2] = EFFECT_RESISTSHOCK
 	ResistEffects[3] = EFFECT_RESISTMAGIC
 	ResistEffects[4] = EFFECT_RESISTPOISON
+	
+	PoisonEffects = new int[1]
+	PoisonEffects[0] = EFFECT_HARMFUL
 endFunction
 
 Function SetAvailableTriggerRaces()
