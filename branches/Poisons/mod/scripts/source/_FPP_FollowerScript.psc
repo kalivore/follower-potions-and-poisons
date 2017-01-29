@@ -426,7 +426,11 @@ State PendingUpdate
 		if (extendUpdate || newState == "PendingUpdate")
 			AliasDebug("PendingUpdate::OnUpdate - update in " + CurrentUpdateInterval)
 			RegisterForSingleUpdate(CurrentUpdateInterval)
-			UsePoisonIfPossible("PendingUpdate::OnUpdate")
+			
+			UseCombatPoisonsDamageStats("PendingUpdate::OnUpdate") \
+				|| UseCombatPoisonsWeaknessMagic("PendingUpdate::OnUpdate") \
+				|| UseCombatPoisonsGeneric("PendingUpdate::OnUpdate")
+			
 			IgnoreEvents = false
 		else
 			AliasDebug("PendingUpdate::OnUpdate - go to " + newState)
@@ -710,7 +714,9 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 	
 	if (ShouldUseCombatPoisons(lvlDiff, enemyRace, isBoss))
 		AliasDebug(msg + "use poisons; ")
-		UsePoisonIfPossible(asState + "::HandleCombatStateChange")
+		UseCombatPoisonsDamageStats(asState + "::HandleCombatStateChange") \
+			|| UseCombatPoisonsWeaknessMagic(asState + "::HandleCombatStateChange") \
+			|| UseCombatPoisonsGeneric(asState + "::HandleCombatStateChange")
 	else
 		AliasDebug(msg + "not enough to use poisons; ")
 	endIf
@@ -747,6 +753,26 @@ bool function ShouldUseCombatPotions(int aiLvlDiff, Race akEnemyRace, bool abIsB
 	
 	return TriggerRaces[TriggerRaceMappings[i]]
 
+endFunction
+
+bool function UseCombatPoisonsDamageStats(string asState)
+	bool usedPoison = UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffects[0], MyPoisons, "MyPoisons") \
+		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffects[1], MyPoisons, "MyPoisons") \
+		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffects[2], MyPoisons, "MyPoisons")
+	return !usedPoison
+endFunction
+
+bool function UseCombatPoisonsWeaknessMagic(string asState)
+	bool usedPoison = UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[3], MyPoisons, "MyPoisons") \
+		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[4], MyPoisons, "MyPoisons") \
+		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[5], MyPoisons, "MyPoisons") \
+		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[6], MyPoisons, "MyPoisons")
+	return !usedPoison
+endFunction
+
+bool function UseCombatPoisonsGeneric(string asState)
+	bool usedPoison = UsePoisonIfPossible(asState + "::UseCombatPoisonsGeneric", -1, MyPoisons, "MyPoisons")
+	return !usedPoison
 endFunction
 
 bool function UseCombatPotionsFortifyStats(string asState)
@@ -1031,8 +1057,30 @@ bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akP
 	return potionUsed
 endFunction
 
-bool function UsePoisonIfPossible(string asState)
-	return TryFirstPoisonThatExists(asState)
+bool function UsePoisonIfPossible(string asState, int aiEffectType, Potion[] akPotionList, string asListName)
+	string effectName = "Generic poison"
+	if (aiEffectType > -1)
+		effectName = EffectNames[aiEffectType]
+	endIf
+	string msg = asState + "::UsePoisonIfPossible (" + aiEffectType + ": " + effectName + ") - "
+	bool poisonUsed = false
+	if (aiEffectType > -1 && !HasPotionOfType[aiEffectType])
+		; nothing to use
+		msg += "no " + effectName + " poisons"
+	elseIf (WornObject.GetPoison(MyActor, 1, 0) != None)
+		; already poisoned
+		msg += "weapon already poisoned"
+	else
+		bool poisonWorked = TryFirstPoisonThatExists(asState, aiEffectType, akPotionList, asListName)
+		if (poisonWorked)
+			msg += "used " + effectName  + " poison from " + asListName
+			poisonUsed = true
+		else
+			msg += "failed to use " + effectName  + " potions"
+		endIf
+	endIf
+	AliasDebug2(msg)
+	return poisonUsed
 endFunction
 
 function WarnNoPotions(string asState, int aiEffectType, string asEffectName, string asListName)
@@ -1089,7 +1137,7 @@ bool function TryFirstPotionThatExists(int aiEffectType, Potion[] akPotionList, 
 			int potionCount = MyActor.GetItemCount(thisPotion)
 			;m += ", have " + potionCount
 			if (potionCount > 0)
-				MyActor.EquipItem(thisPotion)
+				MyActor.EquipItemEx(thisPotion, 0, false, false)
 				;m += ", used " + thisPotion.GetName() + " (" + thisPotion.GetFormId() + "), " + (potionCount - 1) + " remaining"
 				if (potionCount == 1)
 					; Clear this potion from lists if it's the last one..
@@ -1118,25 +1166,25 @@ bool function TryFirstPotionThatExists(int aiEffectType, Potion[] akPotionList, 
 	return false
 endFunction
 
-bool function TryFirstPoisonThatExists(string asState)
+bool function TryFirstPoisonThatExists(string asState, int aiEffectType, Potion[] akPotionList, string asListName)
 	int poisonIndex = 0
-	while (poisonIndex < MyPoisons.Length)
-		Potion thisPoison = MyPoisons[poisonIndex] as Potion
-		string msg = asState + "::TryFirstPoisonThatExists - MyPoisons[" + poisonIndex + "]"
-		if (thisPoison != None)
+	while (poisonIndex < akPotionList.Length)
+		Potion thisPoison = akPotionList[poisonIndex] as Potion
+		string msg = asState + "::TryFirstPoisonThatExists - " + asListName + "[" + poisonIndex + "]"
+		if (thisPoison != None && (aiEffectType < 0 || thisPoison.HasKeyword(EffectKeywords[aiEffectType])))
 			int poisonCount = MyActor.GetItemCount(thisPoison)
 			msg += ", have " + poisonCount
 			if (poisonCount > 0)
-				msg += ". Try use poison.. "
-				int ret = _Q2C_Functions.WornSetPoison(MyActor, 1, thisPoison, 1)
+				msg += ". Try use " + thisPoison.GetName() + " poison.. "
+				int ret = _Q2C_Functions.WornObjectSetPoison(MyActor, 1, 0, thisPoison, 1)
 				if (ret < 0)
 					msg += "Can't poison weapon"
 					AliasDebug2(msg)
 				else
-					msg += "Poisoned weapon with " + thisPoison.GetName() + "!"
+					msg += "Poisoned weapon!"
 					MyActor.RemoveItem(thisPoison)
 					if (poisonCount == 1)
-						MyPoisons[poisonIndex] = None
+						akPotionList[poisonIndex] = None
 						msg += " Removed from index " + poisonIndex
 					endIf
 					AliasDebug2(msg)
