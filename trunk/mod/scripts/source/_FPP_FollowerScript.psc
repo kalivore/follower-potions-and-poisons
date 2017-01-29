@@ -478,7 +478,10 @@ State HaveNoPotions
 	Event OnUpdate()
 		string newState = DetermineState()
 		if (newState == "HaveNoPotions")
-			AliasDebug("HaveNoPotions::OnUpdate - still no useful potions", MyActorName + " has no useful potions at all!", true)
+			AliasDebug("HaveNoPotions::OnUpdate - still no useful potions")
+			if (EnableWarnings[5])
+				AliasDebug("", MyActorName + " has no useful potions at all!", true)
+			endIf
 			RegisterForSingleUpdate(UpdateIntervalNoPotions)
 		else
 			AliasDebug("HaveNoPotions::OnUpdate - go to " + newState)
@@ -1015,6 +1018,11 @@ bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akP
 endFunction
 
 function WarnNoPotions(string asState, int aiEffectType, string asEffectName, string asListName)
+	if (!EnableWarnings[index])
+		AliasDebug(asState + "::WarnNoPotions - warnings disabled for " + asEffectName + " potions")
+		return
+	endif
+	
 	float currentHoursPassed = Game.GetRealHoursPassed()
 	int index
 	string potionName
@@ -1030,16 +1038,12 @@ function WarnNoPotions(string asState, int aiEffectType, string asEffectName, st
 	endIf
 	MyPotionWarningCounts[index] = MyPotionWarningCounts[index] + 1
 	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
-	if (EnableWarnings[index])
-		if (EnableWarnings[index] &&  MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
-			AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
-			MyPotionWarningCounts[index] = 0
-			MyPotionWarningTimes[index] = currentHoursPassed
-		else
-			AliasDebug(asState + "::WarnNoPotions - no " + asEffectName + " potions (warning " + MyPotionWarningCounts[index] + ", last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
-		endif
+	if (MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
+		AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
+		MyPotionWarningCounts[index] = 0
+		MyPotionWarningTimes[index] = currentHoursPassed
 	else
-		AliasDebug(asState + "::WarnNoPotions - warnings disabled for " + asEffectName + " potions")
+		AliasDebug(asState + "::WarnNoPotions - no " + asEffectName + " potions (warning " + MyPotionWarningCounts[index] + ", last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
 	endif
 endFunction
 
@@ -1068,7 +1072,7 @@ bool function TryFirstPotionThatExists(int aiEffectType, Potion[] akPotionList, 
 			int potionCount = MyActor.GetItemCount(thisPotion)
 			;m += ", have " + potionCount
 			if (potionCount > 0)
-				MyActor.EquipItem(thisPotion)
+				MyActor.EquipItemEx(thisPotion, 0, false, false)
 				;m += ", used " + thisPotion.GetName() + " (" + thisPotion.GetFormId() + "), " + (potionCount - 1) + " remaining"
 				if (potionCount == 1)
 					; Clear this potion from lists if it's the last one..
