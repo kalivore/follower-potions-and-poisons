@@ -1018,12 +1018,6 @@ bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akP
 endFunction
 
 function WarnNoPotions(string asState, int aiEffectType, string asEffectName, string asListName)
-	if (!EnableWarnings[index])
-		AliasDebug(asState + "::WarnNoPotions - warnings disabled for " + asEffectName + " potions")
-		return
-	endif
-	
-	float currentHoursPassed = Game.GetRealHoursPassed()
 	int index
 	string potionName
 	if (aiEffectType == EFFECT_RESTOREHEALTH || aiEffectType == EFFECT_RESTORESTAMINA || aiEffectType == EFFECT_RESTOREMAGICKA)
@@ -1036,7 +1030,12 @@ function WarnNoPotions(string asState, int aiEffectType, string asEffectName, st
 		index = 4
 		potionName = "Resist"
 	endIf
+	if (!EnableWarnings[index])
+		AliasDebug(asState + "::WarnNoPotions - warnings disabled for " + asEffectName + " potions")
+		return
+	endif
 	MyPotionWarningCounts[index] = MyPotionWarningCounts[index] + 1
+	float currentHoursPassed = Game.GetRealHoursPassed()
 	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
 	if (MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
 		AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
@@ -1113,7 +1112,6 @@ Function ShowInfo()
 	if (MyActor == None)
 		return
 	endIf
-
 	string msg = "State: " + GetState() + "\n"
 	msg += "\n"
 	msg += "Restore Potions: " + GetPotionReport(MyRestorePotions)
