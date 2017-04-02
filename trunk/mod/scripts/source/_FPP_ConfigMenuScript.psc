@@ -363,8 +363,6 @@ event OnPageReset(string a_page)
 		_healthLimitNonCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_HEALTH_NON_COMBAT, sliderVals[4] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_DISABLED)
 	endIf
 
-	AddEmptyOption()
-
 	_usePotionRestoreStaminaOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[1]), boolVals[1])
 	if (boolVals[1])
 		_staminaLimitInCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_STAMINA_IN_COMBAT, sliderVals[5] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_NONE)
@@ -373,8 +371,6 @@ event OnPageReset(string a_page)
 		_staminaLimitInCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_STAMINA_IN_COMBAT, sliderVals[5] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_DISABLED)
 		_staminaLimitNonCombatOID_S 	= AddSliderOption(C_OPTION_LABEL_STAMINA_NON_COMBAT, sliderVals[6] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_DISABLED)
 	endIf
-
-	AddEmptyOption()
 
 	_usePotionRestoreMagickaOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[2]), boolVals[2])
 	if (boolVals[2])
