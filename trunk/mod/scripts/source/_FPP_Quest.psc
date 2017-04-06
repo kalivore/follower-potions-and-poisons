@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 1.0200 AutoReadonly
+float Property CurrentVersion = 1.0300 AutoReadonly
 float previousVersion
 
 bool DawnguardLoaded
