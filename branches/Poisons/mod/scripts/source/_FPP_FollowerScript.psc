@@ -487,7 +487,10 @@ State HaveNoPotions
 	Event OnUpdate()
 		string newState = DetermineState()
 		if (newState == "HaveNoPotions")
-			AliasDebug("HaveNoPotions::OnUpdate - still no useful potions", MyActorName + " has no useful potions at all!", true)
+			AliasDebug("HaveNoPotions::OnUpdate - still no useful potions")
+			if (EnableWarnings[5])
+				AliasDebug("", MyActorName + " has no useful potions at all!", true)
+			endIf
 			RegisterForSingleUpdate(UpdateIntervalNoPotions)
 		else
 			AliasDebug("HaveNoPotions::OnUpdate - go to " + newState)
@@ -1084,7 +1087,6 @@ bool function UsePoisonIfPossible(string asState, int aiEffectType, Potion[] akP
 endFunction
 
 function WarnNoPotions(string asState, int aiEffectType, string asEffectName, string asListName)
-	float currentHoursPassed = Game.GetRealHoursPassed()
 	int index
 	string potionName
 	if (aiEffectType == EFFECT_RESTOREHEALTH || aiEffectType == EFFECT_RESTORESTAMINA || aiEffectType == EFFECT_RESTOREMAGICKA)
@@ -1097,18 +1099,19 @@ function WarnNoPotions(string asState, int aiEffectType, string asEffectName, st
 		index = 4
 		potionName = "Resist"
 	endIf
-	MyPotionWarningCounts[index] = MyPotionWarningCounts[index] + 1
-	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
-	if (EnableWarnings[index])
-		if (EnableWarnings[index] &&  MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
-			AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
-			MyPotionWarningCounts[index] = 0
-			MyPotionWarningTimes[index] = currentHoursPassed
-		else
-			AliasDebug(asState + "::WarnNoPotions - no " + asEffectName + " potions (warning " + MyPotionWarningCounts[index] + ", last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
-		endif
-	else
+	if (!EnableWarnings[index])
 		AliasDebug(asState + "::WarnNoPotions - warnings disabled for " + asEffectName + " potions")
+		return
+	endif
+	MyPotionWarningCounts[index] = MyPotionWarningCounts[index] + 1
+	float currentHoursPassed = Game.GetRealHoursPassed()
+	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
+	if (MyPotionWarningCounts[index] >= MyPotionWarningTriggers[index] && currentHoursPassed >= nextWarning)
+		AliasDebug(asState + "::WarnNoPotions - " + potionName + " potion warning updated to " + currentHoursPassed, MyActorName + " needs more " + potionName + " potions!", false)
+		MyPotionWarningCounts[index] = 0
+		MyPotionWarningTimes[index] = currentHoursPassed
+	else
+		AliasDebug(asState + "::WarnNoPotions - no " + asEffectName + " potions (warning " + MyPotionWarningCounts[index] + ", last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
 	endif
 endFunction
 
@@ -1211,7 +1214,6 @@ Function ShowInfo()
 	if (MyActor == None)
 		return
 	endIf
-
 	string msg = "State: " + GetState() + "\n"
 	msg += "\n"
 	msg += "Restore Potions: " + GetPotionReport(MyRestorePotions)

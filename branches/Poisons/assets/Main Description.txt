@@ -17,6 +17,31 @@ No special procedure - install normally with a mod manager (I recommend [url=htt
 [*][size=2]This mod also uses the [url=http://www.nexusmods.com/skyrim/mods/78986]Inventory Functions[/url] SKSE plugin.  This was originally by Quad2Core, but did not work with SKSE 1.7.3.  I have updated the plugin, and it is included in this mod.  It's also hosted standalone, in case it's handy to anyone else.[/size]
 [/list]
 
+
+[line]
+[center][font=Georgia][color=#ee0000][size=3][b]Important update - regarding Fortify Potions[/b][/size][/color][/font]
+
+[color=#cc4422]I have just recently found out that, in the vanilla game, simply drinking a [i]Fortify (skill)[/i] potion
+ (like Fortify Marksman) [b]does not have any effect for Followers (grr!)[/b].
+This is because the actual mechanics of increasing damage is done via a hidden Perk,
+which the Player has, but is missing from all NPCs.[/color][/center][color=#cc4422]
+
+My sincerest, humblest apologies for not spotting this sooner, and for any Fortify potions you have given to your followers to no effect :'(
+
+Thankfully, this only affects the Fortify (skill) potions, so Restore and Resist potions are still OK.  Also, there are a few ways to fix/mitigate the issue:
+[list]
+[*][size=2]If you use [url=http://www.nexusmods.com/skyrim/mods/69306]Complete Alchemy and Cooking Overhaul[/url] by Kryptopyr (or any other mod which alters the way Fortify potion effects work, so they directly alter the relevant stat) your followers will be covered[/size]
+[*][size=2]If you use [url=http://www.nexusmods.com/skyrim/mods/18436]ASIS[/url], or [url=http://www.nexusmods.com/skyrim/mods/63246]Awakened Magicka[/url] by jimkaiseriv, these have a SkyProc patcher which includes an option to give the necessary perks to all NPCs[/size]
+[*][size=2]If neither of the above apply, you can use a SkyProc patcher which I've added in v1.03. This does the same thing - ie gives the necessary perks to all NPCs[/size]
+[/list]
+
+[center]I've added a slightly more detailed post in the Comments board about this, 
+If you've any questions, please do leave a message and I'll do my best to help.
+
+Many thanks, and once again, I'm HUGELY sorry I didn't realise this was an issue when I was developing this mod! >:([/center][/color]
+[line]
+
+
 [font=Georgia][color=#8e7cc3][size=3][b]Telling followers to use potions, or STOP using potions[/b][/size][/color][/font]
 
 Any NPC in the Current Follower Faction will have a new dialogue option: "[i]Concerning potions..[/i]".  Select this to tell them to start, or stop, using potions in their inventory.  A maximum of fifteen followers can be tracked by this mod - any more than that, and they're on their own.
@@ -182,7 +207,7 @@ I took inspiration and example from several people when creating and coding this
 [list]
 [*][size=2][b]Quad2Core [/b]- the "Inventory Functions" SKSE plugin was invaluable in being able to re-scan potion inventories in a reasonable amount of time.  Quad2Core's original plugin was designed for an earlier SKSE version, but thanks to them including the source code, I was able to re-work it for SKSE 1.7.3.  I tried to contact Quad2Core about hosting the updated version, but they've not been around for a while, so with the agreement of a Nexus admin, I've re-hosted it [url=http://www.nexusmods.com/skyrim/mods/78986]here[/url] (with a couple of my own tweaks and extensions).  Please feel free to use it for your own projects - but all credit is due to Quad2Core, not me.  They did the work; I just converted it.[/size]
 [size=2]
-[/size][*][size=2][b]Kryptopyr[/b] and [b]Chesko[/b] - it was delving into the multi-threaded async model in Kryptopyr's Complete Alchemy and Cooking Overhaul that led to me thinking I could use multi-threading here, and Chesko's tutorials [i]on[/i] that multi-threading approach are excellent.  I also got the approach for the real-time in-MCM progress updates from Checko's spectacular [url=http://www.nexusmods.com/skyrim/mods/11163]Frostfall[/url].[/size]
+[/size][*][size=2][b]Kryptopyr[/b] and [b]Chesko[/b] - it was delving into the multi-threaded async model in Kryptopyr's Complete Alchemy and Cooking Overhaul that led to me thinking I could use multi-threading here, and Chesko's tutorials [i]on[/i] that multi-threading approach are excellent.  I also got the approach for the real-time in-MCM progress updates from Checko's wonderful [url=http://www.nexusmods.com/skyrim/mods/11163]Frostfall[/url].[/size]
 [size=2]
 [/size][*][size=2][b]Apostrophic Labs[/b] - for the "Immortal" font used on the title page here and in the MCM[/size]
 [size=2]
