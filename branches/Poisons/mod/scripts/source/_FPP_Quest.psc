@@ -173,7 +173,9 @@ int[] Property FortifyEffectsWarrior Auto
 int[] Property FortifyEffectsMage Auto
 int[] Property ResistEffects Auto
 
-int[] Property PoisonEffects Auto
+int[] Property PoisonEffectsStats Auto
+int[] Property PoisonEffectsWeakness Auto
+int[] Property PoisonEffectsGeneric Auto
 
 float Property DefaultUpdateIntervalInCombat Auto
 float Property DefaultUpdateIntervalNonCombat Auto
@@ -700,40 +702,37 @@ endFunction
 
 Function SetProperties()
 	EffectKeywords[EFFECT_BENEFICIAL] = MagicAlchBeneficial
+	
 	EffectKeywords[EFFECT_RESTOREHEALTH] = MagicAlchRestoreHealth
 	EffectKeywords[EFFECT_RESTORESTAMINA] = MagicAlchRestoreStamina
 	EffectKeywords[EFFECT_RESTOREMAGICKA] = MagicAlchRestoreMagicka
-	EffectKeywords[EFFECT_FORTIFYALCHEMY] = MagicAlchFortifyAlchemy
-	EffectKeywords[EFFECT_FORTIFYALTERATION] = MagicAlchFortifyAlteration
-	EffectKeywords[EFFECT_FORTIFYBLOCK] = MagicAlchFortifyBlock
-	EffectKeywords[EFFECT_FORTIFYCARRYWEIGHT] = MagicAlchFortifyCarryWeight
-	EffectKeywords[EFFECT_FORTIFYCONJURATION] = MagicAlchFortifyConjuration
-	EffectKeywords[EFFECT_FORTIFYDESTRUCTION] = MagicAlchFortifyDestruction
-	EffectKeywords[EFFECT_FORTIFYENCHANTING] = MagicAlchFortifyEnchanting
-	EffectKeywords[EFFECT_FORTIFYHEALRATE] = MagicAlchFortifyHealRate
+
 	EffectKeywords[EFFECT_FORTIFYHEALTH] = MagicAlchFortifyHealth
-	EffectKeywords[EFFECT_FORTIFYHEAVYARMOR] = MagicAlchFortifyHeavyArmor
-	EffectKeywords[EFFECT_FORTIFYILLUSION] = MagicAlchFortifyIllusion
-	EffectKeywords[EFFECT_FORTIFYLIGHTARMOR] = MagicAlchFortifyLightArmor
-	EffectKeywords[EFFECT_FORTIFYLOCKPICKING] = MagicAlchFortifyLockpicking
+	EffectKeywords[EFFECT_FORTIFYHEALRATE] = MagicAlchFortifyHealRate
 	EffectKeywords[EFFECT_FORTIFYMAGICKA] = MagicAlchFortifyMagicka
 	EffectKeywords[EFFECT_FORTIFYMAGICKARATE] = MagicAlchFortifyMagickaRate
-	EffectKeywords[EFFECT_FORTIFYMARKSMAN] = MagicAlchFortifyMarksman
-	EffectKeywords[EFFECT_FORTIFYMASS] = MagicAlchFortifyMass
-	EffectKeywords[EFFECT_FORTIFYONEHANDED] = MagicAlchFortifyOneHanded
-	EffectKeywords[EFFECT_FORTIFYPICKPOCKET] = MagicAlchFortifyPickPocket
-	EffectKeywords[EFFECT_FORTIFYRESTORATION] = MagicAlchFortifyRestoration
-	EffectKeywords[EFFECT_FORTIFYSPEECHCRAFT] = MagicAlchFortifySpeechcraft
 	EffectKeywords[EFFECT_FORTIFYSTAMINA] = MagicAlchFortifyStamina
 	EffectKeywords[EFFECT_FORTIFYSTAMINARATE] = MagicAlchFortifyStaminaRate
+	
+	EffectKeywords[EFFECT_FORTIFYBLOCK] = MagicAlchFortifyBlock
+	EffectKeywords[EFFECT_FORTIFYHEAVYARMOR] = MagicAlchFortifyHeavyArmor
+	EffectKeywords[EFFECT_FORTIFYLIGHTARMOR] = MagicAlchFortifyLightArmor
+	EffectKeywords[EFFECT_FORTIFYMARKSMAN] = MagicAlchFortifyMarksman
+	EffectKeywords[EFFECT_FORTIFYONEHANDED] = MagicAlchFortifyOneHanded
 	EffectKeywords[EFFECT_FORTIFYTWOHANDED] = MagicAlchFortifyTwoHanded
+
+	EffectKeywords[EFFECT_FORTIFYALTERATION] = MagicAlchFortifyAlteration
+	EffectKeywords[EFFECT_FORTIFYCONJURATION] = MagicAlchFortifyConjuration
+	EffectKeywords[EFFECT_FORTIFYDESTRUCTION] = MagicAlchFortifyDestruction
+	EffectKeywords[EFFECT_FORTIFYILLUSION] = MagicAlchFortifyIllusion
+	EffectKeywords[EFFECT_FORTIFYRESTORATION] = MagicAlchFortifyRestoration
+	
 	EffectKeywords[EFFECT_RESISTFIRE] = MagicAlchResistFire
 	EffectKeywords[EFFECT_RESISTFROST] = MagicAlchResistFrost
 	EffectKeywords[EFFECT_RESISTMAGIC] = MagicAlchResistMagic
 	EffectKeywords[EFFECT_RESISTPOISON] = MagicAlchResistPoison
 	EffectKeywords[EFFECT_RESISTSHOCK] = MagicAlchResistShock
-	EffectKeywords[EFFECT_FORTIFYSMITHING] = MagicAlchFortifySmithing
-	EffectKeywords[EFFECT_FORTIFYSNEAK] = MagicAlchFortifySneak
+	
 	EffectKeywords[EFFECT_HARMFUL] = MagicAlchHarmful
 	EffectKeywords[EFFECT_DAMAGEHEALTH] = MagicAlchDamageHealth
 	EffectKeywords[EFFECT_DAMAGEMAGICKA] = MagicAlchDamageMagicka
@@ -742,15 +741,26 @@ Function SetProperties()
 	EffectKeywords[EFFECT_WEAKNESSFROST] = MagicAlchWeaknessFrost
 	EffectKeywords[EFFECT_WEAKNESSSHOCK] = MagicAlchWeaknessShock
 	EffectKeywords[EFFECT_WEAKNESSMAGIC] = MagicAlchWeaknessMagic
+	
+	EffectKeywords[EFFECT_FORTIFYALCHEMY] = MagicAlchFortifyAlchemy
+	EffectKeywords[EFFECT_FORTIFYENCHANTING] = MagicAlchFortifyEnchanting
+	EffectKeywords[EFFECT_FORTIFYLOCKPICKING] = MagicAlchFortifyLockpicking
+	EffectKeywords[EFFECT_FORTIFYPICKPOCKET] = MagicAlchFortifyPickPocket
+	EffectKeywords[EFFECT_FORTIFYSMITHING] = MagicAlchFortifySmithing
+	EffectKeywords[EFFECT_FORTIFYSNEAK] = MagicAlchFortifySneak
+	EffectKeywords[EFFECT_FORTIFYSPEECHCRAFT] = MagicAlchFortifySpeechcraft
+	
 	EffectKeywords[EFFECT_DURATIONBASED] = MagicAlchDurationBased
+	EffectKeywords[EFFECT_FORTIFYCARRYWEIGHT] = MagicAlchFortifyCarryWeight
+	EffectKeywords[EFFECT_FORTIFYMASS] = MagicAlchFortifyMass
 	
 	
-	EffectNames[EFFECT_DURATIONBASED] = "Duration Based"
 	EffectNames[EFFECT_BENEFICIAL] = "Beneficial"
 	
 	EffectNames[EFFECT_RESTOREHEALTH] = "Restore Health"
 	EffectNames[EFFECT_RESTORESTAMINA] = "Restore Stamina"
 	EffectNames[EFFECT_RESTOREMAGICKA] = "Restore Magicka"
+	
 	EffectNames[EFFECT_FORTIFYHEALTH] = "Fortify Health"
 	EffectNames[EFFECT_FORTIFYHEALRATE] = "Fortify Heal Rate"
 	EffectNames[EFFECT_FORTIFYSTAMINA] = "Fortify Stamina"
@@ -771,17 +781,6 @@ Function SetProperties()
 	EffectNames[EFFECT_FORTIFYILLUSION] = "Fortify Illusion"
 	EffectNames[EFFECT_FORTIFYRESTORATION] = "Fortify Restoration"
 
-	EffectNames[EFFECT_FORTIFYALCHEMY] = "Fortify Alchemy"
-	EffectNames[EFFECT_FORTIFYENCHANTING] = "Fortify Enchanting"
-	EffectNames[EFFECT_FORTIFYLOCKPICKING] = "Fortify Lockpicking"
-	EffectNames[EFFECT_FORTIFYPICKPOCKET] = "Fortify Pickpocket"
-	EffectNames[EFFECT_FORTIFYSMITHING] = "Fortify Smithing"
-	EffectNames[EFFECT_FORTIFYSNEAK] = "Fortify Sneak"
-	EffectNames[EFFECT_FORTIFYSPEECHCRAFT] = "Fortify Speechcraft"
-
-	EffectNames[EFFECT_FORTIFYCARRYWEIGHT] = "Fortify Carry Weight"
-	EffectNames[EFFECT_FORTIFYMASS] = "Fortify Mass"
-	
 	EffectNames[EFFECT_RESISTFIRE] = "Resist Fire"
 	EffectNames[EFFECT_RESISTFROST] = "Resist Frost"
 	EffectNames[EFFECT_RESISTMAGIC] = "Resist Magic"
@@ -793,10 +792,23 @@ Function SetProperties()
 	EffectNames[EFFECT_DAMAGEHEALTH] = "Damage Health"
 	EffectNames[EFFECT_DAMAGEMAGICKA] = "Damage Magicka"
 	EffectNames[EFFECT_DAMAGESTAMINA] = "Damage Stamina"
+	
 	EffectNames[EFFECT_WEAKNESSFIRE] = "Weakness to Fire"
 	EffectNames[EFFECT_WEAKNESSFROST] = "Weakness to Frost"
 	EffectNames[EFFECT_WEAKNESSSHOCK] = "Weakness to Shock"
 	EffectNames[EFFECT_WEAKNESSMAGIC] = "Weakness to Magic"
+	
+	EffectNames[EFFECT_FORTIFYALCHEMY] = "Fortify Alchemy"
+	EffectNames[EFFECT_FORTIFYENCHANTING] = "Fortify Enchanting"
+	EffectNames[EFFECT_FORTIFYLOCKPICKING] = "Fortify Lockpicking"
+	EffectNames[EFFECT_FORTIFYPICKPOCKET] = "Fortify Pickpocket"
+	EffectNames[EFFECT_FORTIFYSMITHING] = "Fortify Smithing"
+	EffectNames[EFFECT_FORTIFYSNEAK] = "Fortify Sneak"
+	EffectNames[EFFECT_FORTIFYSPEECHCRAFT] = "Fortify Speechcraft"
+
+	EffectNames[EFFECT_DURATIONBASED] = "Duration Based"
+	EffectNames[EFFECT_FORTIFYCARRYWEIGHT] = "Fortify Carry Weight"
+	EffectNames[EFFECT_FORTIFYMASS] = "Fortify Mass"
 	
 	
 	RestoreEffects = new int[3]
@@ -834,14 +846,19 @@ Function SetProperties()
 	ResistEffects[3] = EFFECT_RESISTMAGIC
 	ResistEffects[4] = EFFECT_RESISTPOISON
 	
-	PoisonEffects = new int[7]
-	PoisonEffects[0] = EFFECT_DAMAGEHEALTH
-	PoisonEffects[1] = EFFECT_DAMAGEMAGICKA
-	PoisonEffects[2] = EFFECT_DAMAGESTAMINA
-	PoisonEffects[3] = EFFECT_WEAKNESSFIRE
-	PoisonEffects[4] = EFFECT_WEAKNESSFROST
-	PoisonEffects[5] = EFFECT_WEAKNESSSHOCK
-	PoisonEffects[6] = EFFECT_WEAKNESSMAGIC
+	PoisonEffectsStats = new int[3]
+	PoisonEffectsStats[0] = EFFECT_DAMAGEHEALTH
+	PoisonEffectsStats[1] = EFFECT_DAMAGEMAGICKA
+	PoisonEffectsStats[2] = EFFECT_DAMAGESTAMINA
+	
+	PoisonEffectsWeakness = new int[4]
+	PoisonEffectsWeakness[0] = EFFECT_WEAKNESSFIRE
+	PoisonEffectsWeakness[1] = EFFECT_WEAKNESSFROST
+	PoisonEffectsWeakness[2] = EFFECT_WEAKNESSSHOCK
+	PoisonEffectsWeakness[3] = EFFECT_WEAKNESSMAGIC
+	
+	PoisonEffectsGeneric = new int[1]
+	PoisonEffectsGeneric[0] = EFFECT_HARMFUL
 endFunction
 
 Function SetAvailableTriggerRaces()

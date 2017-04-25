@@ -132,9 +132,12 @@ int[] FortifyEffectsWarrior
 int[] FortifyEffectsMage
 int[] ResistEffects
 
-int[] PoisonEffects
+int[] PoisonEffectsStats
+int[] PoisonEffectsWeakness
+int[] PoisonEffectsGeneric
 
 Keyword KeywordPotion
+Keyword KeywordPoison
 
 Keyword KeywordArmorHeavy
 Keyword KeywordArmorLight
@@ -161,6 +164,7 @@ int[] MyPotionWarningTriggers
 float[] MyPotionWarningTimes
 float[] CurrentStatLimits
 bool[] HasPotionOfType
+bool[] HasPoisonOfType
 
 bool IgnoreEvents = false
 bool IgnoreCombatStateEvents = false
@@ -255,7 +259,7 @@ string Function DetermineState()
 			return "Incapacitated"
 		elseIf (bleedingOut)
 			return "PendingUpdate"
-		elseIf (HasAnyPotions())
+		elseIf (HasAnyPotions() || HasAnyPoisons())
 			return "PendingEvent"
 		else
 			return "HaveNoPotions"
@@ -265,7 +269,7 @@ string Function DetermineState()
 		CurrentUpdateInterval = UpdateIntervalNonCombat
 		if (incapacitated)
 			return "Incapacitated"
-		elseIf (HasAnyPotions())
+		elseIf (HasAnyPotions() || HasAnyPoisons())
 			return "PendingEvent"
 		else
 			return "HaveNoPotions"
@@ -285,7 +289,7 @@ Event OnItemAdded(Form akBaseItem, int aiItemCount, ObjectReference akItemRefere
 	if (thisPotion == None || thisPotion.IsFood() || (!thisPotion.IsPoison() && thisPotion.IsHostile()))
 		return
 	endIf
-	IdentifyPotionThreadManager.IdentifyPotionAsync(true, DebugToFile, MyActorName, thisPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects, IdentifyPotionEffects, C_IDENTIFY_RESTORE, C_IDENTIFY_FORTIFY, C_IDENTIFY_RESIST, C_IDENTIFY_FIRST, C_IDENTIFY_SECOND, C_IDENTIFY_THIRD, PoisonEffects)
+	IdentifyPotionThreadManager.IdentifyPotionAsync(true, DebugToFile, MyActorName, thisPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects, PoisonEffectsStats, PoisonEffectsWeakness, PoisonEffectsGeneric, IdentifyPotionEffects, C_IDENTIFY_RESTORE, C_IDENTIFY_FORTIFY, C_IDENTIFY_RESIST, C_IDENTIFY_FIRST, C_IDENTIFY_SECOND, C_IDENTIFY_THIRD)
 	IdentifyPotionThreadManager.WaitAny()
 	;AliasDebug("OnItemAdded - " + thisPotion.GetName() + " sent for identification")
 endEvent
@@ -427,9 +431,12 @@ State PendingUpdate
 			AliasDebug("PendingUpdate::OnUpdate - update in " + CurrentUpdateInterval)
 			RegisterForSingleUpdate(CurrentUpdateInterval)
 			
-			UseCombatPoisonsDamageStats("PendingUpdate::OnUpdate") \
-				|| UseCombatPoisonsWeaknessMagic("PendingUpdate::OnUpdate") \
-				|| UseCombatPoisonsGeneric("PendingUpdate::OnUpdate")
+			if (ShouldUseCombatPoisonsOnUpdate())
+				int rhItem = MyActor.GetEquippedItemType(1)
+				AliasDebug2(AttemptPoisonChain("PendingUpdate::OnUpdate::AttemptPoisonChain - ", 1, rhItem))
+				int lhItem = MyActor.GetEquippedItemType(0)
+				AliasDebug2(AttemptPoisonChain("PendingUpdate::OnUpdate::AttemptPoisonChain - ", 0, lhItem))
+			endIf
 			
 			IgnoreEvents = false
 		else
@@ -503,7 +510,7 @@ State HaveNoPotions
 			;AliasDebug("HaveNoPotions::OnPotionIdentified - for " + asActorName + ", not me!")
 			return
 		endIf
-		if (HasAnyPotions())
+		if (HasAnyPotions() || HasAnyPoisons())
 			string newState = DetermineState()
 			GoToState(newState)
 			AliasDebug("HaveNoPotions::OnPotionIdentified - have one now, go to " + newState)
@@ -670,7 +677,7 @@ Function RefreshPotions()
 		While iFormIndex < TotalPotionCount
 			Potion foundPotion = _Q2C_Functions.GetNthFormOfType(MyActor, 46, iFormIndex) as Potion
 			if (foundPotion != None)
-				IdentifyPotionThreadManager.IdentifyPotionAsync(false, DebugToFile, MyActorName, foundPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects, IdentifyPotionEffects, C_IDENTIFY_RESTORE, C_IDENTIFY_FORTIFY, C_IDENTIFY_RESIST, C_IDENTIFY_FIRST, C_IDENTIFY_SECOND, C_IDENTIFY_THIRD, PoisonEffects)
+				IdentifyPotionThreadManager.IdentifyPotionAsync(false, DebugToFile, MyActorName, foundPotion, EffectKeywords, RestoreEffects, FortifyEffectsStats, FortifyEffectsWarrior, FortifyEffectsMage, ResistEffects, PoisonEffectsStats, PoisonEffectsWeakness, PoisonEffectsGeneric, IdentifyPotionEffects, C_IDENTIFY_RESTORE, C_IDENTIFY_FORTIFY, C_IDENTIFY_RESIST, C_IDENTIFY_FIRST, C_IDENTIFY_SECOND, C_IDENTIFY_THIRD)
 			endIf
 			iFormIndex += 1
 		EndWhile
@@ -716,18 +723,18 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 	msg += " " + akTarget.GetLeveledActorBase().GetName() + " (diff " + lvlDiff + ", trigger " + LvlDiffTrigger + "); LH: " + lhItem + ", RH: " + rhItem + " - "
 	
 	if (ShouldUseCombatPoisons(lvlDiff, enemyRace, isBoss))
-		AliasDebug(msg + "use poisons; ")
-		UseCombatPoisonsDamageStats(asState + "::HandleCombatStateChange") \
-			|| UseCombatPoisonsWeaknessMagic(asState + "::HandleCombatStateChange") \
-			|| UseCombatPoisonsGeneric(asState + "::HandleCombatStateChange")
+		msg += AttemptPoisonChain("", 1, rhItem)
+		msg += " -- "
+		msg += AttemptPoisonChain("", 0, lhItem)
+		AliasDebug2(msg)
 	else
-		AliasDebug(msg + "not enough to use poisons; ")
+		AliasDebug2(msg + "not enough to use poisons")
 	endIf
 	
 	if (ShouldUseCombatPotions(lvlDiff, enemyRace, isBoss))
 		AliasDebug(msg + "use potions")
-		; by chaining these as an inline, it avoids needless calls to subsequent functions 
-		; if any one returns false (ie because you're not in combat any more)
+		; chain these ones as an AND, since you want to keep going through (using potions)
+		; until any one returns false (ie because you're not in combat any more)
 		UseCombatPotionsFortifyStats(asState + "::HandleCombatStateChange") \
 			&& UseCombatPotionsWarrior(asState + "::HandleCombatStateChange", lhItem, rhItem) \
 			&& UseCombatPotionsMage(asState + "::HandleCombatStateChange") \
@@ -741,41 +748,81 @@ endFunction
 bool function ShouldUseCombatPoisons(int aiLvlDiff, Race akEnemyRace, bool abIsBoss)
 	return true
 endFunction
+bool function ShouldUseCombatPoisonsOnUpdate()
+	return true
+endFunction
 
 bool function ShouldUseCombatPotions(int aiLvlDiff, Race akEnemyRace, bool abIsBoss)
-	
 	; simplest check first
 	if (aiLvlDiff > LvlDiffTrigger)
 		return true
 	endIf
-	
 	int i = AvailableTriggerRaces.Find(akEnemyRace)
 	if (i < 0)
 		return false
 	endIf
-	
 	return TriggerRaces[TriggerRaceMappings[i]]
-
 endFunction
 
-bool function UseCombatPoisonsDamageStats(string asState)
-	bool usedPoison = UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffects[0], MyPoisons, "MyPoisons") \
-		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffects[1], MyPoisons, "MyPoisons") \
-		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffects[2], MyPoisons, "MyPoisons")
-	return !usedPoison
+string function AttemptPoisonChain(string asState, int aiHand, int aiEquippedItemType)
+	if (!EquippedItemPoisonable(aiHand, aiEquippedItemType))
+		return asState + GetHand(aiHand) + " is empty or has unpoisonable item"
+	endIf
+	if (WornObject.GetPoison(MyActor, aiHand, 0) != None)
+		return asState + MyActor.GetEquippedWeapon(aiHand == 0).GetName() + " in " + GetHand(aiHand) + " already poisoned"
+	endIf
+
+	; by chaining these as an inline, it avoids needless calls to subsequent functions 
+	; if any one returns true (ie because you've used a poison)
+	if (UseCombatPoisonsDamageStats(asState, aiHand) \
+		|| UseCombatPoisonsWeaknessMagic(asState, aiHand) \
+		|| UseCombatPoisonsGeneric(asState, aiHand))
+		return asState + "used poison for " + GetHand(aiHand)
+	endIf
+	return asState + "didn't use poisons for " + GetHand(aiHand)
 endFunction
 
-bool function UseCombatPoisonsWeaknessMagic(string asState)
-	bool usedPoison = UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[3], MyPoisons, "MyPoisons") \
-		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[4], MyPoisons, "MyPoisons") \
-		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[5], MyPoisons, "MyPoisons") \
-		|| UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffects[6], MyPoisons, "MyPoisons")
-	return !usedPoison
+bool function EquippedItemPoisonable(int aiHand, int aiEquippedItemType)
+	bool is1H = is1HWeapon(aiEquippedItemType)
+	if (aiHand == 0) ; left hand
+		return is1H
+	elseIf (aiHand == 1) ; right hand
+		return is1H || is2HWeapon(aiEquippedItemType) || aiEquippedItemType == C_ITEM_BOW
+	endIf
+	return false
 endFunction
 
-bool function UseCombatPoisonsGeneric(string asState)
-	bool usedPoison = UsePoisonIfPossible(asState + "::UseCombatPoisonsGeneric", -1, MyPoisons, "MyPoisons")
-	return !usedPoison
+bool function UseCombatPoisonsDamageStats(string asState, int aiHand)
+	int i = PoisonEffectsStats.Length
+	while (i)
+		i -= 1
+		if (UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffectsStats[i], MyPoisons, "MyPoisons", aiHand))
+			return true
+		endIf
+	endWhile
+	return false
+endFunction
+
+bool function UseCombatPoisonsWeaknessMagic(string asState, int aiHand)
+	int i = PoisonEffectsWeakness.Length
+	while (i)
+		i -= 1
+		if (UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffectsWeakness[i], MyPoisons, "MyPoisons", aiHand))
+			return true
+		endIf
+	endWhile
+	return false
+endFunction
+
+bool function UseCombatPoisonsGeneric(string asState, int aiHand)
+	int i = PoisonEffectsGeneric.Length
+	while (i)
+		i -= 1
+		if (UsePoisonIfPossible(asState + "::UseCombatPoisonsGeneric", PoisonEffectsGeneric[i], MyPoisons, "MyPoisons", aiHand))
+			return true
+		endIf
+	endWhile
+	return false
 endFunction
 
 bool function UseCombatPotionsFortifyStats(string asState)
@@ -850,8 +897,7 @@ bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYONEHANDED] \
-		&& (aiLHItem == C_ITEM_1H_SWORD || aiLHItem == C_ITEM_1H_DAGGER || aiLHItem == C_ITEM_1H_AXE || aiLHItem == C_ITEM_1H_MACE \
-			|| aiRHItem == C_ITEM_1H_SWORD || aiRHItem == C_ITEM_1H_DAGGER || aiRHItem == C_ITEM_1H_AXE || aiRHItem == C_ITEM_1H_MACE) \
+		&& (is1HWeapon(aiLHItem) || is1HWeapon(aiRHItem)) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYONEHANDED, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -861,7 +907,7 @@ bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYTWOHANDED] \
-		&& (aiLHItem == C_ITEM_2H_SWORD || aiLHItem == C_ITEM_2H_AXE_MACE) \
+		&& (is2HWeapon(aiRHItem)) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYTWOHANDED, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -1020,7 +1066,7 @@ Function RegisterPotion(Potion akPotion, string asListName, int aiEffectType)
 		if (freeIndex > -1)
 			thisPotionList[freeIndex] = akPotion
 			if (DebugToFile)
-				AliasDebug("RegisterPotion - Recognised " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ", assigned " + asListName + "[" + freeIndex + "], type " + aiEffectType + ")")
+				AliasDebug2("RegisterPotion - Recognised " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ", assigned " + asListName + "[" + freeIndex + "], type " + aiEffectType + ")")
 			endIf
 		else
 			AliasDebug("", MyActorName + " - can't add " + akPotion.GetName() + " potion; no more room for this type of potion!", true)
@@ -1030,10 +1076,14 @@ Function RegisterPotion(Potion akPotion, string asListName, int aiEffectType)
 		endIf
 	else
 		if (DebugToFile)
-			AliasDebug("RegisterPotion - Restocked " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ", at " + asListName + "[" + potionIndex + "], type " + aiEffectType + ")")
+			AliasDebug2("RegisterPotion - Restocked " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ", at " + asListName + "[" + potionIndex + "], type " + aiEffectType + ")")
 		endIf
 	endIf
-	HasPotionOfType[aiEffectType] = true
+	if (asListName == "MyPoisons")
+		HasPoisonOfType[aiEffectType] = true
+	else
+		HasPotionOfType[aiEffectType] = true
+	endIf
 endFunction
 
 bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akPotionList, string asListName)
@@ -1060,27 +1110,31 @@ bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akP
 	return potionUsed
 endFunction
 
-bool function UsePoisonIfPossible(string asState, int aiEffectType, Potion[] akPotionList, string asListName)
-	string effectName = "Generic poison"
-	if (aiEffectType > -1)
-		effectName = EffectNames[aiEffectType]
-	endIf
+bool function UsePoisonIfPossible(string asState, int aiEffectType, Potion[] akPotionList, string asListName, int aiHand)
+	string effectName = EffectNames[aiEffectType]
 	string msg = asState + "::UsePoisonIfPossible (" + aiEffectType + ": " + effectName + ") - "
 	bool poisonUsed = false
-	if (aiEffectType > -1 && !HasPotionOfType[aiEffectType])
+	if (!HasPoisonOfType[aiEffectType])
 		; nothing to use
 		msg += "no " + effectName + " poisons"
-	elseIf (WornObject.GetPoison(MyActor, 1, 0) != None)
-		; already poisoned
-		msg += "weapon already poisoned"
+		;AliasDebug2(msg)
+		return false
+	endIf
+	; some poisons (eg venoms) do not actually have MagicAlchHarmful, only VendorItemPoison.
+	; That isn't technically an effect type, but for purposes of the mod, all generic poisons
+	; are registered as having it. So if we're testing for it here, convert to sending -1,
+	; so the TryFirstPoisonThatExists function will bypass testing for the specific keyword
+	int passedEffectType = aiEffectType
+	if (aiEffectType == EFFECT_HARMFUL)
+		passedEffectType = -1
+	endIf
+	bool poisonWorked = TryFirstPoisonThatExists(asState, passedEffectType, akPotionList, asListName, aiHand)
+	if (poisonWorked)
+		msg += "used " + effectName  + " poison from " + asListName
+		poisonUsed = true
 	else
-		bool poisonWorked = TryFirstPoisonThatExists(asState, aiEffectType, akPotionList, asListName)
-		if (poisonWorked)
-			msg += "used " + effectName  + " poison from " + asListName
-			poisonUsed = true
-		else
-			msg += "failed to use " + effectName  + " potions"
-		endIf
+		HasPoisonOfType[aiEffectType] = false
+		msg += "failed to use " + effectName  + " poison"
 	endIf
 	AliasDebug2(msg)
 	return poisonUsed
@@ -1125,6 +1179,9 @@ endFunction
 bool Function HasAnyPotions()
 	return HasPotionOfType.Find(true) > -1
 endFunction
+bool Function HasAnyPoisons()
+	return HasPoisonOfType.Find(true) > -1
+endFunction
 
 bool function IsIncapacitated()
 	; NKO uses paralysis for KO'd followers - but then, being paralysed should be enough to stop you using potions anyway..
@@ -1159,35 +1216,33 @@ bool function TryFirstPotionThatExists(int aiEffectType, Potion[] akPotionList, 
 				;AliasDebug(m)
 				return true
 			else
-				potionIndex += 1
 				;AliasDebug(m)
 			endif
-		else
-			potionIndex += 1
 		endif
+		potionIndex += 1
 	endWhile
 	return false
 endFunction
 
-bool function TryFirstPoisonThatExists(string asState, int aiEffectType, Potion[] akPotionList, string asListName)
+bool function TryFirstPoisonThatExists(string asState, int aiEffectType, Potion[] akPoisonList, string asListName, int aiHand)
 	int poisonIndex = 0
-	while (poisonIndex < akPotionList.Length)
-		Potion thisPoison = akPotionList[poisonIndex] as Potion
+	while (poisonIndex < akPoisonList.Length)
+		Potion thisPoison = akPoisonList[poisonIndex] as Potion
 		string msg = asState + "::TryFirstPoisonThatExists - " + asListName + "[" + poisonIndex + "]"
 		if (thisPoison != None && (aiEffectType < 0 || thisPoison.HasKeyword(EffectKeywords[aiEffectType])))
 			int poisonCount = MyActor.GetItemCount(thisPoison)
 			msg += ", have " + poisonCount
 			if (poisonCount > 0)
-				msg += ". Try use " + thisPoison.GetName() + " poison.. "
-				int ret = _Q2C_Functions.WornObjectSetPoison(MyActor, 1, 0, thisPoison, 1)
+				msg += ". Try use " + thisPoison.GetName() + " poison on " + MyActor.GetEquippedWeapon().GetName() + " in " + GetHand(aiHand) + ": "
+				int ret = _Q2C_Functions.WornObjectSetPoison(MyActor, aiHand, 0, thisPoison, 1)
 				if (ret < 0)
-					msg += "Can't poison weapon"
+					msg += "fail"
 					AliasDebug2(msg)
 				else
-					msg += "Poisoned weapon!"
+					msg += "success"
 					MyActor.RemoveItem(thisPoison)
 					if (poisonCount == 1)
-						akPotionList[poisonIndex] = None
+						akPoisonList[poisonIndex] = None
 						msg += " Removed from index " + poisonIndex
 					endIf
 					AliasDebug2(msg)
@@ -1200,6 +1255,13 @@ bool function TryFirstPoisonThatExists(string asState, int aiEffectType, Potion[
 		poisonIndex += 1
 	endWhile
 	return false
+endFunction
+
+bool function is1HWeapon(int aiItemType)
+	return aiItemType == C_ITEM_1H_SWORD || aiItemType == C_ITEM_1H_DAGGER || aiItemType == C_ITEM_1H_AXE || aiItemType == C_ITEM_1H_MACE
+endFunction
+bool function is2HWeapon(int aiItemType)
+	return aiItemType == C_ITEM_2H_SWORD || aiItemType == C_ITEM_2H_AXE_MACE
 endFunction
 
 int function RemoveFromArray(Potion akPotion, Potion[] akPotionList)
@@ -1222,7 +1284,7 @@ Function ShowInfo()
 	msg += "\n"
 	msg += "Resist Potions: " + GetPotionReport(MyResistPotions)
 	msg += "\n"
-	msg += "Poisons: " + GetPotionReport(MyPoisons)
+	msg += "Stat Poisons: " + GetPotionReport(MyPoisons)
 	AliasDebug(msg)
 	Debug.MessageBox(MyActorName + "\n" + msg)
 endFunction
@@ -1324,9 +1386,12 @@ Function SetProperties()
 	FortifyEffectsMage = FPPQuest.FortifyEffectsMage
 	ResistEffects = FPPQuest.ResistEffects
 	
-	PoisonEffects = FPPQuest.PoisonEffects
+	PoisonEffectsStats = FPPQuest.PoisonEffectsStats
+	PoisonEffectsWeakness = FPPQuest.PoisonEffectsWeakness
+	PoisonEffectsGeneric = FPPQuest.PoisonEffectsGeneric
 	
 	KeywordPotion = FPPQuest.VendorItemPotion
+	KeywordPoison = FPPQuest.VendorItemPoison
 	
 	KeywordArmorHeavy = FPPQuest.ArmorHeavy
 	KeywordArmorLight = FPPQuest.ArmorLight
@@ -1363,6 +1428,7 @@ Function SetDefaults()
 	
 	ResetPotionWarningTriggers()
 	ResetHasPotionOfType()
+	ResetHasPoisonOfType()
 endFunction
 
 Function ResetPotionWarningTriggers()
@@ -1371,6 +1437,10 @@ endFunction
 
 Function ResetHasPotionOfType()
 	HasPotionOfType = FPPQuest.CreateBoolArray(EffectKeywords.Length, false)
+endFunction
+
+Function ResetHasPoisonOfType()
+	HasPoisonOfType = FPPQuest.CreateBoolArray(EffectKeywords.Length, false)
 endFunction
 
 Function ClearPotionLists()
@@ -1385,6 +1455,15 @@ endFunction
 
 string function GetStringPercentage(string asActorValue)
 	return ((MyActor.GetActorValuePercentage(asActorValue) * 100) as int) + "%"
+endFunction
+
+string function GetHand(int aiHand)
+	if (aiHand == 0)
+		return "left hand"
+	elseIf (aiHand == 1)
+		return "right hand"
+	endIf
+	return "unknown hand"
 endFunction
 
 function AliasDebug(string asLogMsg, string asScreenMsg = "", bool abFpPrefix = false)

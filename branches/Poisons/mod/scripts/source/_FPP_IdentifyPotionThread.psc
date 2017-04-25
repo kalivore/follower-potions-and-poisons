@@ -14,7 +14,9 @@ int[] FortifyEffectsStats
 int[] FortifyEffectsWarrior
 int[] FortifyEffectsMage
 int[] ResistEffects
-int[] PoisonEffects
+int[] PoisonEffectsStats
+int[] PoisonEffectsWeakness
+int[] PoisonEffectsGeneric
 int IdentifyPotionEffects
 int C_IDENTIFY_RESTORE
 int C_IDENTIFY_FORTIFY
@@ -24,9 +26,10 @@ int C_IDENTIFY_SECOND
 int C_IDENTIFY_THIRD
 
 ; Thread queuing and set-up
-function GetAsync(bool abDebug, string asActorName, Potion akPotion, Keyword[] akEffectKeywords, int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects, \
-					int aiIdentifyPotionEffects, int aiC_IDENTIFY_RESTORE, int aiC_IDENTIFY_FORTIFY, int aiC_IDENTIFY_RESIST, int aiC_IDENTIFY_FIRST, int aiC_IDENTIFY_SECOND, int aiC_IDENTIFY_THIRD, \
-					int[] akPoisonEffects)
+function GetAsync(bool abDebug, string asActorName, Potion akPotion, Keyword[] akEffectKeywords, \
+					int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects, \
+					int[] akPoisonEffectsStats, int[] akPoisonEffectsWeakness, int[] akPoisonEffectsGeneric, \
+					int aiIdentifyPotionEffects, int aiC_IDENTIFY_RESTORE, int aiC_IDENTIFY_FORTIFY, int aiC_IDENTIFY_RESIST, int aiC_IDENTIFY_FIRST, int aiC_IDENTIFY_SECOND, int aiC_IDENTIFY_THIRD)
  
     ; Let the Thread Manager know that this thread is busy
     threadQueued = true
@@ -41,7 +44,9 @@ function GetAsync(bool abDebug, string asActorName, Potion akPotion, Keyword[] a
 	FortifyEffectsWarrior = akFortifyEffectsWarrior
 	FortifyEffectsMage = akFortifyEffectsMage
 	ResistEffects = akResistEffects
-	PoisonEffects = akPoisonEffects
+	PoisonEffectsStats = akPoisonEffectsStats
+	PoisonEffectsWeakness = akPoisonEffectsWeakness
+	PoisonEffectsGeneric = akPoisonEffectsGeneric
 	IdentifyPotionEffects = aiIdentifyPotionEffects
 	C_IDENTIFY_RESTORE = aiC_IDENTIFY_RESTORE
 	C_IDENTIFY_FORTIFY = aiC_IDENTIFY_FORTIFY
@@ -93,6 +98,7 @@ endEvent
  
 ; Called from Event OnIdentifyPotion
 Function IdentifyPotion()
+
 	if (ThisPotion == None || ThisPotion.IsFood() || (!ThisPotion.IsPoison() && ThisPotion.IsHostile()))
 		return
 	endIf
@@ -103,9 +109,16 @@ Function IdentifyPotion()
 	int numEffects = effects.Length
 	
 	if (ThisPotion.IsPoison())
-		;CheckFormEffects(PoisonEffects, ThisPotion, "MyPoisons", true)
-		; for now, just throw all poisons in same array, with effect 'MagicAlchHarmful'
-		RegisterPotion("MyPoisons", PoisonEffects[0])
+		if (WriteDebug)
+			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - find " + numEffects + " effect(s) by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+		endIf
+		bool hasStatEffect = CheckFormEffects(PoisonEffectsStats, ThisPotion, "MyPoisons", false)
+		bool hasWeakEffect = CheckFormEffects(PoisonEffectsWeakness, ThisPotion, "MyPoisons", false)
+		if (!hasStatEffect && !hasWeakEffect)
+			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - no specific events found, add as generic")
+			RegisterPotion("MyPoisons", PoisonEffectsGeneric[0])
+		endIf
+		; nothing more to do - return here
 		return
 	endIf
 	
@@ -127,53 +140,54 @@ Function IdentifyPotion()
 		if (numEffects == 1 || !identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
 			CheckFormEffects(ResistEffects, ThisPotion, "MyResistPotions", false)
 		endIf
-	else
-		; OK, let's find these effects
-		int getEffect = 0
-		if (numEffects < 3 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0 \
-			|| numEffects < 2 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
-			getEffect = numEffects
-		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0)
-			getEffect = 3
-		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
-			getEffect = 2
-		elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FIRST) != 0)
-			getEffect = 1
-		endIf
 		
-		if (WriteDebug)
-			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + numEffects + ")")
-		endIf
-		
-		; adjust for 0-based indexing
-		getEffect -= 1
-		
-		if (getEffect < 0)
-			; gee, something went wrong there..
-			return
-		endIf
-		
-		; get relevant effect, and return at first keyword match
-		MagicEffect thisEffect = effects[getEffect]
-		
-		if (CheckFormEffects(RestoreEffects, thisEffect, "MyRestorePotions", true))
-			return
-		endIf
+		; all identifying done - return here
+		return
+	endIf
+	
+	; OK, let's find these effects
+	int getEffect = 0
+	if (numEffects < 3 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0 || numEffects < 2 && Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
+		getEffect = numEffects
+	elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_THIRD) != 0)
+		getEffect = 3
+	elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_SECOND) != 0)
+		getEffect = 2
+	elseIf (Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FIRST) != 0)
+		getEffect = 1
+	endIf
+	
+	if (WriteDebug)
+		Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find by single effect (method " + IdentifyPotionEffects + ", effect " + getEffect + " of " + numEffects + ")")
+	endIf
+	
+	; adjust for 0-based indexing
+	getEffect -= 1
+	
+	if (getEffect < 0)
+		; gee, something went wrong there..
+		return
+	endIf
+	
+	; get relevant effect, and return at first keyword match
+	MagicEffect thisEffect = effects[getEffect]
+	
+	if (CheckFormEffects(RestoreEffects, thisEffect, "MyRestorePotions", true))
+		return
+	endIf
 
-		if (CheckFormEffects(FortifyEffectsStats, thisEffect, "MyFortifyPotions", true))
-			return
-		endIf
-		if (CheckFormEffects(FortifyEffectsWarrior, thisEffect, "MyFortifyPotions", true))
-			return
-		endIf
-		if (CheckFormEffects(FortifyEffectsMage, thisEffect, "MyFortifyPotions", true))
-			return
-		endIf
+	if (CheckFormEffects(FortifyEffectsStats, thisEffect, "MyFortifyPotions", true))
+		return
+	endIf
+	if (CheckFormEffects(FortifyEffectsWarrior, thisEffect, "MyFortifyPotions", true))
+		return
+	endIf
+	if (CheckFormEffects(FortifyEffectsMage, thisEffect, "MyFortifyPotions", true))
+		return
+	endIf
 
-		if (CheckFormEffects(ResistEffects, thisEffect, "MyResistPotions", true))
-			return
-		endIf
-
+	if (CheckFormEffects(ResistEffects, thisEffect, "MyResistPotions", true))
+		return
 	endIf
 	
 endFunction
@@ -189,7 +203,7 @@ bool Function CheckFormEffects(int[] akEffectsArray, Form akFormToCheck, string 
 			endIf
 		endIf
 	endWhile
-	return !abReturnOnFirst
+	return false
 endFunction
 
 Function RegisterPotion(string asListName, int aiEffectType)
@@ -219,7 +233,16 @@ function ClearThreadVars()
 	FortifyEffectsWarrior = new int[1]
 	FortifyEffectsMage = new int[1]
 	ResistEffects = new int[1]
-	PoisonEffects = new int[1]
+	PoisonEffectsStats = new int[1]
+	PoisonEffectsWeakness = new int[1]
+	PoisonEffectsGeneric = new int[1]
+	IdentifyPotionEffects = 0
+	C_IDENTIFY_RESTORE = 0
+	C_IDENTIFY_FORTIFY = 0
+	C_IDENTIFY_RESIST = 0
+	C_IDENTIFY_FIRST = 0
+	C_IDENTIFY_SECOND = 0
+	C_IDENTIFY_THIRD = 0
 endFunction
 
 ; Create the callback, including the specific actor name so other actors can ignore it
