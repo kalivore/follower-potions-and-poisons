@@ -158,6 +158,9 @@ Potion[] MyResistPotions
 
 Potion[] MyPoisons
 
+Race EnemyRace
+int EnemyLvlDiff
+bool EnemyIsBoss
 float CurrentUpdateInterval
 int[] MyPotionWarningCounts
 int[] MyPotionWarningTriggers
@@ -213,7 +216,7 @@ endFunction
 Function Maintenance()
 	IgnoreEvents = false
 	IgnoreCombatStateEvents = false
-	if (!RegisterForAnimationEvent(MyActor, "weaponSwing") || !RegisterForAnimationEvent(MyActor, "weaponLeftSwing"))
+	if (!RegisterForAnimationEvent(MyActor, "weaponSwing") || !RegisterForAnimationEvent(MyActor, "weaponLeftSwing") || !RegisterForAnimationEvent(MyActor, "arrowRelease"))
 		AliasDebug("Failed to register for animation events")
 	endIf
 	if (!DoingInit)
@@ -233,6 +236,7 @@ Function DeInit()
 	UnregisterForUpdate()
 	UnregisterForAnimationEvent(MyActor, "weaponSwing")
 	UnregisterForAnimationEvent(MyActor, "weaponLeftSwing")
+	UnregisterForAnimationEvent(MyActor, "arrowRelease")
 	UnregisterForModEvent("_FPP_Callback_RegisterPotion")
 	UnregisterForModEvent("_FPP_Callback_PotionIdentified")
 	AliasDebug("DeInit - Complete", "removed " + MyActorName, true)
@@ -371,11 +375,19 @@ State PendingEvent
 	EndEvent
 
 	Event OnAnimationEvent(ObjectReference aktarg, string asEventName)
-		if (IgnoreEvents || !UsePotionOfType[EFFECT_RESTORESTAMINA])
+		if (IgnoreEvents)
 			return
 		endIf
 		IgnoreEvents = true
-		if (!MyActor.GetAnimationVariableBool("bAllowRotation"))
+		if (asEventName == "arrowRelease")
+			; just assume they're using a bow, even if they might have switched equipment in the moment
+			if (ShouldUseCombatPoisonsOnUpdate(C_ITEM_BOW, C_ITEM_BOW))
+				AliasDebug2(AttemptPoisonChain("PendingEvent::OnAnimationEvent(bow shot)::AttemptPoisonChain - ", 1, C_ITEM_BOW))
+			endIf
+			IgnoreEvents = false
+			return
+		endIf
+		if (!UsePotionOfType[EFFECT_RESTORESTAMINA] || !MyActor.GetAnimationVariableBool("bAllowRotation"))
 			IgnoreEvents = false
 			return
 		endIf
@@ -428,16 +440,14 @@ State PendingUpdate
 		string newState = DetermineState()
 		bool extendUpdate = HandleUpdate("PendingUpdate::OnUpdate")
 		if (extendUpdate || newState == "PendingUpdate")
-			AliasDebug("PendingUpdate::OnUpdate - update in " + CurrentUpdateInterval)
-			RegisterForSingleUpdate(CurrentUpdateInterval)
-			
-			if (ShouldUseCombatPoisonsOnUpdate())
-				int rhItem = MyActor.GetEquippedItemType(1)
+			int lhItem = MyActor.GetEquippedItemType(0)
+			int rhItem = MyActor.GetEquippedItemType(1)
+			if (ShouldUseCombatPoisonsOnUpdate(lhItem, rhItem))
 				AliasDebug2(AttemptPoisonChain("PendingUpdate::OnUpdate::AttemptPoisonChain - ", 1, rhItem))
-				int lhItem = MyActor.GetEquippedItemType(0)
 				AliasDebug2(AttemptPoisonChain("PendingUpdate::OnUpdate::AttemptPoisonChain - ", 0, lhItem))
 			endIf
-			
+			AliasDebug("PendingUpdate::OnUpdate - update in " + CurrentUpdateInterval)
+			RegisterForSingleUpdate(CurrentUpdateInterval)
 			IgnoreEvents = false
 		else
 			AliasDebug("PendingUpdate::OnUpdate - go to " + newState)
@@ -710,19 +720,19 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 	endIf
 	
 	int enemyLevel = akTarget.GetLevel()
-	Race enemyRace = akTarget.GetRace()
-	bool isBoss = akTarget.HasRefType(LocRefTypeBoss)
-	int lvlDiff = enemyLevel - MyActor.GetLevel()
+	EnemyRace = akTarget.GetRace()
+	EnemyIsBoss = akTarget.HasRefType(LocRefTypeBoss)
+	EnemyLvlDiff = enemyLevel - MyActor.GetLevel()
 	int lhItem = MyActor.GetEquippedItemType(0)
 	int rhItem = MyActor.GetEquippedItemType(1)
 	
-	msg += "combat with level " + enemyLevel + " " + enemyRace.GetName()
-	if (isBoss)
+	msg += "combat with level " + enemyLevel + " " + EnemyRace.GetName()
+	if (EnemyIsBoss)
 		msg += " boss"
 	endIf
-	msg += " " + akTarget.GetLeveledActorBase().GetName() + " (diff " + lvlDiff + ", trigger " + LvlDiffTrigger + "); LH: " + lhItem + ", RH: " + rhItem + " - "
+	msg += " " + akTarget.GetLeveledActorBase().GetName() + " (diff " + EnemyLvlDiff + ", trigger " + LvlDiffTrigger + "); LH: " + lhItem + ", RH: " + rhItem + " - "
 	
-	if (ShouldUseCombatPoisons(lvlDiff, enemyRace, isBoss))
+	if (ShouldUseCombatPoisons(lhItem, rhItem))
 		msg += AttemptPoisonChain("", 1, rhItem)
 		msg += " -- "
 		msg += AttemptPoisonChain("", 0, lhItem)
@@ -731,7 +741,7 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 		AliasDebug2(msg + "not enough to use poisons")
 	endIf
 	
-	if (ShouldUseCombatPotions(lvlDiff, enemyRace, isBoss))
+	if (ShouldUseCombatPotions())
 		AliasDebug(msg + "use potions")
 		; chain these ones as an AND, since you want to keep going through (using potions)
 		; until any one returns false (ie because you're not in combat any more)
@@ -745,19 +755,19 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 	IgnoreCombatStateEvents = false
 endFunction
 
-bool function ShouldUseCombatPoisons(int aiLvlDiff, Race akEnemyRace, bool abIsBoss)
+bool function ShouldUseCombatPoisons(int aiLHItem, int aiRHItem)
 	return true
 endFunction
-bool function ShouldUseCombatPoisonsOnUpdate()
+bool function ShouldUseCombatPoisonsOnUpdate(int aiLHItem, int aiRHItem)
 	return true
 endFunction
 
-bool function ShouldUseCombatPotions(int aiLvlDiff, Race akEnemyRace, bool abIsBoss)
+bool function ShouldUseCombatPotions()
 	; simplest check first
-	if (aiLvlDiff > LvlDiffTrigger)
+	if (EnemyLvlDiff > LvlDiffTrigger)
 		return true
 	endIf
-	int i = AvailableTriggerRaces.Find(akEnemyRace)
+	int i = AvailableTriggerRaces.Find(EnemyRace)
 	if (i < 0)
 		return false
 	endIf
@@ -783,11 +793,11 @@ string function AttemptPoisonChain(string asState, int aiHand, int aiEquippedIte
 endFunction
 
 bool function EquippedItemPoisonable(int aiHand, int aiEquippedItemType)
-	bool is1H = is1HWeapon(aiEquippedItemType)
+	bool is1H = is1HItem(aiEquippedItemType)
 	if (aiHand == 0) ; left hand
 		return is1H
 	elseIf (aiHand == 1) ; right hand
-		return is1H || is2HWeapon(aiEquippedItemType) || aiEquippedItemType == C_ITEM_BOW
+		return is1H || is2HItem(aiEquippedItemType) || isBowItem(aiEquippedItemType)
 	endIf
 	return false
 endFunction
@@ -857,7 +867,7 @@ bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYBLOCK] \
-		&& (aiLHItem == C_ITEM_SHIELD || aiRHItem == C_ITEM_SHIELD) \
+		&& (isShieldItem(aiLHItem) || isShieldItem(aiRHItem)) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYBLOCK, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -887,7 +897,7 @@ bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYMARKSMAN] \
-		&& (aiLHItem == C_ITEM_BOW) \
+		&& (isBowItem(aiLHItem) || isBowItem(aiRHItem)) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYMARKSMAN, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -897,7 +907,7 @@ bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYONEHANDED] \
-		&& (is1HWeapon(aiLHItem) || is1HWeapon(aiRHItem)) \
+		&& (is1HItem(aiLHItem) || is1HItem(aiRHItem)) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYONEHANDED, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -907,7 +917,7 @@ bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem
 	endIf
 	
 	if (UsePotionOfType[EFFECT_FORTIFYTWOHANDED] \
-		&& (is2HWeapon(aiRHItem)) \
+		&& (is2HItem(aiLHItem) || is2HItem(aiRHItem)) \
 		&& UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", EFFECT_FORTIFYTWOHANDED, MyFortifyPotions, "MyFortifyPotions"))
 		Utility.Wait(1)
 		if (!MyActor.IsInCombat())
@@ -1257,11 +1267,17 @@ bool function TryFirstPoisonThatExists(string asState, int aiEffectType, Potion[
 	return false
 endFunction
 
-bool function is1HWeapon(int aiItemType)
+bool function isShieldItem(int aiItemType)
+	return aiItemType == C_ITEM_SHIELD
+endFunction
+bool function is1HItem(int aiItemType)
 	return aiItemType == C_ITEM_1H_SWORD || aiItemType == C_ITEM_1H_DAGGER || aiItemType == C_ITEM_1H_AXE || aiItemType == C_ITEM_1H_MACE
 endFunction
-bool function is2HWeapon(int aiItemType)
+bool function is2HItem(int aiItemType)
 	return aiItemType == C_ITEM_2H_SWORD || aiItemType == C_ITEM_2H_AXE_MACE
+endFunction
+bool function isBowItem(int aiItemType)
+	return aiItemType == C_ITEM_BOW || aiItemType == C_ITEM_CROSSBOW
 endFunction
 
 int function RemoveFromArray(Potion akPotion, Potion[] akPotionList)
