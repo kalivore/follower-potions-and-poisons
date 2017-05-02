@@ -1182,8 +1182,8 @@ Function RefreshAllFollowerPotions()
 		if (FPPQuest.AllFollowers[followerIndex])
 			RefreshFollowerPotions(FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript)
 			Utility.WaitMenuMode(0.5)
-			followerIndex += 1
 		endIf
+		followerIndex += 1
 	endWhile
 
 endFunction

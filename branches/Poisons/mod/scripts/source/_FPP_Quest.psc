@@ -39,6 +39,9 @@ int Property C_ITEM_SHIELD = 10 Autoreadonly
 int Property C_ITEM_TORCH = 11 Autoreadonly
 int Property C_ITEM_CROSSBOW = 12 Autoreadonly
 
+int Property C_HAND_LEFT = 0 Autoreadonly
+int Property C_HAND_RIGHT = 1 Autoreadonly
+
 int Property EFFECT_RESTOREHEALTH = 0 Autoreadonly
 int Property EFFECT_RESTORESTAMINA = 1 Autoreadonly
 int Property EFFECT_RESTOREMAGICKA = 2 Autoreadonly
@@ -332,14 +335,15 @@ function Update()
 		
 		if (iPreviousVersion < 20000)
 		
-			; set MyPoisons for all current followers
+			; reset all current followers
 			int i = 0
 			int iMax = AllFollowers.Length
 			ReferenceAlias thisFollowerRef
 			while (i < iMax)
 				thisFollowerRef = AllFollowers[i]
 				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
-					(thisFollowerRef as _FPP_FollowerScript).ClearPoisonLists()
+					RefreshFollowerPotions(thisFollowerRef.GetReference() as Actor)
+					Utility.WaitMenuMode(0.5)
 				endIf
 				i += 1
 			endWhile

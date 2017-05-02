@@ -8,6 +8,7 @@ bool threadBusy = false
 bool WriteDebug
 string ActorName
 Potion ThisPotion
+int PotionCount
 Keyword[] EffectKeywords
 int[] RestoreEffects
 int[] FortifyEffectsStats
@@ -26,7 +27,7 @@ int C_IDENTIFY_SECOND
 int C_IDENTIFY_THIRD
 
 ; Thread queuing and set-up
-function GetAsync(bool abDebug, string asActorName, Potion akPotion, Keyword[] akEffectKeywords, \
+function GetAsync(bool abDebug, string asActorName, Potion akPotion, int aiPotionCount, Keyword[] akEffectKeywords, \
 					int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects, \
 					int[] akPoisonEffectsStats, int[] akPoisonEffectsWeakness, int[] akPoisonEffectsGeneric, \
 					int aiIdentifyPotionEffects, int aiC_IDENTIFY_RESTORE, int aiC_IDENTIFY_FORTIFY, int aiC_IDENTIFY_RESIST, int aiC_IDENTIFY_FIRST, int aiC_IDENTIFY_SECOND, int aiC_IDENTIFY_THIRD)
@@ -38,6 +39,7 @@ function GetAsync(bool abDebug, string asActorName, Potion akPotion, Keyword[] a
 	WriteDebug = abDebug
 	ActorName = asActorName
 	ThisPotion = akPotion
+	PotionCount = aiPotionCount
 	EffectKeywords = akEffectKeywords
 	RestoreEffects = akRestoreEffects
 	FortifyEffectsStats = akFortifyEffectsStats
@@ -115,7 +117,7 @@ Function IdentifyPotion()
 		bool hasStatEffect = CheckFormEffects(PoisonEffectsStats, ThisPotion, "MyPoisons", false)
 		bool hasWeakEffect = CheckFormEffects(PoisonEffectsWeakness, ThisPotion, "MyPoisons", false)
 		if (!hasStatEffect && !hasWeakEffect)
-			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - no specific events found, add as generic")
+			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - no specific effects found, add as generic")
 			RegisterPotion("MyPoisons", PoisonEffectsGeneric[0])
 		endIf
 		; nothing more to do - return here
@@ -214,6 +216,7 @@ Function RegisterPotion(string asListName, int aiEffectType)
 		ModEvent.PushForm(handle, self)
 		ModEvent.PushString(handle, ActorName)
 		ModEvent.PushForm(handle, ThisPotion)
+		ModEvent.PushInt(handle, PotionCount)
 		ModEvent.PushString(handle, asListName)
 		ModEvent.PushInt(handle, aiEffectType)
 		ModEvent.Send(handle)
@@ -227,6 +230,7 @@ function ClearThreadVars()
 	WriteDebug = false
 	ActorName = None
 	ThisPotion = None
+	PotionCount = 0
 	EffectKeywords = new Keyword[1]
 	RestoreEffects = new int[1]
 	FortifyEffectsStats = new int[1]
