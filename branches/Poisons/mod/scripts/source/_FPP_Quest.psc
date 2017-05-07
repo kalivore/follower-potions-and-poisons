@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 2.0000 AutoReadonly
+float Property CurrentVersion = 2.0001 AutoReadonly
 float previousVersion
 
 bool DawnguardLoaded
@@ -245,15 +245,15 @@ endEvent
 function Update()
 
 	; floating-point math is hard..  let's go shopping!
-	int iPreviousVersion = (PreviousVersion * 10000) as int
-	int iCurrentVersion = (CurrentVersion * 10000) as int
+	int iPreviousVersion = (PreviousVersion * 100000) as int
+	int iCurrentVersion = (CurrentVersion * 100000) as int
 	
 	if (iCurrentVersion != iPreviousVersion)
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; version-specific updates
 		;;;;;;;;;;;;;;;;;;;;;;;;;;
-		if (iPreviousVersion < 00201)
+		if (iPreviousVersion < 002010)
 		
 			; set DefaultWarningIntervals
 			SetDefaultWarningIntervals()
@@ -273,7 +273,7 @@ function Update()
 			
 		endIf
 		
-		if (iPreviousVersion < 00300)
+		if (iPreviousVersion < 003000)
 		
 			; set DefaultIdentifyPotionEffects (to identify everything, which is previous standard behaviour)
 			DefaultIdentifyPotionEffects = C_IDENTIFY_RESTORE + C_IDENTIFY_FORTIFY + C_IDENTIFY_RESIST
@@ -292,7 +292,7 @@ function Update()
 		
 		endIf
 		
-		if (iPreviousVersion < 10100)
+		if (iPreviousVersion < 101000)
 		
 			; set AvailableTriggerRaces
 			SetAvailableTriggerRaces()
@@ -314,7 +314,7 @@ function Update()
 		
 		endIf
 		
-		if (iPreviousVersion < 10200)
+		if (iPreviousVersion < 102000)
 		
 			; set DefaultEnableWarnings
 			SetDefaultEnableWarnings()
@@ -333,7 +333,7 @@ function Update()
 		
 		endIf
 		
-		if (iPreviousVersion < 20000)
+		if (iPreviousVersion < 200010)
 		
 			; reset all current followers
 			int i = 0
@@ -347,7 +347,7 @@ function Update()
 				endIf
 				i += 1
 			endWhile
-		
+			
 		endIf
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; end version-specific updates
@@ -381,6 +381,7 @@ function Maintenance()
 /;
 
 	Debug.OpenUserLog("FollowerPotions")
+	Debug.OpenUserLog("FollowerPoisons")
 
 	SetProperties()
 
