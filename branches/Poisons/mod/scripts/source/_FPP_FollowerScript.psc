@@ -465,7 +465,7 @@ State PendingUpdate
 		; call DetermineState to set current StatLimits and UpdateInterval
 		DetermineState()
 		if (DebugToFile)
-			AliasDebug("PendingUpdate::Begin (" + "H:" + GetStringPercentage("Health") + ", S:" + GetStringPercentage("Stamina") + ", M:" + GetStringPercentage("Magicka") + ") - update in " + CurrentUpdateInterval)
+			AliasDebug("PendingUpdate::Begin (H:" + GetStringPercentage("Health") + ", S:" + GetStringPercentage("Stamina") + ", M:" + GetStringPercentage("Magicka") + ") - update in " + CurrentUpdateInterval)
 		endIf
 		RegisterForSingleUpdate(CurrentUpdateInterval)
 	EndEvent
@@ -525,13 +525,13 @@ endState
 State Incapacitated
  	Event OnBeginState()
 		if (DebugToFile)
-			AliasDebug("Incapacitated::Begin (" + "H:" + GetStringPercentage("Health") + ") - update in " + UpdateIntervalNonCombat)
+			AliasDebug("Incapacitated::Begin (H:" + GetStringPercentage("Health") + ") - update in " + UpdateIntervalNonCombat)
 		endIf
 		RegisterForSingleUpdate(UpdateIntervalNonCombat)
 	EndEvent
 
 	Event OnUpdate()
-		string msg = "Incapacitated::OnUpdate - (" + "H:" + GetStringPercentage("Health") + ")"
+		string msg = "Incapacitated::OnUpdate - (H:" + GetStringPercentage("Health") + ")"
 		if (IsIncapacitated())
 			AliasDebug(msg + " - still incapacitated")
 			RegisterForSingleUpdate(UpdateIntervalNonCombat)
@@ -844,10 +844,10 @@ bool function AttemptPoisonChain(string asState, int aiHand, int aiEquippedItemT
 	if (UseCombatPoisonsDamageStats(asState + "::AttemptPoisonChain", aiHand) \
 		|| UseCombatPoisonsWeaknessMagic(asState + "::AttemptPoisonChain", aiHand) \
 		|| UseCombatPoisonsGeneric(asState + "::AttemptPoisonChain", aiHand))
-		AliasDebug3(asState + "::AttemptPoisonChain - " + "used poison for " + GetHand(aiHand))
+		AliasDebug3(asState + "::AttemptPoisonChain (" + MyTotalPoisonCount + " poisons) - used poison for " + GetHand(aiHand))
 		return true
 	endIf
-	AliasDebug3(asState + "::AttemptPoisonChain - " + "didn't use poisons for " + GetHand(aiHand))
+	AliasDebug3(asState + "::AttemptPoisonChain (" + MyTotalPoisonCount + " poisons) - didn't use poisons for " + GetHand(aiHand))
 	return false
 endFunction
 
@@ -1120,14 +1120,16 @@ Function RegisterPotion(Potion akPotion, int aiPotionCount, int aiEffectType)
 		AliasDebug2("RegisterPotion - can't determine array for effect " + aiEffectType)
 		return
 	endIf
+	int newTotal = 0
 	int potionIndex = potionList.Find(akPotion)
 	if (potionIndex < 0)
 		int freeIndex = potionList.Find(None)
 		if (freeIndex > -1)
 			potionList[freeIndex] = akPotion
-			HasItemOfType[aiEffectType] = HasItemOfType[aiEffectType] + aiPotionCount
+			newTotal = HasItemOfType[aiEffectType] + aiPotionCount
+			HasItemOfType[aiEffectType] = newTotal
 			;if (DebugToFile)
-				AliasDebug2("RegisterPotion - Recognised " + aiPotionCount + "x " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + "), assigned array" + aiEffectType + "[" + freeIndex + "], total " + HasItemOfType[aiEffectType] + " for this effect")
+				AliasDebug2("RegisterPotion - Added " + aiPotionCount + "x " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ") to array" + aiEffectType + "[" + freeIndex + "], total " + newTotal + " for this effect")
 			;endIf
 		else
 			AliasDebug("", MyActorName + " - can't add " + akPotion.GetName() + " potion; no more room for this type of potion!", true)
@@ -1136,9 +1138,10 @@ Function RegisterPotion(Potion akPotion, int aiPotionCount, int aiEffectType)
 			endIf
 		endIf
 	else
-		HasItemOfType[aiEffectType] = HasItemOfType[aiEffectType] + aiPotionCount
+		newTotal = HasItemOfType[aiEffectType] + aiPotionCount
+		HasItemOfType[aiEffectType] = newTotal
 		;if (DebugToFile)
-			AliasDebug2("RegisterPotion - Restocked " + aiPotionCount + "x " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + "), at array" + aiEffectType + "[" + potionIndex + "], total " + HasItemOfType[aiEffectType] + " for this effect")
+			AliasDebug2("RegisterPotion - Increased " + aiPotionCount + "x " + akPotion.GetName() + " (Id " + akPotion.GetFormId() + ") in array" + aiEffectType + "[" + potionIndex + "], total " + newTotal + " for this effect")
 		;endIf
 	endIf
 endFunction
@@ -1151,11 +1154,11 @@ Function UpdateItemCounts(string asActorName, int aiEffectsFound, bool abIsPoiso
 	if (aiEffectsFound < 1)
 		return
 	endIf
-	AliasDebug2("UpdateItemCounts - found " + aiEffectsFound + ", increment count by " + aiItemCount)
-	AliasDebug3("UpdateItemCounts - found " + aiEffectsFound + ", increment count by " + aiItemCount)
 	if (abIsPoison)
+		AliasDebug3("UpdateItemCounts - found " + aiEffectsFound + ", increment MyTotalPoisonCount by " + aiItemCount)
 		MyTotalPoisonCount += aiItemCount
 	else
+		AliasDebug2("UpdateItemCounts - found " + aiEffectsFound + ", increment MyTotalPotionCount by " + aiItemCount)
 		MyTotalPotionCount += aiItemCount
 	endIf
 endFunction
@@ -1181,7 +1184,6 @@ bool function UsePotionIfPossible(string asState, int aiEffectType, Potion[] akP
 			msg += "used " + effectName  + " potion from array" + aiEffectType
 			potionUsed = true
 		else
-			HasItemOfType[aiEffectType] = 0
 			WarnNoPotions(asState + "::UsePotionIfPossible", aiEffectType, effectName)
 			msg += "no " + effectName  + " potions"
 		endIf
@@ -1212,7 +1214,6 @@ bool function UsePoisonIfPossible(string asState, int aiEffectType, Potion[] akP
 		;AliasDebug3(msg)
 		poisonUsed = true
 	else
-		HasItemOfType[aiEffectType] = 0
 		msg += "failed to use " + effectName  + " poison"
 		AliasDebug3(msg)
 	endIf
@@ -1314,9 +1315,6 @@ bool function TryFirstPoisonThatExists(string asState, int aiEffectType, Potion[
 				if (ret < 0)
 					msg += "fail (for unknown reason)"
 					AliasDebug3(msg)
-					
-					; if fail, return true or you won't try again?
-					
 				else
 					MyActor.RemoveItem(thisPoison)
 					UpdateCountsAndArrays(thisPoison, 1, poisonCount == 1)
@@ -1454,6 +1452,7 @@ Potion[] function GetPotionList(int aiEffectType)
 endFunction
 
 int function UpdateCountsAndArrays(Potion akPotion, int aiCount, bool abSetToNone)
+float ftimeStart = Utility.GetCurrentRealTime()
 	int affected = 0
 	
 	affected += UpdateCountAndArray(potionListRestoreHealth, akPotion, EFFECT_RESTOREHEALTH, aiCount, abSetToNone)
@@ -1496,6 +1495,8 @@ int function UpdateCountsAndArrays(Potion akPotion, int aiCount, bool abSetToNon
 	affected += UpdateCountAndArray(potionListWeaknessMagic, akPotion, EFFECT_WEAKNESSMAGIC, aiCount, abSetToNone)
 	affected += UpdateCountAndArray(potionListHarmful, akPotion, EFFECT_HARMFUL, aiCount, abSetToNone)
 
+float ftimeEnd = Utility.GetCurrentRealTime()
+AliasDebug2("UpdateCountsAndArrays: " + (ftimeEnd - ftimeStart) + "s")
 	return affected
 endFunction
 
