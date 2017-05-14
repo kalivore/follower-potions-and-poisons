@@ -7,6 +7,8 @@ float previousVersion
 bool DawnguardLoaded
 bool DragonbornLoaded
 
+bool CACOLoaded
+
 ReferenceAlias[] Property AllFollowers  Auto
 bool Property NoMoreRoom Auto Conditional
 
@@ -97,6 +99,16 @@ int Property EFFECT_BENEFICIAL = 41 Autoreadonly
 int Property EFFECT_DURATIONBASED = 42 Autoreadonly
 int Property EFFECT_HARMFUL = 43 Autoreadonly
 
+int Property EFFECT_PARALYSIS = 70 Autoreadonly
+int Property EFFECT_SLOW = 71 Autoreadonly
+int Property EFFECT_FEAR = 72 Autoreadonly
+int Property EFFECT_FRENZY = 73 Autoreadonly
+
+int Property EFFECT_SILENCE = 100 Autoreadonly
+int Property EFFECT_FATIGUE = 101 Autoreadonly
+int Property EFFECT_DRAININTELLIGENCE = 102 Autoreadonly
+int Property EFFECT_DRAINSTRENGTH = 103 Autoreadonly
+
 int Property XFL_PLUGIN_EVENT_CLEAR_ALL = -1 Autoreadonly
 int Property XFL_PLUGIN_EVENT_WAIT = 0x04 Autoreadonly
 int Property XFL_PLUGIN_EVENT_SANDBOX = 0x05 Autoreadonly
@@ -162,6 +174,16 @@ Keyword Property MagicDamageFire Auto
 Keyword Property MagicDamageFrost Auto
 Keyword Property MagicDamageShock Auto
 
+Keyword Property MagicParalysis Auto
+Keyword Property MagicSlow Auto
+Keyword Property MagicFear Auto							; xx	- created
+Keyword Property MagicFrenzy Auto						; xx	- created
+
+Keyword Property MagicAlchSilence_CACO Auto				; xx07A150
+Keyword Property MagicAlchFatigue_CACO Auto				; xx07A153
+Keyword Property MagicAlchDrainIntelligence_CACO Auto	; xx25B701
+Keyword Property MagicAlchDrainStrength_CACO Auto		; xx	- created
+
 LocationRefType Property LocRefTypeBoss Auto
 
 Race[] Property AvailableTriggerRaces Auto
@@ -176,6 +198,7 @@ int[] Property FortifyEffectsWarrior Auto
 int[] Property FortifyEffectsMage Auto
 int[] Property ResistEffects Auto
 
+int[] Property PoisonEffectsSpecial Auto
 int[] Property PoisonEffectsStats Auto
 int[] Property PoisonEffectsWeakness Auto
 int[] Property PoisonEffectsGeneric Auto
@@ -198,6 +221,8 @@ bool[] Property DefaultUsePotionOfType Auto
 int Property DefaultIdentifyPotionEffects Auto
 
 Message Property _FPP_InfoMessage Auto
+
+_FPP_IdentifyPotionThreadManager Property FPPThreadManager Auto
 
 Potion Property PotionHealth1 Auto
 Potion Property PotionHealth2 Auto
@@ -231,9 +256,6 @@ int followerCount
 
 event OnInit()
 
-	EffectKeywords = new Keyword[44]
-	EffectNames = new string[44]
-
 	SetDefaults()
 
 	DebugStuff("Follower Potions is started")
@@ -243,6 +265,11 @@ event OnInit()
 endEvent
 
 function Update()
+
+	SetProperties()
+
+	Debug.OpenUserLog("FollowerPotions")
+	Debug.OpenUserLog("FollowerPoisons")
 
 	; floating-point math is hard..  let's go shopping!
 	int iPreviousVersion = (PreviousVersion * 100000) as int
@@ -335,6 +362,11 @@ function Update()
 		
 		if (iPreviousVersion < 200010)
 		
+			; thread manager now has its own quest
+			UnregisterForModEvent("_FPP_Trigger_IdentifyPotion")
+			; ..and need to do the RegisterForModEvent *here*, *before* refreshing all potions!
+			FPPThreadManager.Update(iPreviousVersion, iCurrentVersion)
+			
 			; reset all current followers
 			int i = 0
 			int iMax = AllFollowers.Length
@@ -366,6 +398,9 @@ function Update()
 		PreviousVersion = CurrentVersion
 	endIf
 
+	; pass to Thread Manager
+    FPPThreadManager.Update(iPreviousVersion, iCurrentVersion)
+	
 	Maintenance()
 
 endFunction
@@ -380,14 +415,6 @@ function Maintenance()
 	DebugStuff("================================================================================")
 /;
 
-	Debug.OpenUserLog("FollowerPotions")
-	Debug.OpenUserLog("FollowerPoisons")
-
-	SetProperties()
-
-	; used by the Thread Manager which extends Quest
-    RegisterForModEvent("_FPP_Trigger_IdentifyPotion", "OnIdentifyPotion")
-	
 	; used by this script
 	RegisterForModEvent("XFL_System_PluginEvent", "OnXflPluginEvent")
 
@@ -404,6 +431,14 @@ function Maintenance()
 		AddDragonbornTriggerRaces()
 		DebugStuff("Adding Dragonborn races to triggers")
 		DragonbornLoaded = true
+	endIf
+
+	; Check for supported mods
+	int caco = Game.GetModByName("Complete Alchemy & Cooking Overhaul.esp")
+	if (!CACOLoaded && caco > 0 && caco < 255)
+		AddCACOKeywords()
+		DebugStuff("Adding CACO keywords")
+		CACOLoaded = true
 	endIf
 
 	; Maintenance for registered followers
@@ -706,6 +741,7 @@ function DebugStuff(string asLogMsg, string asScreenMsg = "", bool abFpPrefix = 
 endFunction
 
 Function SetProperties()
+	EffectKeywords = new Keyword[127]
 	EffectKeywords[EFFECT_BENEFICIAL] = MagicAlchBeneficial
 	
 	EffectKeywords[EFFECT_RESTOREHEALTH] = MagicAlchRestoreHealth
@@ -747,6 +783,16 @@ Function SetProperties()
 	EffectKeywords[EFFECT_WEAKNESSSHOCK] = MagicAlchWeaknessShock
 	EffectKeywords[EFFECT_WEAKNESSMAGIC] = MagicAlchWeaknessMagic
 	
+	EffectKeywords[EFFECT_PARALYSIS] = MagicParalysis
+	EffectKeywords[EFFECT_SLOW] = MagicSlow
+	EffectKeywords[EFFECT_FEAR] = MagicFear
+	EffectKeywords[EFFECT_FRENZY] = MagicFrenzy
+	
+	EffectKeywords[EFFECT_SILENCE] = MagicAlchSilence_CACO
+	EffectKeywords[EFFECT_FATIGUE] = MagicAlchFatigue_CACO
+	EffectKeywords[EFFECT_DRAININTELLIGENCE] = MagicAlchDrainIntelligence_CACO
+	EffectKeywords[EFFECT_DRAINSTRENGTH] = MagicAlchDrainStrength_CACO
+	
 	EffectKeywords[EFFECT_FORTIFYALCHEMY] = MagicAlchFortifyAlchemy
 	EffectKeywords[EFFECT_FORTIFYENCHANTING] = MagicAlchFortifyEnchanting
 	EffectKeywords[EFFECT_FORTIFYLOCKPICKING] = MagicAlchFortifyLockpicking
@@ -760,6 +806,7 @@ Function SetProperties()
 	EffectKeywords[EFFECT_FORTIFYMASS] = MagicAlchFortifyMass
 	
 	
+	EffectNames = new string[127]
 	EffectNames[EFFECT_BENEFICIAL] = "Beneficial"
 	
 	EffectNames[EFFECT_RESTOREHEALTH] = "Restore Health"
@@ -802,6 +849,16 @@ Function SetProperties()
 	EffectNames[EFFECT_WEAKNESSFROST] = "Weakness to Frost"
 	EffectNames[EFFECT_WEAKNESSSHOCK] = "Weakness to Shock"
 	EffectNames[EFFECT_WEAKNESSMAGIC] = "Weakness to Magic"
+	
+	EffectNames[EFFECT_PARALYSIS] = "Paralysis"
+	EffectNames[EFFECT_SLOW] = "Slow"
+	EffectNames[EFFECT_FEAR] = "Fear"
+	EffectNames[EFFECT_FRENZY] = "Frenzy"
+	
+	EffectNames[EFFECT_SILENCE] = "Silence"
+	EffectNames[EFFECT_FATIGUE] = "Fatigue"
+	EffectNames[EFFECT_DRAININTELLIGENCE] = "Drain Intelligence"
+	EffectNames[EFFECT_DRAINSTRENGTH] = "Drain Strength"
 	
 	EffectNames[EFFECT_FORTIFYALCHEMY] = "Fortify Alchemy"
 	EffectNames[EFFECT_FORTIFYENCHANTING] = "Fortify Enchanting"
@@ -850,6 +907,16 @@ Function SetProperties()
 	ResistEffects[2] = EFFECT_RESISTSHOCK
 	ResistEffects[3] = EFFECT_RESISTMAGIC
 	ResistEffects[4] = EFFECT_RESISTPOISON
+	
+	PoisonEffectsSpecial = new int[8]
+	PoisonEffectsSpecial[0] = EFFECT_PARALYSIS
+	PoisonEffectsSpecial[1] = EFFECT_SLOW
+	PoisonEffectsSpecial[2] = EFFECT_FEAR
+	PoisonEffectsSpecial[3] = EFFECT_FRENZY
+	PoisonEffectsSpecial[4] = EFFECT_SILENCE
+	PoisonEffectsSpecial[5] = EFFECT_FATIGUE
+	PoisonEffectsSpecial[6] = EFFECT_DRAININTELLIGENCE
+	PoisonEffectsSpecial[7] = EFFECT_DRAINSTRENGTH
 	
 	PoisonEffectsStats = new int[3]
 	PoisonEffectsStats[0] = EFFECT_DAMAGEHEALTH
@@ -900,6 +967,16 @@ Function AddDragonbornTriggerRaces()
 	
 	AvailableTriggerRaces[09] = Game.GetFormFromFile(0x0003911a, "Dragonborn.esm") as Race ; Dragon Priests
 	TriggerRaceMappings[09] = 1
+endFunction
+
+Function AddCACOKeywords()
+	MagicAlchSilence_CACO = Game.GetFormFromFile(0x0007a150, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	MagicAlchFatigue_CACO = Game.GetFormFromFile(0x0007a153, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	MagicAlchDrainIntelligence_CACO = Game.GetFormFromFile(0x0025b701, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	; TODO (when/if added to CACO)
+	; MagicFear = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	; MagicFrenzy = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	; MagicAlchDrainStrength_CACO = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 endFunction
 
 Function SetDefaults()
