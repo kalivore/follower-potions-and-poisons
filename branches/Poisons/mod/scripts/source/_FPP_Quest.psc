@@ -277,6 +277,9 @@ function Update()
 	
 	if (iCurrentVersion != iPreviousVersion)
 
+		; pass to Thread Manager
+		FPPThreadManager.Update(iCurrentVersion)
+		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; version-specific updates
 		;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -362,10 +365,15 @@ function Update()
 		
 		if (iPreviousVersion < 200010)
 		
-			; thread manager now has its own quest
+			; thread manager now has its own quest, so we don't need this event listener
 			UnregisterForModEvent("_FPP_Trigger_IdentifyPotion")
-			; ..and need to do the RegisterForModEvent *here*, *before* refreshing all potions!
-			FPPThreadManager.Update(iPreviousVersion, iCurrentVersion)
+			FPPThreadManager.Start()
+			Utility.Wait(1)
+			int iW = 100
+			while (iW && !FPPThreadManager.IsRunning())
+				iW -= 1
+				Utility.Wait(0.1)
+			endWhile
 			
 			; reset all current followers
 			int i = 0
@@ -398,9 +406,6 @@ function Update()
 		PreviousVersion = CurrentVersion
 	endIf
 
-	; pass to Thread Manager
-    FPPThreadManager.Update(iPreviousVersion, iCurrentVersion)
-	
 	Maintenance()
 
 endFunction

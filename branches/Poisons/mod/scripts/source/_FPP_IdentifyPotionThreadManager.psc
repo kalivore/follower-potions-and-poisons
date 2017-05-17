@@ -2,7 +2,9 @@ scriptname _FPP_IdentifyPotionThreadManager extends Quest
  
 Quest property IdentifyPotionQuest auto
 {The name of the thread management quest.}
- 
+
+int iCurrentVersion = 0
+
 _FPP_IdentifyPotionThread01 thread01
 _FPP_IdentifyPotionThread02 thread02
 _FPP_IdentifyPotionThread03 thread03
@@ -27,7 +29,7 @@ _FPP_IdentifyPotionThread20 thread20
 bool blocked = false
  
 Event OnInit()
-    ;Let's cast our threads to local variables so things are less cluttered in our code
+    ; Let's cast our threads to local variables so things are less cluttered in our code
     thread01 = IdentifyPotionQuest as _FPP_IdentifyPotionThread01
     thread02 = IdentifyPotionQuest as _FPP_IdentifyPotionThread02
     thread03 = IdentifyPotionQuest as _FPP_IdentifyPotionThread03
@@ -48,20 +50,18 @@ Event OnInit()
     thread18 = IdentifyPotionQuest as _FPP_IdentifyPotionThread18
     thread19 = IdentifyPotionQuest as _FPP_IdentifyPotionThread19
     thread20 = IdentifyPotionQuest as _FPP_IdentifyPotionThread20
-	
-	Maintenance()
 EndEvent
 
-function Update(int aiPreviousVersion, int aiCurrentVersion)
+function Update(int aiCurrentVersion)
 
-	if (aiCurrentVersion != aiPreviousVersion)
+	if (iCurrentVersion != aiCurrentVersion)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; version-specific updates
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; end version-specific updates
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		iCurrentVersion = aiCurrentVersion
 	endIf
 	
 	Maintenance()

@@ -2,24 +2,6 @@ Scriptname _FPP_IdentifyPotionThread extends Quest
 
 _FPP_Quest property FPPQuest auto
 {quest which holds useful thread properties}
- 
-; constant (more-or-less) properties
-Keyword[] EffectKeywords
-int[] RestoreEffects
-int[] FortifyEffectsStats
-int[] FortifyEffectsWarrior
-int[] FortifyEffectsMage
-int[] ResistEffects
-int[] PoisonEffectsSpecial
-int[] PoisonEffectsStats
-int[] PoisonEffectsWeakness
-int[] PoisonEffectsGeneric
-int C_IDENTIFY_RESTORE
-int C_IDENTIFY_FORTIFY
-int C_IDENTIFY_RESIST
-int C_IDENTIFY_FIRST
-int C_IDENTIFY_SECOND
-int C_IDENTIFY_THIRD
 
 ; Thread variables
 bool threadQueued = false
@@ -42,30 +24,6 @@ Potion ThisPotion
 int PotionCount
 int IdentifyPotionEffects
 bool DebugToFile
-
-; re-initialise external properties from main quest
-Event OnInit()
-	ReInit()
-endEvent
-
-function ReInit()
-	EffectKeywords = FPPQuest.EffectKeywords
-	RestoreEffects = FPPQuest.RestoreEffects
-	FortifyEffectsStats = FPPQuest.FortifyEffectsStats
-	FortifyEffectsWarrior = FPPQuest.FortifyEffectsWarrior
-	FortifyEffectsMage = FPPQuest.FortifyEffectsMage
-	ResistEffects = FPPQuest.ResistEffects
-	PoisonEffectsSpecial = FPPQuest.PoisonEffectsSpecial
-	PoisonEffectsStats = FPPQuest.PoisonEffectsStats
-	PoisonEffectsWeakness = FPPQuest.PoisonEffectsWeakness
-	PoisonEffectsGeneric = FPPQuest.PoisonEffectsGeneric
-	C_IDENTIFY_RESTORE = FPPQuest.C_IDENTIFY_RESTORE
-	C_IDENTIFY_FORTIFY = FPPQuest.C_IDENTIFY_FORTIFY
-	C_IDENTIFY_RESIST = FPPQuest.C_IDENTIFY_RESIST
-	C_IDENTIFY_FIRST = FPPQuest.C_IDENTIFY_FIRST
-	C_IDENTIFY_SECOND = FPPQuest.C_IDENTIFY_SECOND
-	C_IDENTIFY_THIRD = FPPQuest.C_IDENTIFY_THIRD
-endFunction
 
 ; Thread queuing and set-up
 function GetAsync(string asActorName, Potion akPotion, int aiPotionCount, int aiIdentifyPotionEffects, bool abDebugToFile)
@@ -141,7 +99,24 @@ Function IdentifyPotion()
 	if (ThisPotion == None || ThisPotion.IsFood() || (!isPoisonItem && ThisPotion.IsHostile()))
 		return
 	endIf
-	
+
+	Keyword[] EffectKeywords = FPPQuest.EffectKeywords
+	int[] RestoreEffects = FPPQuest.RestoreEffects
+	int[] FortifyEffectsStats = FPPQuest.FortifyEffectsStats
+	int[] FortifyEffectsWarrior = FPPQuest.FortifyEffectsWarrior
+	int[] FortifyEffectsMage = FPPQuest.FortifyEffectsMage
+	int[] ResistEffects = FPPQuest.ResistEffects
+	int[] PoisonEffectsSpecial = FPPQuest.PoisonEffectsSpecial
+	int[] PoisonEffectsStats = FPPQuest.PoisonEffectsStats
+	int[] PoisonEffectsWeakness = FPPQuest.PoisonEffectsWeakness
+	int[] PoisonEffectsGeneric = FPPQuest.PoisonEffectsGeneric
+	int C_IDENTIFY_RESTORE = FPPQuest.C_IDENTIFY_RESTORE
+	int C_IDENTIFY_FORTIFY = FPPQuest.C_IDENTIFY_FORTIFY
+	int C_IDENTIFY_RESIST = FPPQuest.C_IDENTIFY_RESIST
+	int C_IDENTIFY_FIRST = FPPQuest.C_IDENTIFY_FIRST
+	int C_IDENTIFY_SECOND = FPPQuest.C_IDENTIFY_SECOND
+	int C_IDENTIFY_THIRD = FPPQuest.C_IDENTIFY_THIRD
+
 	bool playerMade = Math.RightShift(ThisPotion.GetFormId(), 24) >= 255
 	bool identByEffectType = IdentifyPotionEffects < C_IDENTIFY_FIRST
 	MagicEffect[] effects = ThisPotion.GetMagicEffects()
@@ -151,9 +126,9 @@ Function IdentifyPotion()
 		if (DebugToFile)
 			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - find " + numEffects + " effect(s) by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
 		endIf
-		effectTypesSpecial = CheckFormEffects(PoisonEffectsSpecial, ThisPotion, false)
-		effectTypesDamageStats = CheckFormEffects(PoisonEffectsStats, ThisPotion, false)
-		effectTypesWeakness = CheckFormEffects(PoisonEffectsWeakness, ThisPotion, false)
+		effectTypesSpecial = CheckFormEffects(PoisonEffectsSpecial, ThisPotion, EffectKeywords, false)
+		effectTypesDamageStats = CheckFormEffects(PoisonEffectsStats, ThisPotion, EffectKeywords, false)
+		effectTypesWeakness = CheckFormEffects(PoisonEffectsWeakness, ThisPotion, EffectKeywords, false)
 		if (effectsFound == 0)
 			if (DebugToFile)
 				Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - no specific effects found, add as generic")
@@ -172,19 +147,19 @@ Function IdentifyPotion()
 		endIf
 		
 		if (numEffects == 1 || !identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
-			effectTypesRestore = CheckFormEffects(RestoreEffects, ThisPotion, false)
+			effectTypesRestore = CheckFormEffects(RestoreEffects, ThisPotion, EffectKeywords, false)
 		endIf
 			
 		if (numEffects == 1 || !identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_FORTIFY) != 0)
-			effectTypesFortifyStats = CheckFormEffects(FortifyEffectsStats, ThisPotion, false)
-			effectTypesFortifyWarrior = CheckFormEffects(FortifyEffectsWarrior, ThisPotion, false)
-			effectTypesFortifyMage = CheckFormEffects(FortifyEffectsMage, ThisPotion, false)
+			effectTypesFortifyStats = CheckFormEffects(FortifyEffectsStats, ThisPotion, EffectKeywords, false)
+			effectTypesFortifyWarrior = CheckFormEffects(FortifyEffectsWarrior, ThisPotion, EffectKeywords, false)
+			effectTypesFortifyMage = CheckFormEffects(FortifyEffectsMage, ThisPotion, EffectKeywords, false)
 		endIf
 			
 		if (numEffects == 1 || !identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESIST) != 0)
-			effectTypesResist = CheckFormEffects(ResistEffects, ThisPotion, false)
+			effectTypesResist = CheckFormEffects(ResistEffects, ThisPotion, EffectKeywords, false)
 		endIf
-		
+
 		RegisterPotion()
 		; all identifying done - return here
 		return
@@ -217,29 +192,29 @@ Function IdentifyPotion()
 	; get relevant effect, and return at first keyword match
 	MagicEffect thisEffect = effects[getEffect]
 	
-	effectTypesRestore = CheckFormEffects(RestoreEffects, thisEffect, true)
+	effectTypesRestore = CheckFormEffects(RestoreEffects, thisEffect, EffectKeywords, true)
 	if (effectTypesRestore > 0)
 		RegisterPotion()
 		return
 	endIf
 
-	effectTypesFortifyStats = CheckFormEffects(FortifyEffectsStats, thisEffect, true)
+	effectTypesFortifyStats = CheckFormEffects(FortifyEffectsStats, thisEffect, EffectKeywords, true)
 	if (effectTypesFortifyStats > 0)
 		RegisterPotion()
 		return
 	endIf
-	effectTypesFortifyWarrior = CheckFormEffects(FortifyEffectsWarrior, thisEffect, true)
+	effectTypesFortifyWarrior = CheckFormEffects(FortifyEffectsWarrior, thisEffect, EffectKeywords, true)
 	if (effectTypesFortifyWarrior > 0)
 		RegisterPotion()
 		return
 	endIf
-	effectTypesFortifyMage = CheckFormEffects(FortifyEffectsMage, thisEffect, true)
+	effectTypesFortifyMage = CheckFormEffects(FortifyEffectsMage, thisEffect, EffectKeywords, true)
 	if (effectTypesFortifyMage > 0)
 		RegisterPotion()
 		return
 	endIf
 
-	effectTypesResist = CheckFormEffects(ResistEffects, thisEffect, true)
+	effectTypesResist = CheckFormEffects(ResistEffects, thisEffect, EffectKeywords, true)
 	if (effectTypesResist > 0)
 		RegisterPotion()
 		return
@@ -247,12 +222,12 @@ Function IdentifyPotion()
 	
 endFunction
 
-int Function CheckFormEffects(int[] akEffectsArray, Form akFormToCheck, bool abReturnOnFirst)
+int Function CheckFormEffects(int[] akEffectsArray, Form akFormToCheck, Keyword[] akEffectKeywords, bool abReturnOnFirst)
 	int itemEffects = 0
 	int i = akEffectsArray.Length
 	while (i)
 		i -= 1
-		if (akFormToCheck.HasKeyword(EffectKeywords[akEffectsArray[i]]))
+		if (akFormToCheck.HasKeyword(akEffectKeywords[akEffectsArray[i]]))
 			effectsFound += 1
 			itemEffects = Math.LogicalOr(itemEffects, Math.Pow(2, i) as int)
 			if (abReturnOnFirst)

@@ -211,6 +211,7 @@ Potion[] MyPoisonList
 int MyTotalPotionCount = 0
 int MyTotalPoisonCount = 0
 
+Actor MyEnemy
 Race EnemyRace
 int EnemyLvlDiff
 bool EnemyIsBoss
@@ -806,9 +807,10 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 		return
 	endIf
 	
-	int enemyLevel = akTarget.GetLevel()
+	MyEnemy = akTarget
 	EnemyRace = akTarget.GetRace()
 	EnemyIsBoss = akTarget.HasRefType(LocRefTypeBoss)
+	int enemyLevel = akTarget.GetLevel()
 	EnemyLvlDiff = enemyLevel - MyActor.GetLevel()
 	int lhItem = MyActor.GetEquippedItemType(C_HAND_LEFT)
 	int rhItem = MyActor.GetEquippedItemType(1)
@@ -1114,7 +1116,7 @@ bool function UsePotionIfPossible(string asState, int aiEffectType)
 	if (HasItemOfType[aiEffectType] < 1)
 		WarnNoPotions(asState + "::UsePotionIfPossible", aiEffectType, effectName)
 		msg += "no " + effectName + " potions"
-	elseif (IsInCooldown(aiEffectType))
+	elseif (IsInCooldown(aiEffectType, MyActor))
 		msg += effectName + " potion still taking effect"
 	else
 		bool potionWorked = TryFirstPotionThatExists(asState, aiEffectType)
@@ -1123,7 +1125,7 @@ bool function UsePotionIfPossible(string asState, int aiEffectType)
 			potionUsed = true
 		else
 			WarnNoPotions(asState + "::UsePotionIfPossible", aiEffectType, effectName)
-			msg += "no " + effectName  + " potions"
+			msg += "failed to use " + effectName  + " potion (something out of sync?)"
 		endIf
 	endIf
 	AliasDebug(msg)
@@ -1135,19 +1137,21 @@ bool function UsePoisonIfPossible(string asState, int aiEffectType, int aiHand)
 	string msg = asState + "::UsePoisonIfPossible (" + aiEffectType + ": " + effectName + ") - "
 	bool poisonUsed = false
 	if (HasItemOfType[aiEffectType] < 1)
-		; nothing to use
+		;WarnNoPotions(asState + "::UsePoisonIfPossible", aiEffectType, effectName)
 		msg += "no " + effectName + " poisons"
-		AliasDebug2(msg, true)
-		return poisonUsed
-	endIf
-	bool poisonWorked = TryFirstPoisonThatExists(asState, aiEffectType, aiHand)
-	if (poisonWorked)
-		msg += "used " + effectName  + " poison from array" + aiEffectType
-		poisonUsed = true
+	elseif (IsInCooldown(aiEffectType, MyEnemy))
+		msg += effectName + " poison still taking effect"
 	else
-		msg += "failed to use " + effectName  + " poison"
-		AliasDebug2(msg, true)
+		bool poisonWorked = TryFirstPoisonThatExists(asState, aiEffectType, aiHand)
+		if (poisonWorked)
+			msg += "used " + effectName  + " poison from array" + aiEffectType
+			poisonUsed = true
+		else
+			;WarnNoPotions(asState + "::UsePoisonIfPossible", aiEffectType, effectName)
+			msg += "failed to use " + effectName  + " poison (something out of sync?)"
+		endIf
 	endIf
+	AliasDebug2(msg, true)
 	return poisonUsed
 endFunction
 
@@ -1257,11 +1261,11 @@ bool function TryFirstPoisonThatExists(string asState, int aiEffectType, int aiH
 	return false
 endFunction
 
-bool function IsInCooldown(int aiEffectType)
-	if (!EffectKeywords[aiEffectType])
+bool function IsInCooldown(int aiEffectType, Actor akSubject)
+	if (!akSubject || !EffectKeywords[aiEffectType])
 		return false
 	endIf
-	return MyActor.HasEffectKeyword(EffectKeywords[aiEffectType])
+	return akSubject.HasEffectKeyword(EffectKeywords[aiEffectType])
 endFunction
 
 bool Function HasAnyPotions()
