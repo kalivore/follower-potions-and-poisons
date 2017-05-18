@@ -181,8 +181,8 @@ Keyword Property MagicFrenzy Auto						; xx	- created
 
 Keyword Property MagicAlchSilence_CACO Auto				; xx07A150
 Keyword Property MagicAlchFatigue_CACO Auto				; xx07A153
-Keyword Property MagicAlchDrainIntelligence_CACO Auto	; xx25B701
-Keyword Property MagicAlchDrainStrength_CACO Auto		; xx	- created
+Keyword Property MagicAlchDrainInt_CACO Auto			; xx25B701
+Keyword Property MagicAlchDrainStr_CACO Auto			; xx	- created
 
 LocationRefType Property LocRefTypeBoss Auto
 
@@ -217,6 +217,7 @@ float Property DefaultLvlDiffTrigger Auto
 bool[] Property DefaultTriggerRaces Auto
 
 bool[] Property DefaultUsePotionOfType Auto
+bool[] Property DefaultUsePoisonOfType Auto
 
 int Property DefaultIdentifyPotionEffects Auto
 
@@ -308,7 +309,7 @@ function Update()
 			; set DefaultIdentifyPotionEffects (to identify everything, which is previous standard behaviour)
 			DefaultIdentifyPotionEffects = C_IDENTIFY_RESTORE + C_IDENTIFY_FORTIFY + C_IDENTIFY_RESIST
 			
-			; set UsePotionOfType for all current followers
+			; set IdentifyPotionEffects for all current followers
 			int i = 0
 			int iMax = AllFollowers.Length
 			ReferenceAlias thisFollowerRef
@@ -365,6 +366,8 @@ function Update()
 		
 		if (iPreviousVersion < 200010)
 		
+			DefaultUsePoisonOfType = CreateBoolArray(EffectKeywords.Length, true)
+		
 			; thread manager now has its own quest, so we don't need this event listener
 			UnregisterForModEvent("_FPP_Trigger_IdentifyPotion")
 			FPPThreadManager.Start()
@@ -384,6 +387,7 @@ function Update()
 				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
 					RefreshFollowerPotions(thisFollowerRef.GetReference() as Actor)
 					Utility.WaitMenuMode(0.5)
+					(thisFollowerRef as _FPP_FollowerScript).UsePoisonOfType = GetDefaultUsePoisonsOfTypes()
 				endIf
 				i += 1
 			endWhile
@@ -557,48 +561,8 @@ function ResetFollower(Actor akFollower)
 		thisFollowerRef = AllFollowers[i]
 		if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor) == akFollower)
 			_FPP_FollowerScript thisFollower = thisFollowerRef as _FPP_FollowerScript
-			
-			thisFollower.UpdateIntervalInCombat = DefaultUpdateIntervalInCombat
-			thisFollower.UpdateIntervalNonCombat = DefaultUpdateIntervalNonCombat
-			thisFollower.UpdateIntervalNoPotions = DefaultUpdateIntervalNoPotions
-			thisFollower.WarningIntervals = GetDefaultWarningIntervals()
-			thisFollower.StatLimitsInCombat[0] = DefaultStatLimitsInCombat[0]
-			thisFollower.StatLimitsInCombat[1] = DefaultStatLimitsInCombat[1]
-			thisFollower.StatLimitsInCombat[2] = DefaultStatLimitsInCombat[2]
-			thisFollower.StatLimitsNonCombat[0] = DefaultStatLimitsNonCombat[0]
-			thisFollower.StatLimitsNonCombat[1] = DefaultStatLimitsNonCombat[1]
-			thisFollower.StatLimitsNonCombat[2] = DefaultStatLimitsNonCombat[2]
-			thisFollower.LvlDiffTrigger = DefaultLvlDiffTrigger as int
-			thisFollower.TriggerRaces = GetDefaultTriggerRaces()
-			
-			int p = RestoreEffects.Length
-			while (p)
-				p -= 1
-				thisFollower.UsePotionOfType[RestoreEffects[p]] = DefaultUsePotionOfType[RestoreEffects[p]]
-			endWhile
-			p = FortifyEffectsStats.Length
-			while (p)
-				p -= 1
-				thisFollower.UsePotionOfType[FortifyEffectsStats[p]] = DefaultUsePotionOfType[FortifyEffectsStats[p]]
-			endWhile
-			p = FortifyEffectsWarrior.Length
-			while (p)
-				p -= 1
-				thisFollower.UsePotionOfType[FortifyEffectsWarrior[p]] = DefaultUsePotionOfType[FortifyEffectsWarrior[p]]
-			endWhile
-			p = FortifyEffectsMage.Length
-			while (p)
-				p -= 1
-				thisFollower.UsePotionOfType[FortifyEffectsMage[p]] = DefaultUsePotionOfType[FortifyEffectsMage[p]]
-			endWhile
-			p = ResistEffects.Length
-			while (p)
-				p -= 1
-				thisFollower.UsePotionOfType[ResistEffects[p]] = DefaultUsePotionOfType[ResistEffects[p]]
-			endWhile
-
+			thisFollower.SetDefaults()
 			DebugStuff("Reset " + thisFollower.ActorName + " to defaults")
-			
 		endIf
 		i += 1
 	endWhile
@@ -795,8 +759,8 @@ Function SetProperties()
 	
 	EffectKeywords[EFFECT_SILENCE] = MagicAlchSilence_CACO
 	EffectKeywords[EFFECT_FATIGUE] = MagicAlchFatigue_CACO
-	EffectKeywords[EFFECT_DRAININTELLIGENCE] = MagicAlchDrainIntelligence_CACO
-	EffectKeywords[EFFECT_DRAINSTRENGTH] = MagicAlchDrainStrength_CACO
+	EffectKeywords[EFFECT_DRAININTELLIGENCE] = MagicAlchDrainInt_CACO
+	EffectKeywords[EFFECT_DRAINSTRENGTH] = MagicAlchDrainStr_CACO
 	
 	EffectKeywords[EFFECT_FORTIFYALCHEMY] = MagicAlchFortifyAlchemy
 	EffectKeywords[EFFECT_FORTIFYENCHANTING] = MagicAlchFortifyEnchanting
@@ -925,8 +889,8 @@ Function SetProperties()
 	
 	PoisonEffectsStats = new int[3]
 	PoisonEffectsStats[0] = EFFECT_DAMAGEHEALTH
-	PoisonEffectsStats[1] = EFFECT_DAMAGEMAGICKA
-	PoisonEffectsStats[2] = EFFECT_DAMAGESTAMINA
+	PoisonEffectsStats[1] = EFFECT_DAMAGESTAMINA
+	PoisonEffectsStats[2] = EFFECT_DAMAGEMAGICKA
 	
 	PoisonEffectsWeakness = new int[4]
 	PoisonEffectsWeakness[0] = EFFECT_WEAKNESSFIRE
@@ -977,11 +941,11 @@ endFunction
 Function AddCACOKeywords()
 	MagicAlchSilence_CACO = Game.GetFormFromFile(0x0007a150, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 	MagicAlchFatigue_CACO = Game.GetFormFromFile(0x0007a153, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
-	MagicAlchDrainIntelligence_CACO = Game.GetFormFromFile(0x0025b701, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	MagicAlchDrainInt_CACO = Game.GetFormFromFile(0x0025b701, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 	; TODO (when/if added to CACO)
 	; MagicFear = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 	; MagicFrenzy = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
-	; MagicAlchDrainStrength_CACO = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	; MagicAlchDrainStr_CACO = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 endFunction
 
 Function SetDefaults()
@@ -1010,6 +974,10 @@ Function SetDefaults()
 	DefaultUsePotionOfType[EFFECT_RESTORESTAMINA] = true
 	DefaultUsePotionOfType[EFFECT_RESTOREMAGICKA] = true
 
+	DefaultUsePoisonOfType = CreateBoolArray(EffectKeywords.Length, false)
+	
+	DefaultIdentifyPotionEffects = C_IDENTIFY_RESTORE + C_IDENTIFY_FORTIFY + C_IDENTIFY_RESIST
+
 	DebugToFile = false
 endFunction
 
@@ -1035,6 +1003,17 @@ bool[] function GetDefaultUsePotionsOfTypes()
 	while(i)
 		i -= 1
 		array[i] = DefaultUsePotionOfType[i]
+	endWhile
+	return array
+endFunction
+
+; as per above, need to copy & return this
+bool[] function GetDefaultUsePoisonsOfTypes()
+	bool[] array = CreateBoolArray(DefaultUsePoisonOfType.Length, true)
+	int i = array.Length
+	while(i)
+		i -= 1
+		array[i] = DefaultUsePoisonOfType[i]
 	endWhile
 	return array
 endFunction
