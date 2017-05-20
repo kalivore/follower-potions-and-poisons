@@ -208,6 +208,8 @@ bool[] potionListHarmful
 
 Potion[] MyPotionList
 Potion[] MyPoisonList
+int[] MyPotionCounts
+int[] MyPoisonCounts
 
 int MyTotalPotionCount = 0
 int MyTotalPoisonCount = 0
@@ -353,40 +355,48 @@ Event OnItemAdded(Form akBaseItem, int aiItemCount, ObjectReference akItemRefere
 	;AliasDebug("OnItemAdded - " + aiItemCount + " of " + thisPotion.GetName() + " sent for identification")
 endEvent
 
-Event OnObjectEquipped(Form akBaseItem, ObjectReference akItemReference)
-	AliasDebug2("OnObjectEquipped - " + akBaseItem.GetName() + "(ref: " + akItemReference + ")")
-endEvent
-
 Event OnItemRemoved(Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akDestContainer)
 	Potion thisPotion = akBaseItem as Potion
 	if (!thisPotion || thisPotion.IsFood() || (!thisPotion.IsPoison() && thisPotion.IsHostile()))
 		return
 	endIf
 	bool isPoisonItem = thisPotion.IsPoison()
-	AliasDebug2("OnItemRemoved - " + aiItemCount + " of " + thisPotion.GetName(), isPoisonItem)
-	if (!akDestContainer)
+	string itemName = thisPotion.GetName()
+	Potion[] itemList = MyPotionList
+	int[] itemCountList = MyPotionCounts
+	if (isPoisonItem)
+		itemList = MyPoisonList
+		itemCountList = MyPoisonCounts
+	endIf
+	int index = itemList.Find(thisPotion)
+	if (index < 0)
+		AliasDebug2("OnItemRemoved - " + aiItemCount + " of " + itemName + "; not a tracked item", isPoisonItem)
 		return
 	endIf
+	int remaining = MyActor.GetItemCount(thisPotion)
+	int itemCount = itemCountList[index]
+	if (itemCount == remaining)
+		AliasDebug2("OnItemRemoved - " + aiItemCount + " of " + itemName + "; current count (" + itemCount + ") matches remaining (" + remaining + ")", isPoisonItem)
+		return
+	endIf
+	string destId = "None"
+	if (akDestContainer)
+		destId = akDestContainer.GetFormId()
+	endIf
 	string refId = "None"
-	if (akItemReference != None)
+	if (akItemReference)
 		refId = akItemReference.GetFormId()
 	endIf
-	string destId = akDestContainer.GetFormId()
-	int remaining = MyActor.GetItemCount(thisPotion)
-	int listsAffected = 0
-	if (isPoisonItem)
-		listsAffected = UpdateCountsAndArrays("OnItemRemoved", true, MyPoisonList.Find(thisPotion), aiItemCount, remaining == 0)
-		if (listsAffected > 0)
+	int listsAffected = UpdateCountsAndArrays("OnItemRemoved", isPoisonItem, index, aiItemCount, remaining == 0)
+	if (listsAffected > 0)
+		itemCountList[index] = itemCount - aiItemCount
+		if (isPoisonItem)
 			MyTotalPoisonCount -= aiItemCount
-		endIf
-		AliasDebug2("OnItemRemoved - " + aiItemCount + " of " + thisPotion.GetName() + " (" + remaining + " remaining), removed from " + listsAffected + " lists (ref " + refId + ", dest " + destId + ")", true)
-	else
-		listsAffected = UpdateCountsAndArrays("OnItemRemoved", false, MyPotionList.Find(thisPotion), aiItemCount, remaining == 0)
-		if (listsAffected > 0)
+		else
 			MyTotalPotionCount -= aiItemCount
 		endIf
-		AliasDebug2("OnItemRemoved - " + aiItemCount + " of " + thisPotion.GetName() + " (" + remaining + " remaining), removed from " + listsAffected + " lists (ref " + refId + ", dest " + destId + ")")
 	endIf
+	AliasDebug2("OnItemRemoved - " + aiItemCount + " of " + itemName + "; " + remaining + " (" + (itemCount - aiItemCount) + ") remaining, removed from " + listsAffected + " lists (ref " + refId + ", dest " + destId + ")", isPoisonItem)
 endEvent
 
 Event OnPotionRegister(Form akSender, string asActorName, Form akPotion, int aiPotionCount, int aiEffectsFound, bool abIsPoison, \
@@ -1112,21 +1122,26 @@ endFunction
 Function UpdateItemCounts(int aiPotionIndex, int aiPotionCount, bool abIsPoison, \
 							int aiEffectTypesRestore, int aiEffectTypesFortifyStats, int aiEffectTypesFortifyWarrior, int aiEffectTypesFortifyMage, int aiEffectTypesResist, \
 							int aiEffectTypesSpecial, int aiEffectTypesDamageStats, int aiEffectTypesWeakness, int aiEffectTypesGenericHarmful)
+	int newTotal = aiPotionCount
 	if (!abIsPoison)
 		UpdateEffectCounts(RestoreEffects, aiEffectTypesRestore, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(FortifyEffectsStats, aiEffectTypesFortifyStats, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(FortifyEffectsWarrior, aiEffectTypesFortifyWarrior, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(FortifyEffectsMage, aiEffectTypesFortifyMage, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(ResistEffects, aiEffectTypesResist, aiPotionCount, aiPotionIndex, abIsPoison)
-		AliasDebug2("UpdateItemCounts - increment MyTotalPotionCount by " + aiPotionCount, false)
 		MyTotalPotionCount += aiPotionCount
+		newTotal += MyPotionCounts[aiPotionIndex]
+		MyPotionCounts[aiPotionIndex] = newTotal
+		AliasDebug2("UpdateItemCounts - increment by " + aiPotionCount + ": MyTotalPotionCount = " + MyTotalPotionCount + ", MyPotionCounts[" + aiPotionIndex + "] = " + newTotal, abIsPoison)
 	else
 		UpdateEffectCounts(PoisonEffectsSpecial, aiEffectTypesSpecial, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(PoisonEffectsStats, aiEffectTypesDamageStats, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(PoisonEffectsWeakness, aiEffectTypesWeakness, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(PoisonEffectsGeneric, aiEffectTypesGenericHarmful, aiPotionCount, aiPotionIndex, abIsPoison)
-		AliasDebug2("UpdateItemCounts - increment MyTotalPoisonCount by " + aiPotionCount, true)
 		MyTotalPoisonCount += aiPotionCount
+		newTotal += MyPoisonCounts[aiPotionIndex]
+		MyPoisonCounts[aiPotionIndex] = newTotal
+		AliasDebug2("UpdateItemCounts - increment by " + aiPotionCount + ": MyTotalPoisonCount = " + MyTotalPoisonCount + ", MyPoisonCounts[" + aiPotionIndex + "] = " + newTotal, abIsPoison)
 	endIf
 endFunction
 
@@ -1224,44 +1239,46 @@ endFunction
 
 bool function TryFirstPotionThatExists(string asState, int aiEffectType)
 	bool[] trackerList = GetTrackerList(aiEffectType)
-	int potionIndex = trackerList.Find(true)
-	if (potionIndex < 0)
+	int itemIndex = trackerList.Find(true)
+	if (itemIndex < 0)
 		return false
 	endIf
-	while (potionIndex < MyPotionList.Length)
-		if (trackerList[potionIndex])
-			Potion thisPotion = MyPotionList[potionIndex] as Potion
-			string msg = asState + "::TryFirstPotionThatExists - array" + aiEffectType + "[" + potionIndex + "]"
-			if (thisPotion != None && thisPotion.HasKeyword(EffectKeywords[aiEffectType]))
-				int potionCount = MyActor.GetItemCount(thisPotion)
-				msg += ", have " + potionCount + " (of " + HasItemOfType[aiEffectType] + ")"
-				if (potionCount > 0)
-					MyActor.EquipItemEx(thisPotion, 2, false, true)
-					UpdateCountsAndArrays(asState, false, potionIndex, 1, potionCount == 1)
+	while (itemIndex < MyPotionList.Length)
+		if (trackerList[itemIndex])
+			Potion thisItem = MyPotionList[itemIndex] as Potion
+			string msg = asState + "::TryFirstPotionThatExists - array" + aiEffectType + "[" + itemIndex + "]"
+			if (thisItem != None && thisItem.HasKeyword(EffectKeywords[aiEffectType]))
+				int itemCount = MyActor.GetItemCount(thisItem)
+				int arrayCount = MyPotionCounts[itemIndex]
+				msg += ", have " + itemCount + " (" + arrayCount + "/" + HasItemOfType[aiEffectType] + "/" + MyTotalPotionCount + ")"
+				if (itemCount > 0)
+					MyPotionCounts[itemIndex] = arrayCount - 1
+					MyActor.EquipItemEx(thisItem, 2, false, true)
+					UpdateCountsAndArrays(asState, false, itemIndex, 1, itemCount == 1)
 					MyTotalPotionCount -= 1
-					msg += ", use " + thisPotion.GetName() + " (" + thisPotion.GetFormId() + "), " + (potionCount - 1) + " remaining"
+					msg += ", use " + thisItem.GetName() + " (" + thisItem.GetFormId() + "), " + (itemCount - 1) + " remaining"
 					AliasDebug2(msg)
 					return true
 				else
-					UpdateCountsAndArrays(asState, false, potionIndex, 0, true)
+					UpdateCountsAndArrays(asState, false, itemIndex, 0, true)
 					AliasDebug2(msg + " - removed from arrays SHOUND'T HAPPEN!")
 				endif
 			endIf
 		endIf
-		potionIndex += 1
+		itemIndex += 1
 	endWhile
 	return false
 endFunction
 
 bool function TryFirstPoisonThatExists(string asState, int aiEffectType, int aiHand)
 	bool[] trackerList = GetTrackerList(aiEffectType)
-	int poisonIndex = trackerList.Find(true)
-	if (poisonIndex < 0)
+	int itemIndex = trackerList.Find(true)
+	if (itemIndex < 0)
 		return false
 	endIf
-	while (poisonIndex < MyPoisonList.Length)
-		if (trackerList[poisonIndex])
-			Potion thisPoison = MyPoisonList[poisonIndex] as Potion
+	while (itemIndex < MyPoisonList.Length)
+		if (trackerList[itemIndex])
+			Potion thisItem = MyPoisonList[itemIndex] as Potion
 			; some poisons (eg venoms) do not actually have MagicAlchHarmful, only VendorItemPoison.
 			; That isn't technically an effect type, but for purposes of the mod, all generic poisons
 			; are registered as having it. So if we're testing for it here, convert to sending -1,
@@ -1270,31 +1287,33 @@ bool function TryFirstPoisonThatExists(string asState, int aiEffectType, int aiH
 			if (aiEffectType == EFFECT_HARMFUL)
 				passedEffectType = -1
 			endIf
-			string msg = asState + "::TryFirstPoisonThatExists - array" + aiEffectType + "[" + poisonIndex + "]"
-			if (thisPoison != None && (passedEffectType < 0 || thisPoison.HasKeyword(EffectKeywords[aiEffectType])))
-				int poisonCount = MyActor.GetItemCount(thisPoison)
-				msg += ", have " + poisonCount + " (of " + HasItemOfType[aiEffectType] + ")"
-				if (poisonCount > 0)
-					msg += ", try use " + thisPoison.GetName() + " poison on " + MyActor.GetEquippedWeapon(aiHand == C_HAND_LEFT).GetName() + " in " + GetHand(aiHand) + ": "
-					int ret = _Q2C_Functions.WornObjectSetPoison(MyActor, aiHand, 0, thisPoison, 1)
+			string msg = asState + "::TryFirstPoisonThatExists - array" + aiEffectType + "[" + itemIndex + "]"
+			if (thisItem != None && (passedEffectType < 0 || thisItem.HasKeyword(EffectKeywords[aiEffectType])))
+				int itemCount = MyActor.GetItemCount(thisItem)
+				int arrayCount = MyPoisonCounts[itemIndex]
+				msg += ", have " + itemCount + " (" + arrayCount + "/" + HasItemOfType[aiEffectType] + "/" + MyTotalPoisonCount + ")"
+				if (itemCount > 0)
+					msg += ", try use " + thisItem.GetName() + " poison on " + MyActor.GetEquippedWeapon(aiHand == C_HAND_LEFT).GetName() + " in " + GetHand(aiHand) + ": "
+					int ret = _Q2C_Functions.WornObjectSetPoison(MyActor, aiHand, 0, thisItem, 1)
 					if (ret < 0)
 						msg += "fail (for unknown reason)"
 						AliasDebug2(msg, true)
 					else
-						MyActor.RemoveItem(thisPoison)
-						UpdateCountsAndArrays(asState, true, poisonIndex, 1, poisonCount == 1)
+						MyPoisonCounts[itemIndex] = arrayCount - 1
+						MyActor.RemoveItem(thisItem)
+						UpdateCountsAndArrays(asState, true, itemIndex, 1, itemCount == 1)
 						MyTotalPoisonCount -= 1
-						msg += "success, " + (poisonCount - 1) + " remaining"
+						msg += "success, " + (itemCount - 1) + " remaining"
 						AliasDebug2(msg, true)
 						return true
 					endIf
 				else
-					UpdateCountsAndArrays(asState, true, poisonIndex, 0, true)
+					UpdateCountsAndArrays(asState, true, itemIndex, 0, true)
 					AliasDebug2(msg + " - removed from arrays SHOUND'T HAPPEN!", true)
 				endIf
 			endIf
 		endIf
-		poisonIndex += 1
+		itemIndex += 1
 	endWhile
 	return false
 endFunction
@@ -1456,15 +1475,15 @@ int function UpdateCountsAndArrays(string asState, bool abIsPoison, int aiIndex,
 	if (aiIndex < 0)
 		return 0
 	endIf
-string msg = asState + "::UpdateCountsAndArrays - "
-float ftimeStart = Utility.GetCurrentRealTime()
+;string msg = asState + "::UpdateCountsAndArrays - "
+;float ftimeStart = Utility.GetCurrentRealTime()
 	if (abSetToNone)
 		if (!abIsPoison)
 			MyPotionList[aiIndex] = None
-			msg += "Set MyPotionList[" + aiIndex + "] to None - "
+			;msg += "Set MyPotionList[" + aiIndex + "] to None - "
 		else
 			MyPoisonList[aiIndex] = None
-			msg += "Set MyPoisonList[" + aiIndex + "] to None - "
+			;msg += "Set MyPoisonList[" + aiIndex + "] to None - "
 		endIf
 	endIf
 	int affected = 0
@@ -1518,9 +1537,9 @@ float ftimeStart = Utility.GetCurrentRealTime()
 		affected += UpdateCountAndArray(aiIndex, potionListWeaknessMagic, EFFECT_WEAKNESSMAGIC, aiCount, abSetToNone, abIsPoison)
 		affected += UpdateCountAndArray(aiIndex, potionListHarmful, EFFECT_HARMFUL, aiCount, abSetToNone, abIsPoison)
 	endIf
-float ftimeEnd = Utility.GetCurrentRealTime()
-msg += (ftimeEnd - ftimeStart) + "s"
-AliasDebug2(msg, abIsPoison)
+;float ftimeEnd = Utility.GetCurrentRealTime()
+;msg += (ftimeEnd - ftimeStart) + "s"
+;AliasDebug2(msg, abIsPoison)
 	return affected
 endFunction
 
@@ -1693,7 +1712,9 @@ Function ResetHasItemOfType()
 endFunction
 
 Function ClearPotionLists()
+	MyTotalPotionCount = 0
 	MyPotionList = new Potion[127]
+	MyPotionCounts = new int[127]
 	potionListRestoreHealth = new bool[127]
 	potionListRestoreStamina = new bool[127]
 	potionListRestoreMagicka = new bool[127]
@@ -1722,7 +1743,9 @@ Function ClearPotionLists()
 endFunction
 
 Function ClearPoisonLists()
+	MyTotalPoisonCount = 0
 	MyPoisonList = new Potion[127]
+	MyPoisonCounts = new int[127]
 	potionListParalysis = new bool[127]
 	potionListSlow = new bool[127]
 	potionListFear = new bool[127]
