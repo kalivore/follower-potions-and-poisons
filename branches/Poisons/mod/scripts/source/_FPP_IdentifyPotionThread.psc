@@ -121,20 +121,24 @@ Function IdentifyPotion()
 	bool identByEffectType = IdentifyPotionEffects < C_IDENTIFY_FIRST
 	MagicEffect[] effects = ThisPotion.GetMagicEffects()
 	int numEffects = effects.Length
+	string msg = ""
 	
 	if (isPoisonItem)
 		if (DebugToFile)
-			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - find " + numEffects + " effect(s) by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+			msg += ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - find " + numEffects + " effect(s) by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")"
 		endIf
 		effectTypesSpecial = CheckFormEffects(PoisonEffectsSpecial, ThisPotion, EffectKeywords, false)
 		effectTypesDamageStats = CheckFormEffects(PoisonEffectsStats, ThisPotion, EffectKeywords, false)
 		effectTypesWeakness = CheckFormEffects(PoisonEffectsWeakness, ThisPotion, EffectKeywords, false)
 		if (effectsFound == 0)
 			if (DebugToFile)
-				Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " (poison) - no specific effects found, add as generic")
+				msg += "; no specific effects found, add as generic"
 			endIf
 			effectsFound += 1
 			effectTypesGenericHarmful = 1
+		endIf
+		if (DebugToFile)
+			Debug.TraceUser("FollowerPotions", msg)
 		endIf
 		RegisterPotion()
 		; nothing more to do - return here
@@ -143,7 +147,7 @@ Function IdentifyPotion()
 	
 	if (!playerMade || identByEffectType)
 		if (DebugToFile)
-			Debug.TraceUser("FollowerPotions", ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find " + numEffects + " effect(s) by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")")
+			msg += ActorName + ": IdentifyPotion " + ThisPotion.GetFormId() + " - find " + numEffects + " effect(s) by relevant effect types (player-made: " + playerMade + ", method " + IdentifyPotionEffects + ")"
 		endIf
 		
 		if (numEffects == 1 || !identByEffectType || Math.LogicalAnd(IdentifyPotionEffects, C_IDENTIFY_RESTORE) != 0)
@@ -160,6 +164,9 @@ Function IdentifyPotion()
 			effectTypesResist = CheckFormEffects(ResistEffects, ThisPotion, EffectKeywords, false)
 		endIf
 
+		if (DebugToFile)
+			Debug.TraceUser("FollowerPotions", msg)
+		endIf
 		RegisterPotion()
 		; all identifying done - return here
 		return

@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 2.0001 AutoReadonly
+float Property CurrentVersion = 2.0002 AutoReadonly
 float previousVersion
 
 bool DawnguardLoaded
@@ -118,6 +118,8 @@ int Property XFL_PLUGIN_EVENT_REMOVE_FOLLOWER = 0x01 Autoreadonly
 int Property XFL_PLUGIN_EVENT_REMOVE_DEAD_FOLLOWER = 0x02 Autoreadonly
 
 
+Keyword Property Dummy Auto
+
 Keyword[] Property EffectKeywords Auto
 Keyword Property MagicAlchDurationBased Auto
 Keyword Property MagicAlchBeneficial Auto
@@ -184,10 +186,22 @@ Keyword Property MagicAlchFatigue_CACO Auto				; xx07A153
 Keyword Property MagicAlchDrainInt_CACO Auto			; xx25B701
 Keyword Property MagicAlchDrainStr_CACO Auto			; xx	- created
 
+Keyword Property ActorTypeDaedra Auto					; Fear, Frenzy; all when CACO
+Keyword Property ActorTypeDragon Auto					; Fear, Frenzy; all when CACO
+Keyword Property ActorTypeDwarven Auto					; Fear, Frenzy; DamStamina, LingStamina (vanilla), all (CACO)
+Keyword Property ActorTypeUndead Auto					; Fear, Frenzy; all (CACO)
+Keyword Property ActorTypeGhost Auto					; all (CACO)
+Keyword Property Vampire Auto							; all (CACO)
+
+Keyword Property CACO_ImmunePoisonUndead Auto			; xx84B243 all (CACO)
+Keyword Property ImmuneParalysis Auto
+
 LocationRefType Property LocRefTypeBoss Auto
 
 Race[] Property AvailableTriggerRaces Auto
 int[] Property TriggerRaceMappings Auto
+Keyword[] Property PoisonImmunityKeywords Auto
+int[] Property PoisonImmunityMappings Auto
 
 
 string[] Property EffectNames Auto
@@ -297,7 +311,6 @@ function Update()
 				thisFollowerRef = AllFollowers[i]
 				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
 					(thisFollowerRef as _FPP_FollowerScript).WarningIntervals = GetDefaultWarningIntervals()
-					(thisFollowerRef as _FPP_FollowerScript).ResetPotionWarningTriggers()
 				endIf
 				i += 1
 			endWhile
@@ -364,9 +377,22 @@ function Update()
 		
 		endIf
 		
-		if (iPreviousVersion < 200010)
+		if (iPreviousVersion < 200020)
 		
 			DefaultUsePoisonOfType = CreateBoolArray(EffectKeywords.Length, true)
+			SetAvailablePoisonImmunityKeywords()
+			if (CACOLoaded)
+				Debug.Notification("Adding CACO poison immunities")
+				AddCACOPoisonImmunityKeywords()
+			endIf
+			
+			bool[] oldValsB = GetDefaultEnableWarnings()
+			SetDefaultEnableWarnings()
+			UpdateInPlaceBools(oldValsB, DefaultEnableWarnings)
+			
+			float[] oldValsF = GetDefaultWarningIntervals()
+			SetDefaultWarningIntervals()
+			UpdateInPlaceFloats(oldValsF, DefaultWarningIntervals)
 		
 			; thread manager now has its own quest, so we don't need this event listener
 			UnregisterForModEvent("_FPP_Trigger_IdentifyPotion")
@@ -385,9 +411,21 @@ function Update()
 			while (i < iMax)
 				thisFollowerRef = AllFollowers[i]
 				if (thisFollowerRef && (thisFollowerRef.GetReference() as Actor))
+					_FPP_FollowerScript followerScript = thisFollowerRef as _FPP_FollowerScript
+					
 					RefreshFollowerPotions(thisFollowerRef.GetReference() as Actor)
 					Utility.WaitMenuMode(0.5)
-					(thisFollowerRef as _FPP_FollowerScript).UsePoisonOfType = GetDefaultUsePoisonsOfTypes()
+
+					followerScript.UsePoisonOfType = GetDefaultUsePoisonsOfTypes()
+
+					oldValsB = followerScript.EnableWarnings
+					followerScript.EnableWarnings = GetDefaultEnableWarnings()
+					UpdateInPlaceBools(oldValsB, followerScript.EnableWarnings)
+
+					oldValsF = followerScript.WarningIntervals
+					followerScript.WarningIntervals = GetDefaultWarningIntervals()
+					UpdateInPlaceFloats(oldValsF, followerScript.WarningIntervals)
+					
 				endIf
 				i += 1
 			endWhile
@@ -447,6 +485,8 @@ function Maintenance()
 	if (!CACOLoaded && caco > 0 && caco < 255)
 		AddCACOKeywords()
 		DebugStuff("Adding CACO keywords")
+		AddCACOPoisonImmunityKeywords()
+		DebugStuff("Adding CACO poison immunities")
 		CACOLoaded = true
 	endIf
 
@@ -938,6 +978,7 @@ Function AddDragonbornTriggerRaces()
 	TriggerRaceMappings[09] = 1
 endFunction
 
+
 Function AddCACOKeywords()
 	MagicAlchSilence_CACO = Game.GetFormFromFile(0x0007a150, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 	MagicAlchFatigue_CACO = Game.GetFormFromFile(0x0007a153, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
@@ -947,6 +988,57 @@ Function AddCACOKeywords()
 	; MagicFrenzy = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 	; MagicAlchDrainStr_CACO = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 endFunction
+
+
+Function SetAvailablePoisonImmunityKeywords()
+	PoisonImmunityKeywords = new Keyword[8]
+	PoisonImmunityKeywords[0] = ActorTypeDaedra
+	PoisonImmunityKeywords[1] = ActorTypeDragon
+	PoisonImmunityKeywords[2] = ActorTypeDwarven
+	PoisonImmunityKeywords[3] = ActorTypeUndead
+	PoisonImmunityKeywords[4] = ActorTypeGhost
+	PoisonImmunityKeywords[5] = Vampire
+	PoisonImmunityKeywords[6] = ImmuneParalysis
+	PoisonImmunityKeywords[7] = Dummy
+	
+	; immunities: for each effect, bitmask-true the indices of keywords taht grant immunity
+	PoisonImmunityMappings = Utility.CreateIntArray(127)
+	; eg dwarven things (index 2) immune to Stamina damage, so bitmask 2^2 to true
+	PoisonImmunityMappings[EFFECT_DAMAGESTAMINA] = Math.Pow(2, 2) as int
+	; the dedicated ImmuneParalysis (ind 6) keyword does just that, so set 2^6 true
+	PoisonImmunityMappings[EFFECT_PARALYSIS] = Math.Pow(2, 6) as int
+	; in vanilla, most things that have immunity (ind 0-3) have it to frenzy & fear
+	int fearFrenzyImmunes = 15 ; (2^0 through 2^3)
+	PoisonImmunityMappings[EFFECT_FEAR] = fearFrenzyImmunes
+	PoisonImmunityMappings[EFFECT_FRENZY] = fearFrenzyImmunes
+	
+	PoisonImmunityMappings[3] = fearFrenzyImmunes
+endFunction
+
+Function AddCACOPoisonImmunityKeywords()
+	PoisonImmunityKeywords[7] = Game.GetFormFromFile(0x0084b243, "Complete Alchemy & Cooking Overhaul.esp") as Keyword ; CACO_ImmunePoisonUndead
+	; with CACO, Undead, Ghost or Vampire keywords (or the CACO-specific CACO_ImmunePoisonUndead) give immunity to most things
+	int CACOImmunities = 184 ; (2^3 through 2^5, plus 2^7)
+	; setting it on the generic 'harmful' effect should be enough
+	PoisonImmunityMappings[EFFECT_HARMFUL] = CACOImmunities
+	; but just in case, set explicitly too
+	PoisonImmunityMappings[EFFECT_DAMAGEHEALTH] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_DAMAGEMAGICKA] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_DAMAGESTAMINA] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_WEAKNESSFIRE] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_WEAKNESSFROST] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_WEAKNESSSHOCK] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_WEAKNESSMAGIC] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_PARALYSIS] = CACOImmunities + Math.Pow(2, 6) as int ; all CACO, plus ImmuneParalysis
+	PoisonImmunityMappings[EFFECT_SLOW] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_FEAR] = CACOImmunities + Math.Pow(2, 0) as int + Math.Pow(2, 1) as int ; all CACO, plus Daedra and Dragon
+	PoisonImmunityMappings[EFFECT_FRENZY] = CACOImmunities + Math.Pow(2, 0) as int + Math.Pow(2, 1) as int ; all CACO, plus Daedra and Dragon
+	PoisonImmunityMappings[EFFECT_SILENCE] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_FATIGUE] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_DRAININTELLIGENCE] = CACOImmunities
+	PoisonImmunityMappings[EFFECT_DRAINSTRENGTH] = CACOImmunities
+endFunction
+
 
 Function SetDefaults()
 	DefaultUpdateIntervalInCombat = 1.0
@@ -1000,49 +1092,48 @@ endFunction
 bool[] function GetDefaultUsePotionsOfTypes()
 	bool[] array = CreateBoolArray(DefaultUsePotionOfType.Length, true)
 	int i = array.Length
-	while(i)
+	while (i)
 		i -= 1
 		array[i] = DefaultUsePotionOfType[i]
 	endWhile
 	return array
 endFunction
 
-; as per above, need to copy & return this
 bool[] function GetDefaultUsePoisonsOfTypes()
 	bool[] array = CreateBoolArray(DefaultUsePoisonOfType.Length, true)
 	int i = array.Length
-	while(i)
+	while (i)
 		i -= 1
 		array[i] = DefaultUsePoisonOfType[i]
 	endWhile
 	return array
 endFunction
 
-; as per above, need to copy & return this
 float[] function GetDefaultWarningIntervals()
-	float[] array = new float[5]
-	array[EFFECT_RESTOREHEALTH] = DefaultWarningIntervals[EFFECT_RESTOREHEALTH]
-	array[EFFECT_RESTORESTAMINA] = DefaultWarningIntervals[EFFECT_RESTORESTAMINA]
-	array[EFFECT_RESTOREMAGICKA] = DefaultWarningIntervals[EFFECT_RESTOREMAGICKA]
-	array[3] = DefaultWarningIntervals[3]
-	array[4] = DefaultWarningIntervals[4]
+	float[] array = Utility.CreateFloatArray(DefaultWarningIntervals.Length, 0.0)
+	int i = array.Length
+	while (i)
+		i -= 1
+		array[i] = DefaultWarningIntervals[i]
+	endWhile
 	return array
 endFunction
 
 function SetDefaultWarningIntervals()
-	DefaultWarningIntervals = new float[5]
+	DefaultWarningIntervals = new float[7]
 	DefaultWarningIntervals[EFFECT_RESTOREHEALTH] = 30.0
 	DefaultWarningIntervals[EFFECT_RESTORESTAMINA] = 30.0
 	DefaultWarningIntervals[EFFECT_RESTOREMAGICKA] = 30.0
 	DefaultWarningIntervals[3] = 180.0
 	DefaultWarningIntervals[4] = 180.0
+	DefaultWarningIntervals[5] = 30.0 ; dummy value, placeholder for 'have no potions'
+	DefaultWarningIntervals[6] = 30.0
 endFunction
 
-; as per above, need to copy & return this
 bool[] function GetDefaultTriggerRaces()
 	bool[] array = CreateBoolArray(DefaultTriggerRaces.Length, true)
 	int i = array.Length
-	while(i)
+	while (i)
 		i -= 1
 		array[i] = DefaultTriggerRaces[i]
 	endWhile
@@ -1056,7 +1147,7 @@ endFunction
 bool[] function GetDefaultEnableWarnings()
 	bool[] array = CreateBoolArray(DefaultEnableWarnings.Length, true)
 	int i = array.Length
-	while(i)
+	while (i)
 		i -= 1
 		array[i] = DefaultEnableWarnings[i]
 	endWhile
@@ -1064,5 +1155,22 @@ bool[] function GetDefaultEnableWarnings()
 endFunction
 
 function SetDefaultEnableWarnings()
-	DefaultEnableWarnings = CreateBoolArray(6, true)
+	DefaultEnableWarnings = CreateBoolArray(7, true)
+endFunction
+
+
+function UpdateInPlaceFloats(float[] akOldVals, float[] akNewVals)
+	int i = akOldVals.Length
+	while (i)
+		i -= 1
+		akNewVals[i] = akOldVals[i]
+	endWhile
+endFunction
+
+function UpdateInPlaceBools(bool[] akOldVals, bool[] akNewVals)
+	int i = akOldVals.Length
+	while (i)
+		i -= 1
+		akNewVals[i] = akOldVals[i]
+	endWhile
 endFunction

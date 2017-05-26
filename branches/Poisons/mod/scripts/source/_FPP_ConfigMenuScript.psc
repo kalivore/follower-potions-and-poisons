@@ -9,9 +9,10 @@ ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase
 ; 3 - Added options for how to identify potions
 ; 4 - Added Trigger Races for when to use potions
 ; 5 - Added toggle options for Warning Intervals
+; 6 - Added Poisons functionality
 
 int function GetVersion()
-	return 5
+	return 6
 endFunction
 
 
@@ -68,6 +69,8 @@ string C_OPTION_LABEL_ENABLE_WARNING_RESTORE = "$FPPOptionLabelEnableWarningRest
 string C_OPTION_LABEL_WARNING_RESTORE = "$FPPOptionLabelWarningRestore"
 string C_OPTION_LABEL_ENABLE_WARNING_FORTIFY_RESIST = "$FPPOptionLabelEnableWarningFortifyResist"
 string C_OPTION_LABEL_WARNING_FORTIFY_RESIST = "$FPPOptionLabelWarningFortifyResist"
+string C_OPTION_LABEL_ENABLE_WARNING_POISONS = "$FPPOptionLabelEnableWarningPoisons"
+string C_OPTION_LABEL_WARNING_POISONS = "$FPPOptionLabelWarningPoisons"
 string C_OPTION_LABEL_HEALTH_IN_COMBAT = "$FPPOptionLabelHealthInCombat"
 string C_OPTION_LABEL_HEALTH_NON_COMBAT = "$FPPOptionLabelHealthNonCombat"
 string C_OPTION_LABEL_STAMINA_IN_COMBAT = "$FPPOptionLabelStaminaInCombat"
@@ -102,6 +105,7 @@ string C_INFO_TEXT_UPDATE_NON_COMBAT = "$FPPInfoTextUpdateNonCombat"
 string C_INFO_TEXT_UPDATE_NO_POTIONS = "$FPPInfoTextUpdateNoPotions"
 string C_INFO_TEXT_WARNING_RESTORE = "$FPPInfoTextWarningRestore"
 string C_INFO_TEXT_WARNING_FORTIFY_RESIST = "$FPPInfoTextWarningFortifyResist"
+string C_INFO_TEXT_WARNING_POISON = "$FPPInfoTextWarningPoison"
 string C_INFO_TEXT_HEALTH_IN_COMBAT = "$FPPInfoTextHealthInCombat"
 string C_INFO_TEXT_HEALTH_NON_COMBAT = "$FPPInfoTextHealthNonCombat"
 string C_INFO_TEXT_STAMINA_IN_COMBAT = "$FPPInfoTextStaminaInCombat"
@@ -161,6 +165,8 @@ int			_enableWarningIntervalRestoreOID_B
 int			_warningIntervalRestoreOID_S
 int			_enableWarningIntervalFortifyResistOID_B
 int			_warningIntervalFortifyResistOID_S
+int			_enableWarningIntervalPoisonOID_B
+int			_warningIntervalPoisonOID_S
 int			_healthLimitInCombatOID_S
 int			_healthLimitNonCombatOID_S
 int			_staminaLimitInCombatOID_S
@@ -187,6 +193,7 @@ float _defaultUpdateIntervalNonCombat = 10.0
 float _defaultUpdateIntervalNoPotions = 180.0
 float _defaultWarningIntervalRestore = 30.0
 float _defaultWarningIntervalFortifyResist = 180.0
+float _defaultWarningIntervalPoison = 30.0
 float _defaultHealthLimitInCombat = 0.6
 float _defaultHealthLimitNonCombat = 1.0
 float _defaultStaminaLimitInCombat = 0.6
@@ -222,9 +229,9 @@ endEvent
 ; @overrides SKI_ConfigBase
 event OnConfigInit()
 	
-	sliderVals = new float[12]
+	sliderVals = new float[13]
 	boolVals = new bool[25]
-	enableWarningsBoolVals = new bool[3]
+	enableWarningsBoolVals = new bool[4]
 
 	_followerOID_M = new int[15]
 	
@@ -406,6 +413,13 @@ event OnPageReset(string a_page)
 		_warningIntervalFortifyResistOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_FORTIFY_RESIST, sliderVals[11], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_DISABLED)
 	endIf
 
+	_enableWarningIntervalPoisonOID_B = AddToggleOption(C_OPTION_LABEL_ENABLE_WARNING_POISONS, enableWarningsBoolVals[3])
+	if (enableWarningsBoolVals[3])
+		_warningIntervalPoisonOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_POISONS, sliderVals[12], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_NONE)
+	else
+		_warningIntervalPoisonOID_S = AddSliderOption(C_OPTION_LABEL_WARNING_POISONS, sliderVals[12], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_DISABLED)
+	endIf
+
 	_enableWarningNoPotionsOID_B = AddToggleOption(C_OPTION_LABEL_ENABLE_WARNING_NO_POTIONS, enableWarningsBoolVals[2])
 	if (enableWarningsBoolVals[2])
 		_updateIntervalNoPotionsOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_NO_POTIONS, sliderVals[2], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_NONE)
@@ -502,6 +516,8 @@ event OnOptionHighlight(int a_option)
 		SetInfoText(C_INFO_TEXT_WARNING_RESTORE)
 	elseIf (a_option == _warningIntervalFortifyResistOID_S)
 		SetInfoText(C_INFO_TEXT_WARNING_FORTIFY_RESIST)
+	elseIf (a_option == _warningIntervalPoisonOID_S)
+		SetInfoText(C_INFO_TEXT_WARNING_POISON)
 	elseIf (a_option == _lvlDiffTriggerOID_S)
 		SetInfoText(C_INFO_TEXT_ENEMY_OVER)
 	elseIf (a_option == _potionIdentOID_M)
@@ -912,6 +928,20 @@ event OnOptionSelect(int a_option)
 			FPPQuest.DefaultEnableWarnings[4] = enableWarningsBoolVals[1]
 		endIf
 
+	elseIf (a_option == _enableWarningIntervalPoisonOID_B)
+		enableWarningsBoolVals[3] = !enableWarningsBoolVals[3]
+		SetToggleOptionValue(a_option, enableWarningsBoolVals[3])
+		if (enableWarningsBoolVals[3])
+			SetOptionFlags(_warningIntervalPoisonOID_S, OPTION_FLAG_NONE)
+		else
+			SetOptionFlags(_warningIntervalPoisonOID_S, OPTION_FLAG_DISABLED)
+		endIf
+		if (follower)
+			follower.EnableWarnings[6] = enableWarningsBoolVals[3]
+		else
+			FPPQuest.DefaultEnableWarnings[6] = enableWarningsBoolVals[3]
+		endIf
+
 	elseIf (a_option == _enableWarningNoPotionsOID_B)
 		enableWarningsBoolVals[2] = !enableWarningsBoolVals[2]
 		SetToggleOptionValue(a_option, enableWarningsBoolVals[2])
@@ -997,6 +1027,12 @@ event OnOptionSliderOpen(int a_option)
 	elseIf a_option == _warningIntervalFortifyResistOID_S
 		SetSliderDialogStartValue(sliderVals[11])
 		SetSliderDialogDefaultValue(_defaultWarningIntervalFortifyResist)
+		SetSliderDialogRange(10, 900)
+		SetSliderDialogInterval(1)
+		
+	elseIf a_option == _warningIntervalPoisonOID_S
+		SetSliderDialogStartValue(sliderVals[12])
+		SetSliderDialogDefaultValue(_defaultWarningIntervalPoison)
 		SetSliderDialogRange(10, 900)
 		SetSliderDialogInterval(1)
 		
@@ -1131,6 +1167,15 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		else
 			FPPQuest.DefaultWarningIntervals[3] = sliderVals[11]
 			FPPQuest.DefaultWarningIntervals[4] = sliderVals[11]
+		endIf
+		
+	elseIf a_option == _warningIntervalPoisonOID_S
+		sliderVals[12] = a_value
+		SetSliderOptionValue(a_option, sliderVals[12], C_FORMAT_PLACEHOLDER_SECONDS)
+		if (follower)
+			follower.WarningIntervals[6] = sliderVals[12]
+		else
+			FPPQuest.DefaultWarningIntervals[6] = sliderVals[12]
 		endIf
 		
 	endIf
@@ -1357,10 +1402,12 @@ Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat,
 	sliderVals[9] = LvlDiffTrigger
 	sliderVals[10] = WarningIntervals[0]
 	sliderVals[11] = WarningIntervals[3]
+	sliderVals[12] = WarningIntervals[6]
 	
 	enableWarningsBoolVals[0] = EnableWarningIntervals[0]
 	enableWarningsBoolVals[1] = EnableWarningIntervals[3]
 	enableWarningsBoolVals[2] = EnableWarningIntervals[5]
+	enableWarningsBoolVals[3] = EnableWarningIntervals[6]
 	
 	triggerRaceVals[0] = TriggerRaces[0]
 	triggerRaceVals[1] = TriggerRaces[1]
