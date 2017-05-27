@@ -231,6 +231,11 @@ float Property DefaultLvlDiffTrigger Auto
 bool[] Property DefaultTriggerRaces Auto
 
 bool[] Property DefaultUsePotionOfType Auto
+bool Property DefaultGlobalUsePoisons Auto
+bool Property DefaultUsePoisonsOnEngage Auto
+bool Property DefaultUsePoisonsOnEngageOffHand Auto
+bool Property DefaultUsePoisonsDuringCombat Auto
+bool Property DefaultUsePoisonsDuringCombatOffHand Auto
 bool[] Property DefaultUsePoisonOfType Auto
 
 int Property DefaultIdentifyPotionEffects Auto

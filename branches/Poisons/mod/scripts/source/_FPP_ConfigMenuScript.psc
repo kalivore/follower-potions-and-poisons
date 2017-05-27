@@ -157,6 +157,12 @@ int			_usePotionResistShockOID_B
 int			_usePotionResistMagicOID_B
 int			_usePotionResistPoisonOID_B
 
+int			_usePoisonsGlobalOID_B
+int			_usePoisonsEngageOID_B
+int			_usePoisonsEngageOffHandOID_B
+int			_usePoisonsDuringOID_B
+int			_usePoisonsDuringOffHandOID_B
+
 int			_updateIntervalInCombatOID_S
 int			_updateIntervalNonCombatOID_S
 int			_enableWarningNoPotionsOID_B
@@ -230,7 +236,7 @@ endEvent
 event OnConfigInit()
 	
 	sliderVals = new float[13]
-	boolVals = new bool[25]
+	boolVals = new bool[30]
 	enableWarningsBoolVals = new bool[4]
 
 	_followerOID_M = new int[15]
@@ -427,6 +433,11 @@ event OnPageReset(string a_page)
 		_updateIntervalNoPotionsOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_NO_POTIONS, sliderVals[2], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_DISABLED)
 	endIf
 	
+	_usePoisonsGlobalOID_B		= AddToggleOption("Use Poisons", boolVals[25])
+	_usePoisonsEngageOID_B		= AddToggleOption("Use Poisons On Engage", boolVals[26])
+	_usePoisonsEngageOffHandOID_B		= AddToggleOption("Use Poisons On Engage (off-hand)", boolVals[27])
+	_usePoisonsDuringOID_B		= AddToggleOption("Use Poisons During Combat", boolVals[28])
+	_usePoisonsDuringOffHandOID_B		= AddToggleOption("Use Poisons During Combat (off-hand)", boolVals[29])
 	
 	; Move to the top of the right-hand pane
 	SetCursorPosition(1)
@@ -856,6 +867,51 @@ event OnOptionSelect(int a_option)
 			follower.UsePotionOfType[24] = boolVals[24]
 		else
 			FPPQuest.DefaultUsePotionOfType[24] = boolVals[24]
+		endIf
+
+	elseIf (a_option == _usePoisonsGlobalOID_B)
+		boolVals[25] = !boolVals[25]
+		SetToggleOptionValue(a_option, boolVals[25])
+		if (follower)
+			follower.GlobalUsePoisons = boolVals[25]
+		else
+			FPPQuest.DefaultGlobalUsePoisons = boolVals[25]
+		endIf
+
+	elseIf (a_option == _usePoisonsEngageOID_B)
+		boolVals[26] = !boolVals[26]
+		SetToggleOptionValue(a_option, boolVals[26])
+		if (follower)
+			follower.UsePoisonsOnEngage = boolVals[26]
+		else
+			FPPQuest.DefaultUsePoisonsOnEngage = boolVals[26]
+		endIf
+
+	elseIf (a_option == _usePoisonsEngageOffHandOID_B)
+		boolVals[27] = !boolVals[27]
+		SetToggleOptionValue(a_option, boolVals[27])
+		if (follower)
+			follower.UsePoisonsOnEngageOffHand = boolVals[27]
+		else
+			FPPQuest.DefaultUsePoisonsOnEngageOffHand = boolVals[27]
+		endIf
+
+	elseIf (a_option == _usePoisonsDuringOID_B)
+		boolVals[28] = !boolVals[28]
+		SetToggleOptionValue(a_option, boolVals[28])
+		if (follower)
+			follower.UsePoisonsDuringCombat = boolVals[28]
+		else
+			FPPQuest.DefaultUsePoisonsDuringCombat = boolVals[28]
+		endIf
+
+	elseIf (a_option == _usePoisonsDuringOffHandOID_B)
+		boolVals[29] = !boolVals[29]
+		SetToggleOptionValue(a_option, boolVals[29])
+		if (follower)
+			follower.UsePoisonsDuringCombatOffHand = boolVals[29]
+		else
+			FPPQuest.DefaultUsePoisonsDuringCombatOffHand = boolVals[29]
 		endIf
 
 	elseIf (a_option == _triggerRaceDragonOID_B)
@@ -1439,5 +1495,19 @@ Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat,
 		p -= 1
 		boolVals[FPPQuest.ResistEffects[p]] = UsePotionOfType[FPPQuest.ResistEffects[p]]
 	endWhile
+	
+	if (isFollower)
+		boolVals[25] = follower.GlobalUsePoisons
+		boolVals[26] = follower.UsePoisonsOnEngage
+		boolVals[27] = follower.UsePoisonsOnEngageOffHand
+		boolVals[28] = follower.UsePoisonsDuringCombat
+		boolVals[29] = follower.UsePoisonsDuringCombatOffHand
+	else
+		boolVals[25] = FPPQuest.DefaultGlobalUsePoisons
+		boolVals[26] = FPPQuest.DefaultUsePoisonsOnEngage
+		boolVals[27] = FPPQuest.DefaultUsePoisonsOnEngageOffHand
+		boolVals[28] = FPPQuest.DefaultUsePoisonsDuringCombatOffHand
+		boolVals[29] = FPPQuest.DefaultUsePoisonsDuringCombatOffHand
+	endIf
 	
 endFunction
