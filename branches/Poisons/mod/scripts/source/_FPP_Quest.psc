@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 2.0002 AutoReadonly
+float Property CurrentVersion = 2.0001 AutoReadonly
 float previousVersion
 
 bool DawnguardLoaded
@@ -231,11 +231,7 @@ float Property DefaultLvlDiffTrigger Auto
 bool[] Property DefaultTriggerRaces Auto
 
 bool[] Property DefaultUsePotionOfType Auto
-bool Property DefaultGlobalUsePoisons Auto
-bool Property DefaultUsePoisonsOnEngage Auto
-bool Property DefaultUsePoisonsOnEngageOffHand Auto
-bool Property DefaultUsePoisonsDuringCombat Auto
-bool Property DefaultUsePoisonsDuringCombatOffHand Auto
+int[] Property DefaultGlobalUsePoisons Auto
 bool[] Property DefaultUsePoisonOfType Auto
 
 int Property DefaultIdentifyPotionEffects Auto
@@ -382,9 +378,10 @@ function Update()
 		
 		endIf
 		
-		if (iPreviousVersion < 200020)
+		if (iPreviousVersion < 200010)
 		
-			DefaultUsePoisonOfType = CreateBoolArray(EffectKeywords.Length, true)
+			SetDefaultGlobalUsePoisons()
+			SetDefaultUsePoisonsOfTypes()
 			SetAvailablePoisonImmunityKeywords()
 			if (CACOLoaded)
 				Debug.Notification("Adding CACO poison immunities")
@@ -421,6 +418,7 @@ function Update()
 					RefreshFollowerPotions(thisFollowerRef.GetReference() as Actor)
 					Utility.WaitMenuMode(0.5)
 
+					followerScript.GlobalUsePoisons = GetDefaultGlobalUsePoisons()
 					followerScript.UsePoisonOfType = GetDefaultUsePoisonsOfTypes()
 
 					oldValsB = followerScript.EnableWarnings
@@ -1066,12 +1064,9 @@ Function SetDefaults()
 	DefaultLvlDiffTrigger = 5.0
 	SetDefaultTriggerRaces()
 
-	DefaultUsePotionOfType = CreateBoolArray(EffectKeywords.Length, false)
-	DefaultUsePotionOfType[EFFECT_RESTOREHEALTH] = true
-	DefaultUsePotionOfType[EFFECT_RESTORESTAMINA] = true
-	DefaultUsePotionOfType[EFFECT_RESTOREMAGICKA] = true
-
-	DefaultUsePoisonOfType = CreateBoolArray(EffectKeywords.Length, false)
+	SetDefaultUsePotionsOfTypes()
+	SetDefaultGlobalUsePoisons()
+	SetDefaultUsePoisonsOfTypes()
 	
 	DefaultIdentifyPotionEffects = C_IDENTIFY_RESTORE + C_IDENTIFY_FORTIFY + C_IDENTIFY_RESIST
 
@@ -1104,6 +1099,31 @@ bool[] function GetDefaultUsePotionsOfTypes()
 	return array
 endFunction
 
+function SetDefaultUsePotionsOfTypes()
+	DefaultUsePotionOfType = new bool[127]
+	DefaultUsePotionOfType[EFFECT_RESTOREHEALTH] = true
+	DefaultUsePotionOfType[EFFECT_RESTORESTAMINA] = true
+	DefaultUsePotionOfType[EFFECT_RESTOREMAGICKA] = true
+endFunction
+
+int[] function GetDefaultGlobalUsePoisons()
+	int[] array = new int[4]
+	int i = array.Length
+	while (i)
+		i -= 1
+		array[i] = DefaultGlobalUsePoisons[i]
+	endWhile
+	return array
+endFunction
+
+function SetDefaultGlobalUsePoisons()
+	DefaultGlobalUsePoisons = new int[4]
+	DefaultGlobalUsePoisons[0] = 1
+	DefaultGlobalUsePoisons[1] = 2
+	DefaultGlobalUsePoisons[2] = 1
+	DefaultGlobalUsePoisons[3] = 1
+endFunction
+
 bool[] function GetDefaultUsePoisonsOfTypes()
 	bool[] array = CreateBoolArray(DefaultUsePoisonOfType.Length, true)
 	int i = array.Length
@@ -1112,6 +1132,10 @@ bool[] function GetDefaultUsePoisonsOfTypes()
 		array[i] = DefaultUsePoisonOfType[i]
 	endWhile
 	return array
+endFunction
+
+function SetDefaultUsePoisonsOfTypes()
+	DefaultUsePoisonOfType = CreateBoolArray(127, true)
 endFunction
 
 float[] function GetDefaultWarningIntervals()
@@ -1146,7 +1170,7 @@ bool[] function GetDefaultTriggerRaces()
 endFunction
 
 function SetDefaultTriggerRaces()
-	DefaultTriggerRaces = CreateBoolArray(TriggerRaceMappings.Length, true)
+	DefaultTriggerRaces = CreateBoolArray(10, true)
 endFunction
 
 bool[] function GetDefaultEnableWarnings()

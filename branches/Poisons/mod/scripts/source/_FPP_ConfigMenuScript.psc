@@ -18,110 +18,110 @@ endFunction
 
 ; PRIVATE VARIABLES -------------------------------------------------------------------------------
 ; string constants
-string C_LOGO_PATH = "FollowerPotions/mcm_logo.dds"
+string Property C_LOGO_PATH = "FollowerPotions/mcm_logo.dds" Autoreadonly
 ; Image size 768x384
 ; X offset = 376 - (width / 2) = -8
 int offsetX = -8
 ; Y offset = 223 - (height / 2) = 31
 int offsetY = 31
 
-string C_STRING_EMPTY = ""
-string C_STRING_FORMAT_PLACEHOLDER_ZERO = "{0}"
-string C_STRING_INDEX_NAME_SEPARATOR = ": "
-string C_TEMPLATED_STRING_USE_POTIONS = "Use {0} Potions"
-string C_TEMPLATED_STRING_RESET_NAME_TO_DEFAULTS = "MCM - reset {0} to defaults"
+string Property C_STRING_EMPTY = "" Autoreadonly
+string Property C_STRING_FORMAT_PLACEHOLDER_ZERO = "{0}" Autoreadonly
+string Property C_STRING_INDEX_NAME_SEPARATOR = ": " Autoreadonly
 
 ; Translatables
-string C_PAGE_MISC = "$FPPPageMisc"
-string C_PAGE_DEFAULTS = "$FPPPageDefaults"
-string C_PAGE_NOT_SET = "$FPPPageEmpty"
-string C_FORMAT_PLACEHOLDER_SECONDS = "$FPPFormatPlaceholderSeconds"
-string C_FORMAT_PLACEHOLDER_PERCENT = "$FPPFormatPlaceholderPercent"
-string C_FORMAT_PLACEHOLDER_LEVELS = "$FPPFormatPlaceholderLevels"
-string C_HEADER_LABEL_UPDATE_INTERVALS = "$FPPHeaderLabelUpdateIntervals"
-string C_HEADER_LABEL_RESTORE_POTIONS = "$FPPHeaderLabelRestorePotions"
-string C_HEADER_LABEL_WARNING_INTERVALS = "$FPPHeaderLabelWarningIntervals"
-string C_HEADER_LABEL_FORTIFY_RESIST_POTIONS = "$FPPHeaderLabelFortifyResistPotions"
-string C_HEADER_LABEL_ACTIONS = "$FPPHeaderLabelActions"
-string C_HEADER_LABEL_POTION_IDENT = "$FPPHeaderLabelPotionIdent"
-string C_MENU_OPTION_CANCEL = "$FPPMenuOptionCancel"
-string C_MENU_OPTION_RESET = "$FPPMenuOptionReset"
-string C_MENU_OPTION_REFRESH = "$FPPMenuOptionRefresh"
-string C_MENU_OPTION_REMOVE = "$FPPMenuOptionRemove"
-string C_MENU_OPTION_ADD_POTIONS = "$FPPMenuOptionAddPotions"
-string C_MENU_OPTION_EFFECTS_ALL = "$FPPMenuOptionEffectsAll"
-string C_MENU_OPTION_EFFECTS_RESTORE = "$FPPMenuOptionEffectsRestore"
-string C_MENU_OPTION_EFFECTS_FORTIFY = "$FPPMenuOptionEffectsFortify"
-string C_MENU_OPTION_EFFECTS_RESIST = "$FPPMenuOptionEffectsResist"
-string C_MENU_OPTION_EFFECTS_FIRST = "$FPPMenuOptionEffectsFirst"
-string C_MENU_OPTION_EFFECTS_SECOND = "$FPPMenuOptionEffectsSecond"
-string C_MENU_OPTION_EFFECTS_THIRD = "$FPPMenuOptionEffectsThird"
-string C_OPTION_LABEL_NO_FOLLOWER = "$FPPOptionLabelNoFollower"
-string C_OPTION_LABEL_DEBUG = "$FPPOptionLabelDebug"
-string C_OPTION_LABEL_ADD_ON_FOLLOW = "$FPPOptionLabelAddOnFollow"
-string C_OPTION_LABEL_CURRENT_VERSION = "$FPPOptionLabelCurrentVersion"
-string C_OPTION_LABEL_ACTIONS_ALL = "$FPPOptionLabelActionsAll"
-string C_OPTION_LABEL_UPDATE_IN_COMBAT = "$FPPOptionLabelUpdateInCombat"
-string C_OPTION_LABEL_UPDATE_NON_COMBAT = "$FPPOptionLabelUpdateNonCombat"
-string C_OPTION_LABEL_ENABLE_WARNING_NO_POTIONS = "$FPPOptionLabelEnableWarningNoPotions"
-string C_OPTION_LABEL_UPDATE_NO_POTIONS = "$FPPOptionLabelUpdateNoPotions"
-string C_OPTION_LABEL_ENABLE_WARNING_RESTORE = "$FPPOptionLabelEnableWarningRestore"
-string C_OPTION_LABEL_WARNING_RESTORE = "$FPPOptionLabelWarningRestore"
-string C_OPTION_LABEL_ENABLE_WARNING_FORTIFY_RESIST = "$FPPOptionLabelEnableWarningFortifyResist"
-string C_OPTION_LABEL_WARNING_FORTIFY_RESIST = "$FPPOptionLabelWarningFortifyResist"
-string C_OPTION_LABEL_ENABLE_WARNING_POISONS = "$FPPOptionLabelEnableWarningPoisons"
-string C_OPTION_LABEL_WARNING_POISONS = "$FPPOptionLabelWarningPoisons"
-string C_OPTION_LABEL_HEALTH_IN_COMBAT = "$FPPOptionLabelHealthInCombat"
-string C_OPTION_LABEL_HEALTH_NON_COMBAT = "$FPPOptionLabelHealthNonCombat"
-string C_OPTION_LABEL_STAMINA_IN_COMBAT = "$FPPOptionLabelStaminaInCombat"
-string C_OPTION_LABEL_STAMINA_NON_COMBAT = "$FPPOptionLabelStaminaNonCombat"
-string C_OPTION_LABEL_MAGICKA_IN_COMBAT = "$FPPOptionLabelMagickaInCombat"
-string C_OPTION_LABEL_MAGICKA_NON_COMBAT = "$FPPOptionLabelMagickaNonCombat"
-string C_OPTION_LABEL_ENEMY_OVER = "$FPPOptionLabelEnemyOver"
-string C_OPTION_LABEL_POTION_IDENT = "$FPPOptionLabelPotionIdent"
-string C_OPTION_LABEL_DUMMY_TRIGGER_RACES = "$FPPOptionLabelDummyTriggerRaces"
-string C_OPTION_LABEL_TRIGGER_RACE_DRAGON = "$FPPOptionLabelTriggerRaceDragon"
-string C_OPTION_LABEL_TRIGGER_RACE_DRAGON_PRIEST = "$FPPOptionLabelTriggerRaceDragonPriest"
-string C_OPTION_LABEL_TRIGGER_RACE_GIANT = "$FPPOptionLabelTriggerRaceGiant"
-string C_OPTION_LABEL_TRIGGER_RACE_VAMPIRE_LORD = "$FPPOptionLabelTriggerRaceVampireLord"
-string C_OPTION_VALUE_SELECT_ACTION = "$FPPOptionValueSelectAction"
-string C_INFO_TEXT_DEBUG = "$FPPInfoTextDebug"
-string C_INFO_TEXT_ADD_ON_FOLLOW = "$FPPInfoTextAddOnFollow"
-string C_INFO_TEXT_STATUS_PREFIX = "$FPPInfoText"
-string C_INFO_TEXT_ACTION_SINGLE = "$FPPInfoTextActionSingle"
-string C_INFO_TEXT_ACTION_ALL = "$FPPInfoTextActionAll"
-string C_INFO_TEXT_ACTION_ALL_ADD_POTIONS = "$FPPInfoTextActionAllWithAddPotions"
-string C_INFO_TEXT_RESET = "$FPPInfoTextReset"
-string C_INFO_TEXT_RESET_SINGLE = "$FPPInfoTextResetSingle"
-string C_INFO_TEXT_RESET_ALL = "$FPPInfoTextResetAll"
-string C_INFO_TEXT_REMOVE = "$FPPInfoTextRemove"
-string C_INFO_TEXT_REMOVE_SINGLE = "$FPPInfoTextRemoveSingle"
-string C_INFO_TEXT_REMOVE_ALL = "$FPPInfoTextRemoveAll"
-string C_INFO_TEXT_REFRESH = "$FPPInfoTextRefresh"
-string C_INFO_TEXT_REFRESH_SINGLE = "$FPPInfoTextRefreshSingle"
-string C_INFO_TEXT_REFRESH_ALL = "$FPPInfoTextRefreshAll"
-string C_INFO_TEXT_UPDATE_IN_COMBAT = "$FPPInfoTextUpdateInCombat"
-string C_INFO_TEXT_UPDATE_NON_COMBAT = "$FPPInfoTextUpdateNonCombat"
-string C_INFO_TEXT_UPDATE_NO_POTIONS = "$FPPInfoTextUpdateNoPotions"
-string C_INFO_TEXT_WARNING_RESTORE = "$FPPInfoTextWarningRestore"
-string C_INFO_TEXT_WARNING_FORTIFY_RESIST = "$FPPInfoTextWarningFortifyResist"
-string C_INFO_TEXT_WARNING_POISON = "$FPPInfoTextWarningPoison"
-string C_INFO_TEXT_HEALTH_IN_COMBAT = "$FPPInfoTextHealthInCombat"
-string C_INFO_TEXT_HEALTH_NON_COMBAT = "$FPPInfoTextHealthNonCombat"
-string C_INFO_TEXT_STAMINA_IN_COMBAT = "$FPPInfoTextStaminaInCombat"
-string C_INFO_TEXT_STAMINA_NON_COMBAT = "$FPPInfoTextStaminaNonCombat"
-string C_INFO_TEXT_MAGICKA_IN_COMBAT = "$FPPInfoTextMagickaInCombat"
-string C_INFO_TEXT_MAGICKA_NON_COMBAT = "$FPPInfoTextMagickaNonCombat"
-string C_INFO_TEXT_ENEMY_OVER = "$FPPInfoTextEnemyOver"
-string C_INFO_TEXT_POTION_IDENT = "$FPPInfoTextPotionIdent"
-string C_CONFIRM_RESET_SINGLE = "$FPPConfirmResetSingle"
-string C_CONFIRM_RESET_ALL = "$FPPConfirmResetAll"
-string C_CONFIRM_REMOVE_SINGLE = "$FPPConfirmRemoveSingle"
-string C_CONFIRM_REMOVE_ALL = "$FPPConfirmRemoveAll"
-string C_CONFIRM_REFRESH_SINGLE = "$FPPConfirmRefreshSingle"
-string C_CONFIRM_REFRESH_ALL = "$FPPConfirmRefreshAll"
-string C_CONFIRM_ADD_POTIONS_SINGLE = "$FPPConfirmAddPotionsSingle"
-string C_CONFIRM_ADD_POTIONS_ALL = "$FPPConfirmAddPotionsAll"
+string Property C_PAGE_MISC = "$FPPPageMisc"																Autoreadonly
+string Property C_PAGE_DEFAULTS = "$FPPPageDefaults"														Autoreadonly
+string Property C_PAGE_NOT_SET = "$FPPPageEmpty"															Autoreadonly
+string Property C_FORMAT_PLACEHOLDER_SECONDS = "$FPPFormatPlaceholderSeconds"								Autoreadonly
+string Property C_FORMAT_PLACEHOLDER_PERCENT = "$FPPFormatPlaceholderPercent"								Autoreadonly
+string Property C_FORMAT_PLACEHOLDER_LEVELS = "$FPPFormatPlaceholderLevels"									Autoreadonly
+string Property C_HEADER_LABEL_UPDATE_INTERVALS = "$FPPHeaderLabelUpdateIntervals"							Autoreadonly
+string Property C_HEADER_LABEL_RESTORE_POTIONS = "$FPPHeaderLabelRestorePotions"							Autoreadonly
+string Property C_HEADER_LABEL_POISONS = "$FPPHeaderLabelPoisons"											Autoreadonly
+string Property C_HEADER_LABEL_WARNING_INTERVALS = "$FPPHeaderLabelWarningIntervals"						Autoreadonly
+string Property C_HEADER_LABEL_FORTIFY_RESIST_POTIONS = "$FPPHeaderLabelFortifyResistPotions"				Autoreadonly
+string Property C_HEADER_LABEL_ACTIONS = "$FPPHeaderLabelActions"											Autoreadonly
+string Property C_HEADER_LABEL_POTION_IDENT = "$FPPHeaderLabelPotionIdent"									Autoreadonly
+string Property C_MENU_OPTION_CANCEL = "$FPPMenuOptionCancel"												Autoreadonly
+string Property C_MENU_OPTION_RESET = "$FPPMenuOptionReset"													Autoreadonly
+string Property C_MENU_OPTION_REFRESH = "$FPPMenuOptionRefresh"												Autoreadonly
+string Property C_MENU_OPTION_REMOVE = "$FPPMenuOptionRemove"												Autoreadonly
+string Property C_MENU_OPTION_ADD_POTIONS = "$FPPMenuOptionAddPotions"										Autoreadonly
+string Property C_MENU_OPTION_EFFECTS_ALL = "$FPPMenuOptionEffectsAll"										Autoreadonly
+string Property C_MENU_OPTION_EFFECTS_RESTORE = "$FPPMenuOptionEffectsRestore"								Autoreadonly
+string Property C_MENU_OPTION_EFFECTS_FORTIFY = "$FPPMenuOptionEffectsFortify"								Autoreadonly
+string Property C_MENU_OPTION_EFFECTS_RESIST = "$FPPMenuOptionEffectsResist"								Autoreadonly
+string Property C_MENU_OPTION_EFFECTS_FIRST = "$FPPMenuOptionEffectsFirst"									Autoreadonly
+string Property C_MENU_OPTION_EFFECTS_SECOND = "$FPPMenuOptionEffectsSecond"								Autoreadonly
+string Property C_MENU_OPTION_EFFECTS_THIRD = "$FPPMenuOptionEffectsThird"									Autoreadonly
+string Property C_OPTION_LABEL_NO_FOLLOWER = "$FPPOptionLabelNoFollower"									Autoreadonly
+string Property C_OPTION_LABEL_DEBUG = "$FPPOptionLabelDebug"												Autoreadonly
+string Property C_OPTION_LABEL_ADD_ON_FOLLOW = "$FPPOptionLabelAddOnFollow"									Autoreadonly
+string Property C_OPTION_LABEL_CURRENT_VERSION = "$FPPOptionLabelCurrentVersion"							Autoreadonly
+string Property C_OPTION_LABEL_ACTIONS_ALL = "$FPPOptionLabelActionsAll"									Autoreadonly
+string Property C_OPTION_LABEL_USE_POTIONS = "$FPPOptionLabelUsePotions{0}"									Autoreadonly
+string Property C_OPTION_LABEL_UPDATE_IN_COMBAT = "$FPPOptionLabelUpdateInCombat"							Autoreadonly
+string Property C_OPTION_LABEL_UPDATE_NON_COMBAT = "$FPPOptionLabelUpdateNonCombat"							Autoreadonly
+string Property C_OPTION_LABEL_ENABLE_WARNING_NO_POTIONS = "$FPPOptionLabelEnableWarningNoPotions"			Autoreadonly
+string Property C_OPTION_LABEL_UPDATE_NO_POTIONS = "$FPPOptionLabelUpdateNoPotions"							Autoreadonly
+string Property C_OPTION_LABEL_ENABLE_WARNING_RESTORE = "$FPPOptionLabelEnableWarningRestore"				Autoreadonly
+string Property C_OPTION_LABEL_WARNING_RESTORE = "$FPPOptionLabelWarningRestore"							Autoreadonly
+string Property C_OPTION_LABEL_ENABLE_WARNING_FORTIFY_RESIST = "$FPPOptionLabelEnableWarningFortifyResist"	Autoreadonly
+string Property C_OPTION_LABEL_WARNING_FORTIFY_RESIST = "$FPPOptionLabelWarningFortifyResist"				Autoreadonly
+string Property C_OPTION_LABEL_ENABLE_WARNING_POISONS = "$FPPOptionLabelEnableWarningPoisons"				Autoreadonly
+string Property C_OPTION_LABEL_WARNING_POISONS = "$FPPOptionLabelWarningPoisons"							Autoreadonly
+string Property C_OPTION_LABEL_HEALTH_IN_COMBAT = "$FPPOptionLabelHealthInCombat"							Autoreadonly
+string Property C_OPTION_LABEL_HEALTH_NON_COMBAT = "$FPPOptionLabelHealthNonCombat"							Autoreadonly
+string Property C_OPTION_LABEL_STAMINA_IN_COMBAT = "$FPPOptionLabelStaminaInCombat"							Autoreadonly
+string Property C_OPTION_LABEL_STAMINA_NON_COMBAT = "$FPPOptionLabelStaminaNonCombat"						Autoreadonly
+string Property C_OPTION_LABEL_MAGICKA_IN_COMBAT = "$FPPOptionLabelMagickaInCombat"							Autoreadonly
+string Property C_OPTION_LABEL_MAGICKA_NON_COMBAT = "$FPPOptionLabelMagickaNonCombat"						Autoreadonly
+string Property C_OPTION_LABEL_ENEMY_OVER = "$FPPOptionLabelEnemyOver"										Autoreadonly
+string Property C_OPTION_LABEL_POTION_IDENT = "$FPPOptionLabelPotionIdent"									Autoreadonly
+string Property C_OPTION_LABEL_DUMMY_TRIGGER_RACES = "$FPPOptionLabelDummyTriggerRaces"						Autoreadonly
+string Property C_OPTION_LABEL_TRIGGER_RACE_DRAGON = "$FPPOptionLabelTriggerRaceDragon"						Autoreadonly
+string Property C_OPTION_LABEL_TRIGGER_RACE_DRAGON_PRIEST = "$FPPOptionLabelTriggerRaceDragonPriest"		Autoreadonly
+string Property C_OPTION_LABEL_TRIGGER_RACE_GIANT = "$FPPOptionLabelTriggerRaceGiant"						Autoreadonly
+string Property C_OPTION_LABEL_TRIGGER_RACE_VAMPIRE_LORD = "$FPPOptionLabelTriggerRaceVampireLord"			Autoreadonly
+string Property C_OPTION_VALUE_SELECT_ACTION = "$FPPOptionValueSelectAction"								Autoreadonly
+string Property C_INFO_TEXT_DEBUG = "$FPPInfoTextDebug"														Autoreadonly
+string Property C_INFO_TEXT_ADD_ON_FOLLOW = "$FPPInfoTextAddOnFollow"										Autoreadonly
+string Property C_INFO_TEXT_STATUS_PREFIX = "$FPPInfoText"													Autoreadonly
+string Property C_INFO_TEXT_ACTION_SINGLE = "$FPPInfoTextActionSingle"										Autoreadonly
+string Property C_INFO_TEXT_ACTION_ALL = "$FPPInfoTextActionAll"											Autoreadonly
+string Property C_INFO_TEXT_ACTION_ALL_ADD_POTIONS = "$FPPInfoTextActionAllWithAddPotions"					Autoreadonly
+string Property C_INFO_TEXT_RESET = "$FPPInfoTextReset"														Autoreadonly
+string Property C_INFO_TEXT_RESET_SINGLE = "$FPPInfoTextResetSingle"										Autoreadonly
+string Property C_INFO_TEXT_RESET_ALL = "$FPPInfoTextResetAll"												Autoreadonly
+string Property C_INFO_TEXT_REMOVE = "$FPPInfoTextRemove"													Autoreadonly
+string Property C_INFO_TEXT_REMOVE_SINGLE = "$FPPInfoTextRemoveSingle"										Autoreadonly
+string Property C_INFO_TEXT_REMOVE_ALL = "$FPPInfoTextRemoveAll"											Autoreadonly
+string Property C_INFO_TEXT_REFRESH = "$FPPInfoTextRefresh"													Autoreadonly
+string Property C_INFO_TEXT_REFRESH_SINGLE = "$FPPInfoTextRefreshSingle"									Autoreadonly
+string Property C_INFO_TEXT_REFRESH_ALL = "$FPPInfoTextRefreshAll"											Autoreadonly
+string Property C_INFO_TEXT_UPDATE_IN_COMBAT = "$FPPInfoTextUpdateInCombat"									Autoreadonly
+string Property C_INFO_TEXT_UPDATE_NON_COMBAT = "$FPPInfoTextUpdateNonCombat"								Autoreadonly
+string Property C_INFO_TEXT_UPDATE_NO_POTIONS = "$FPPInfoTextUpdateNoPotions"								Autoreadonly
+string Property C_INFO_TEXT_WARNING_RESTORE = "$FPPInfoTextWarningRestore"									Autoreadonly
+string Property C_INFO_TEXT_WARNING_FORTIFY_RESIST = "$FPPInfoTextWarningFortifyResist"						Autoreadonly
+string Property C_INFO_TEXT_WARNING_POISON = "$FPPInfoTextWarningPoison"									Autoreadonly
+string Property C_INFO_TEXT_HEALTH_IN_COMBAT = "$FPPInfoTextHealthInCombat"									Autoreadonly
+string Property C_INFO_TEXT_HEALTH_NON_COMBAT = "$FPPInfoTextHealthNonCombat"								Autoreadonly
+string Property C_INFO_TEXT_STAMINA_IN_COMBAT = "$FPPInfoTextStaminaInCombat"								Autoreadonly
+string Property C_INFO_TEXT_STAMINA_NON_COMBAT = "$FPPInfoTextStaminaNonCombat"								Autoreadonly
+string Property C_INFO_TEXT_MAGICKA_IN_COMBAT = "$FPPInfoTextMagickaInCombat"								Autoreadonly
+string Property C_INFO_TEXT_MAGICKA_NON_COMBAT = "$FPPInfoTextMagickaNonCombat"								Autoreadonly
+string Property C_INFO_TEXT_ENEMY_OVER = "$FPPInfoTextEnemyOver"											Autoreadonly
+string Property C_INFO_TEXT_POTION_IDENT = "$FPPInfoTextPotionIdent"										Autoreadonly
+string Property C_CONFIRM_RESET_SINGLE = "$FPPConfirmResetSingle"											Autoreadonly
+string Property C_CONFIRM_RESET_ALL = "$FPPConfirmResetAll"													Autoreadonly
+string Property C_CONFIRM_REMOVE_SINGLE = "$FPPConfirmRemoveSingle"											Autoreadonly
+string Property C_CONFIRM_REMOVE_ALL = "$FPPConfirmRemoveAll"												Autoreadonly
+string Property C_CONFIRM_REFRESH_SINGLE = "$FPPConfirmRefreshSingle"										Autoreadonly
+string Property C_CONFIRM_REFRESH_ALL = "$FPPConfirmRefreshAll"												Autoreadonly
+string Property C_CONFIRM_ADD_POTIONS_SINGLE = "$FPPConfirmAddPotionsSingle"								Autoreadonly
+string Property C_CONFIRM_ADD_POTIONS_ALL = "$FPPConfirmAddPotionsAll"										Autoreadonly
 
 ; OIDs (T:Text B:Toggle S:Slider M:Menu, C:Color, K:Key)
 int			_debugOID_B
@@ -157,11 +157,9 @@ int			_usePotionResistShockOID_B
 int			_usePotionResistMagicOID_B
 int			_usePotionResistPoisonOID_B
 
-int			_usePoisonsGlobalOID_B
-int			_usePoisonsEngageOID_B
-int			_usePoisonsEngageOffHandOID_B
-int			_usePoisonsDuringOID_B
-int			_usePoisonsDuringOffHandOID_B
+int			_usePoisonsMainOID_M
+int			_usePoisonsBowOID_M
+int			_usePoisonsOffHandOID_M
 
 int			_updateIntervalInCombatOID_S
 int			_updateIntervalNonCombatOID_S
@@ -194,20 +192,20 @@ bool updatingFollowerPotions
 
 
 ; Internal
-float _defaultUpdateIntervalInCombat = 1.0
-float _defaultUpdateIntervalNonCombat = 10.0
-float _defaultUpdateIntervalNoPotions = 180.0
-float _defaultWarningIntervalRestore = 30.0
-float _defaultWarningIntervalFortifyResist = 180.0
-float _defaultWarningIntervalPoison = 30.0
-float _defaultHealthLimitInCombat = 0.6
-float _defaultHealthLimitNonCombat = 1.0
-float _defaultStaminaLimitInCombat = 0.6
-float _defaultStaminaLimitNonCombat = 0.3
-float _defaultMagickaLimitInCombat = 0.6
-float _defaultMagickaLimitNonCombat = 0.3
-float _defaultLvlDiffTrigger = 5.0
-int   _defaultPotionIdent = 0
+float Property _defaultUpdateIntervalInCombat = 1.0			Autoreadonly
+float Property _defaultUpdateIntervalNonCombat = 10.0		Autoreadonly
+float Property _defaultUpdateIntervalNoPotions = 180.0		Autoreadonly
+float Property _defaultWarningIntervalRestore = 30.0		Autoreadonly
+float Property _defaultWarningIntervalFortifyResist = 180.0	Autoreadonly
+float Property _defaultWarningIntervalPoison = 30.0			Autoreadonly
+float Property _defaultHealthLimitInCombat = 0.6			Autoreadonly
+float Property _defaultHealthLimitNonCombat = 1.0			Autoreadonly
+float Property _defaultStaminaLimitInCombat = 0.6			Autoreadonly
+float Property _defaultStaminaLimitNonCombat = 0.3			Autoreadonly
+float Property _defaultMagickaLimitInCombat = 0.6			Autoreadonly
+float Property _defaultMagickaLimitNonCombat = 0.3			Autoreadonly
+float Property _defaultLvlDiffTrigger = 5.0					Autoreadonly
+int   Property _defaultPotionIdent = 0						Autoreadonly
 
 _FPP_Quest Property FPPQuest Auto
 
@@ -215,10 +213,12 @@ float[] sliderVals
 bool[] boolVals
 bool[] enableWarningsBoolVals
 bool[] triggerRaceVals
+int[] poisonOptionVals
 int potionIdentIndex
 
 string[] actionOptions
 string[] potionIdentOptions
+string[] poisonOptions
 
 _FPP_FollowerScript follower
 
@@ -236,12 +236,14 @@ endEvent
 event OnConfigInit()
 	
 	sliderVals = new float[13]
-	boolVals = new bool[30]
+	boolVals = new bool[25]
 	enableWarningsBoolVals = new bool[4]
 
 	_followerOID_M = new int[15]
 	
 	triggerRaceVals = new bool[4]
+
+	poisonOptionVals = new int[3]
 
 	RedrawFollowerPages()
 endEvent
@@ -340,7 +342,7 @@ event OnPageReset(string a_page)
 		follower = None
 		SetOptions(FPPQuest.DefaultUpdateIntervalInCombat, FPPQuest.DefaultUpdateIntervalNonCombat, FPPQuest.DefaultUpdateIntervalNoPotions, \
 					FPPQuest.DefaultEnableWarnings, FPPQuest.DefaultWarningIntervals, FPPQuest.DefaultStatLimitsInCombat, FPPQuest.DefaultStatLimitsNonCombat, FPPQuest.DefaultLvlDiffTrigger, FPPQuest.DefaultTriggerRaces, \
-					FPPQuest.DefaultUsePotionOfType, false)
+					FPPQuest.DefaultUsePotionOfType, FPPQuest.DefaultGlobalUsePoisons, FPPQuest.DefaultUsePoisonOfType, false)
 		
 	elseIf (a_page != C_PAGE_NOT_SET)
 	
@@ -354,7 +356,7 @@ event OnPageReset(string a_page)
 		follower = FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript
 		SetOptions(follower.UpdateIntervalInCombat, follower.UpdateIntervalNonCombat, follower.UpdateIntervalNoPotions, \
 					follower.EnableWarnings, follower.WarningIntervals, follower.StatLimitsInCombat, follower.StatLimitsNonCombat, follower.LvlDiffTrigger, follower.TriggerRaces, \
-					follower.UsePotionOfType, true)
+					follower.UsePotionOfType, follower.GlobalUsePoisons, follower.UsePoisonOfType, true)
 		
 	else
 	
@@ -367,7 +369,7 @@ event OnPageReset(string a_page)
 	; paint page
 	AddHeaderOption(C_HEADER_LABEL_RESTORE_POTIONS)
 	
-	_usePotionRestoreHealthOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[0]), boolVals[0])
+	_usePotionRestoreHealthOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[0]), boolVals[0])
 	if (boolVals[0])
 		_healthLimitInCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_HEALTH_IN_COMBAT, sliderVals[3] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_NONE)
 		_healthLimitNonCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_HEALTH_NON_COMBAT, sliderVals[4] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_NONE)
@@ -376,7 +378,7 @@ event OnPageReset(string a_page)
 		_healthLimitNonCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_HEALTH_NON_COMBAT, sliderVals[4] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_DISABLED)
 	endIf
 
-	_usePotionRestoreStaminaOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[1]), boolVals[1])
+	_usePotionRestoreStaminaOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[1]), boolVals[1])
 	if (boolVals[1])
 		_staminaLimitInCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_STAMINA_IN_COMBAT, sliderVals[5] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_NONE)
 		_staminaLimitNonCombatOID_S 	= AddSliderOption(C_OPTION_LABEL_STAMINA_NON_COMBAT, sliderVals[6] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_NONE)
@@ -385,7 +387,7 @@ event OnPageReset(string a_page)
 		_staminaLimitNonCombatOID_S 	= AddSliderOption(C_OPTION_LABEL_STAMINA_NON_COMBAT, sliderVals[6] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_DISABLED)
 	endIf
 
-	_usePotionRestoreMagickaOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[2]), boolVals[2])
+	_usePotionRestoreMagickaOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[2]), boolVals[2])
 	if (boolVals[2])
 		_magickaLimitInCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_MAGICKA_IN_COMBAT, sliderVals[7] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_NONE)
 		_magickaLimitNonCombatOID_S 	= AddSliderOption(C_OPTION_LABEL_MAGICKA_NON_COMBAT, sliderVals[8] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_NONE)
@@ -393,6 +395,14 @@ event OnPageReset(string a_page)
 		_magickaLimitInCombatOID_S 		= AddSliderOption(C_OPTION_LABEL_MAGICKA_IN_COMBAT, sliderVals[7] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_DISABLED)
 		_magickaLimitNonCombatOID_S 	= AddSliderOption(C_OPTION_LABEL_MAGICKA_NON_COMBAT, sliderVals[8] * 100, C_FORMAT_PLACEHOLDER_PERCENT, OPTION_FLAG_DISABLED)
 	endIf
+	
+	AddEmptyOption()
+	
+	AddHeaderOption(C_HEADER_LABEL_POISONS)
+	
+	_usePoisonsMainOID_M		= AddMenuOption("Use on main weapon", poisonOptions[poisonOptionVals[0]])
+	_usePoisonsBowOID_M			= AddMenuOption("Use on bows", poisonOptions[poisonOptionVals[1]])
+	_usePoisonsOffHandOID_M		= AddMenuOption("Use on off-hand", poisonOptions[poisonOptionVals[2]])
 	
 	AddEmptyOption()
 	
@@ -433,12 +443,6 @@ event OnPageReset(string a_page)
 		_updateIntervalNoPotionsOID_S = AddSliderOption(C_OPTION_LABEL_UPDATE_NO_POTIONS, sliderVals[2], C_FORMAT_PLACEHOLDER_SECONDS, OPTION_FLAG_DISABLED)
 	endIf
 	
-	_usePoisonsGlobalOID_B		= AddToggleOption("Use Poisons", boolVals[25])
-	_usePoisonsEngageOID_B		= AddToggleOption("Use Poisons On Engage", boolVals[26])
-	_usePoisonsEngageOffHandOID_B		= AddToggleOption("Use Poisons On Engage (off-hand)", boolVals[27])
-	_usePoisonsDuringOID_B		= AddToggleOption("Use Poisons During Combat", boolVals[28])
-	_usePoisonsDuringOffHandOID_B		= AddToggleOption("Use Poisons During Combat (off-hand)", boolVals[29])
-	
 	; Move to the top of the right-hand pane
 	SetCursorPosition(1)
 
@@ -454,37 +458,37 @@ event OnPageReset(string a_page)
 	
 	AddEmptyOption()
 
-	_usePotionFortifyHealthOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[3]), boolVals[3])
-	_usePotionFortifyHealthRegenOID_B	= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[4]), boolVals[4])
-	_usePotionFortifyStaminaOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[5]), boolVals[5])
-	_usePotionFortifyStaminaRegenOID_B	= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[6]), boolVals[6])
-	_usePotionFortifyMagickaOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[7]), boolVals[7])
-	_usePotionFortifyMagickaRegenOID_B	= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[8]), boolVals[8])
+	_usePotionFortifyHealthOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[3]), boolVals[3])
+	_usePotionFortifyHealthRegenOID_B	= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[4]), boolVals[4])
+	_usePotionFortifyStaminaOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[5]), boolVals[5])
+	_usePotionFortifyStaminaRegenOID_B	= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[6]), boolVals[6])
+	_usePotionFortifyMagickaOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[7]), boolVals[7])
+	_usePotionFortifyMagickaRegenOID_B	= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[8]), boolVals[8])
 	
 	AddEmptyOption()
 	
-	_usePotionFortifyBlockOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[9]), boolVals[9])
-	_usePotionFortifyHvArmOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[10]), boolVals[10])
-	_usePotionFortifyLtArmOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[11]), boolVals[11])
-	_usePotionFortifyMarksmanOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[12]), boolVals[12])
-	_usePotionFortify1hOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[13]), boolVals[13])
-	_usePotionFortify2hOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[14]), boolVals[14])
+	_usePotionFortifyBlockOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[9]), boolVals[9])
+	_usePotionFortifyHvArmOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[10]), boolVals[10])
+	_usePotionFortifyLtArmOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[11]), boolVals[11])
+	_usePotionFortifyMarksmanOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[12]), boolVals[12])
+	_usePotionFortify1hOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[13]), boolVals[13])
+	_usePotionFortify2hOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[14]), boolVals[14])
 	
 	AddEmptyOption()
 	
-	_usePotionFortifyAlterationOID_B	= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[15]), boolVals[15])
-	_usePotionFortifyConjurationOID_B	= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[16]), boolVals[16])
-	_usePotionFortifyDestructionOID_B	= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[17]), boolVals[17])
-	_usePotionFortifyIllusionOID_B		= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[18]), boolVals[18])
-	_usePotionFortifyRestorationOID_B	= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[19]), boolVals[19])
+	_usePotionFortifyAlterationOID_B	= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[15]), boolVals[15])
+	_usePotionFortifyConjurationOID_B	= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[16]), boolVals[16])
+	_usePotionFortifyDestructionOID_B	= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[17]), boolVals[17])
+	_usePotionFortifyIllusionOID_B		= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[18]), boolVals[18])
+	_usePotionFortifyRestorationOID_B	= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[19]), boolVals[19])
 	
 	AddEmptyOption()
 	
-	_usePotionResistFireOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[20]), boolVals[20])
-	_usePotionResistFrostOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[21]), boolVals[21])
-	_usePotionResistShockOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[22]), boolVals[22])
-	_usePotionResistMagicOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[23]), boolVals[23])
-	_usePotionResistPoisonOID_B			= AddToggleOption(FormatString(C_TEMPLATED_STRING_USE_POTIONS, FPPQuest.EffectNames[24]), boolVals[24])
+	_usePotionResistFireOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[20]), boolVals[20])
+	_usePotionResistFrostOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[21]), boolVals[21])
+	_usePotionResistShockOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[22]), boolVals[22])
+	_usePotionResistMagicOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[23]), boolVals[23])
+	_usePotionResistPoisonOID_B			= AddToggleOption(FormatString(C_OPTION_LABEL_USE_POTIONS, FPPQuest.EffectNames[24]), boolVals[24])
 
 endEvent
 
@@ -543,6 +547,22 @@ event OnOptionMenuOpen(int a_option)
 		SetMenuDialogStartIndex(potionIdentIndex)
 		SetMenuDialogDefaultIndex(_defaultPotionIdent)
 		SetMenuDialogOptions(potionIdentOptions)
+
+	elseIf (a_option == _usePoisonsMainOID_M)
+		SetMenuDialogStartIndex(poisonOptionVals[0])
+		SetMenuDialogDefaultIndex(0)
+		SetMenuDialogOptions(poisonOptions)
+
+	elseIf (a_option == _usePoisonsBowOID_M)
+		SetMenuDialogStartIndex(poisonOptionVals[1])
+		SetMenuDialogDefaultIndex(0)
+		SetMenuDialogOptions(poisonOptions)
+
+	elseIf (a_option == _usePoisonsOffHandOID_M)
+		SetMenuDialogStartIndex(poisonOptionVals[2])
+		SetMenuDialogDefaultIndex(0)
+		SetMenuDialogOptions(poisonOptions)
+
 	elseIf (a_option == _actionAllOID_M || _followerOID_M.Find(a_option) > -1)
 		SetMenuDialogStartIndex(0)
 		SetMenuDialogDefaultIndex(0)
@@ -557,6 +577,37 @@ event OnOptionMenuAccept(int a_option, int a_index)
 		potionIdentIndex = a_index
 		SetMenuOptionValue(_potionIdentOID_M, potionIdentOptions[potionIdentIndex])
 		SetPotionIdentMethod(potionIdentIndex)
+
+	elseIf (a_option == _usePoisonsMainOID_M)
+		poisonOptionVals[0] = a_index
+		SetMenuOptionValue(_usePoisonsMainOID_M, poisonOptions[a_index])
+		if (follower)
+			follower.GlobalUsePoisons[1] = 2 + (a_index * -1)
+		else
+			FPPQuest.DefaultGlobalUsePoisons[1] = 2 + (a_index * -1)
+		endIf
+		SetGlobalUsePoisons()
+
+	elseIf (a_option == _usePoisonsBowOID_M)
+		poisonOptionVals[1] = a_index
+		SetMenuOptionValue(_usePoisonsBowOID_M, poisonOptions[a_index])
+		if (follower)
+			follower.GlobalUsePoisons[2] = 2 + (a_index * -1)
+		else
+			FPPQuest.DefaultGlobalUsePoisons[2] = 2 + (a_index * -1)
+		endIf
+		SetGlobalUsePoisons()
+
+	elseIf (a_option == _usePoisonsOffHandOID_M)
+		poisonOptionVals[2] = a_index
+		SetMenuOptionValue(_usePoisonsOffHandOID_M, poisonOptions[a_index])
+		if (follower)
+			follower.GlobalUsePoisons[3] = 2 + (a_index * -1)
+		else
+			FPPQuest.DefaultGlobalUsePoisons[3] = 2 + (a_index * -1)
+		endIf
+		SetGlobalUsePoisons()
+
 	elseIf (a_option == _actionAllOID_M)
 		if (a_index == 0)
 			return
@@ -867,51 +918,6 @@ event OnOptionSelect(int a_option)
 			follower.UsePotionOfType[24] = boolVals[24]
 		else
 			FPPQuest.DefaultUsePotionOfType[24] = boolVals[24]
-		endIf
-
-	elseIf (a_option == _usePoisonsGlobalOID_B)
-		boolVals[25] = !boolVals[25]
-		SetToggleOptionValue(a_option, boolVals[25])
-		if (follower)
-			follower.GlobalUsePoisons = boolVals[25]
-		else
-			FPPQuest.DefaultGlobalUsePoisons = boolVals[25]
-		endIf
-
-	elseIf (a_option == _usePoisonsEngageOID_B)
-		boolVals[26] = !boolVals[26]
-		SetToggleOptionValue(a_option, boolVals[26])
-		if (follower)
-			follower.UsePoisonsOnEngage = boolVals[26]
-		else
-			FPPQuest.DefaultUsePoisonsOnEngage = boolVals[26]
-		endIf
-
-	elseIf (a_option == _usePoisonsEngageOffHandOID_B)
-		boolVals[27] = !boolVals[27]
-		SetToggleOptionValue(a_option, boolVals[27])
-		if (follower)
-			follower.UsePoisonsOnEngageOffHand = boolVals[27]
-		else
-			FPPQuest.DefaultUsePoisonsOnEngageOffHand = boolVals[27]
-		endIf
-
-	elseIf (a_option == _usePoisonsDuringOID_B)
-		boolVals[28] = !boolVals[28]
-		SetToggleOptionValue(a_option, boolVals[28])
-		if (follower)
-			follower.UsePoisonsDuringCombat = boolVals[28]
-		else
-			FPPQuest.DefaultUsePoisonsDuringCombat = boolVals[28]
-		endIf
-
-	elseIf (a_option == _usePoisonsDuringOffHandOID_B)
-		boolVals[29] = !boolVals[29]
-		SetToggleOptionValue(a_option, boolVals[29])
-		if (follower)
-			follower.UsePoisonsDuringCombatOffHand = boolVals[29]
-		else
-			FPPQuest.DefaultUsePoisonsDuringCombatOffHand = boolVals[29]
 		endIf
 
 	elseIf (a_option == _triggerRaceDragonOID_B)
@@ -1356,6 +1362,14 @@ Function SetPotionIdentMethod(int aiSelectedIndex)
 	
 endFunction
 
+function SetGlobalUsePoisons()
+	int useAny = 2 + (poisonOptionVals[0] * -1) + 2 + (poisonOptionVals[1] * -1) + 2 + (poisonOptionVals[2] * -1)
+	if (follower)
+		follower.GlobalUsePoisons[0] = useAny
+	else
+		FPPQuest.DefaultGlobalUsePoisons[0] = useAny
+	endIf
+endFunction
 
 Function EnableFollowerOptions()
 	SetOptionFlags(_actionAllOID_M, OPTION_FLAG_NONE)
@@ -1420,6 +1434,11 @@ Function RedrawFollowerPages()
 	potionIdentOptions[5] = C_MENU_OPTION_EFFECTS_SECOND
 	potionIdentOptions[6] = C_MENU_OPTION_EFFECTS_THIRD
 
+	poisonOptions = new string[3]
+	poisonOptions[0] = "Always"
+	poisonOptions[1] = "On engage"
+	poisonOptions[2] = "Never"
+	
 endFunction
 
 int Function GetFollowerIndex(string asActorPageName)
@@ -1437,14 +1456,14 @@ endFunction
 
 string Function FormatString(string asTemplate, string asEffectName)
 	int subPos = StringUtil.Find(asTemplate, C_STRING_FORMAT_PLACEHOLDER_ZERO)
-	return StringUtil.Substring(asTemplate, 0, subPos) \
+	return StringUtil.Substring(asTemplate, 0, subPos + 1) \
 			+ asEffectName \
-			+ StringUtil.Substring(asTemplate, subPos + StringUtil.GetLength(C_STRING_FORMAT_PLACEHOLDER_ZERO))
+			+ StringUtil.Substring(asTemplate, subPos + StringUtil.GetLength(C_STRING_FORMAT_PLACEHOLDER_ZERO) - 1)
 endFunction
 
 Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat, float UpdateIntervalNoPotions, \
 					bool[] EnableWarningIntervals, float[] WarningIntervals, float[] StatLimitsInCombat, float[] StatLimitsNonCombat, float LvlDiffTrigger, bool[] TriggerRaces, \
-					bool[] UsePotionOfType, bool isFollower)
+					bool[] UsePotionOfType, int[] globalUsePoisons, bool[] usePoisonOfType, bool isFollower)
 
 	sliderVals[0] = UpdateIntervalInCombat
 	sliderVals[1] = UpdateIntervalNonCombat
@@ -1496,18 +1515,15 @@ Function SetOptions(float UpdateIntervalInCombat, float UpdateIntervalNonCombat,
 		boolVals[FPPQuest.ResistEffects[p]] = UsePotionOfType[FPPQuest.ResistEffects[p]]
 	endWhile
 	
-	if (isFollower)
-		boolVals[25] = follower.GlobalUsePoisons
-		boolVals[26] = follower.UsePoisonsOnEngage
-		boolVals[27] = follower.UsePoisonsOnEngageOffHand
-		boolVals[28] = follower.UsePoisonsDuringCombat
-		boolVals[29] = follower.UsePoisonsDuringCombatOffHand
-	else
-		boolVals[25] = FPPQuest.DefaultGlobalUsePoisons
-		boolVals[26] = FPPQuest.DefaultUsePoisonsOnEngage
-		boolVals[27] = FPPQuest.DefaultUsePoisonsOnEngageOffHand
-		boolVals[28] = FPPQuest.DefaultUsePoisonsDuringCombatOffHand
-		boolVals[29] = FPPQuest.DefaultUsePoisonsDuringCombatOffHand
-	endIf
+	poisonOptionVals[0] = 2 + (globalUsePoisons[1] * -1)
+	poisonOptionVals[1] = 2 + (globalUsePoisons[2] * -1)
+	poisonOptionVals[2] = 2 + (globalUsePoisons[3] * -1)
+	
+	;p = usePoisonOfType.Length
+	;while (p)
+		;p -= 1
+		;boolVals[p] = usePoisonOfType[p]
+	;endWhile
 	
 endFunction
+

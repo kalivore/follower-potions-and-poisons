@@ -30,11 +30,7 @@ int Property LvlDiffTrigger Auto
 bool[] Property TriggerRaces Auto
 
 bool[] Property UsePotionOfType Auto
-bool Property GlobalUsePoisons Auto
-bool Property UsePoisonsOnEngage Auto
-bool Property UsePoisonsOnEngageOffHand Auto
-bool Property UsePoisonsDuringCombat Auto
-bool Property UsePoisonsDuringCombatOffHand Auto
+int[] Property GlobalUsePoisons Auto
 bool[] Property UsePoisonOfType Auto
 
 int Property IdentifyPotionEffects Auto
@@ -85,6 +81,11 @@ int C_ITEM_CROSSBOW
 
 int C_HAND_LEFT
 int C_HAND_RIGHT
+
+int GLOBAL_POISONS_ANY		= 0
+int GLOBAL_POISONS_MAIN		= 1
+int GLOBAL_POISONS_BOW		= 2
+int GLOBAL_POISONS_OFFHAND	= 3
 
 int EFFECT_RESTOREHEALTH
 int EFFECT_RESTORESTAMINA
@@ -501,7 +502,7 @@ State PendingEvent
 				if (asEventName == "weaponSwing" || asEventName == "arrowRelease")
 					AttemptPoisonChain(asState, C_HAND_RIGHT, rhItem, false)
 				elseIf (asEventName == "weaponLeftSwing")
-					UsePoisonsDuringCombatOffHand && AttemptPoisonChain(asState, C_HAND_LEFT, lhItem, false)
+					AttemptPoisonChain(asState, C_HAND_LEFT, lhItem, false)
 				endIf
 			endIf
 		endIf
@@ -564,9 +565,9 @@ State PendingUpdate
 				RefreshCombatTarget("PendingUpdate::OnUpdate", None, true)
 				if (ShouldUseCombatPoisons("PendingUpdate::OnUpdate", lhItem, rhItem))
 					if (AttemptPoisonChain("PendingUpdate::OnUpdate", C_HAND_RIGHT, rhItem, false))
-						Utility.Wait(1)
+						Utility.Wait(0.3)
 					endIf
-					UsePoisonsDuringCombatOffHand && AttemptPoisonChain("PendingUpdate::OnUpdate", C_HAND_LEFT, lhItem, false)
+					AttemptPoisonChain("PendingUpdate::OnUpdate", C_HAND_LEFT, lhItem, false)
 				endIf
 			endIf
 			AliasDebug("PendingUpdate::OnUpdate - update in " + CurrentUpdateInterval)
@@ -858,9 +859,9 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 	if (PoisonsEnabled(true) && ShouldUseCombatPoisons(asState, lhItem, rhItem))
 		AliasDebug2(msg + "use poisons", true)
 		if (AttemptPoisonChain(asState, C_HAND_RIGHT, rhItem, true))
-			Utility.Wait(1)
+			Utility.Wait(0.3)
 		endIf
-		UsePoisonsOnEngageOffHand && AttemptPoisonChain(asState, C_HAND_LEFT, lhItem, true)
+		AttemptPoisonChain(asState, C_HAND_LEFT, lhItem, true)
 	else
 		AliasDebug2(msg + "don't use poisons", true)
 	endIf
@@ -880,7 +881,9 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 endFunction
 
 bool function PoisonsEnabled(bool abOnEngage)
-	return GlobalUsePoisons && ((abOnEngage && UsePoisonsOnEngage) || (!abOnEngage && UsePoisonsDuringCombat))
+	return GlobalUsePoisons[GLOBAL_POISONS_ANY] > 0 \
+		&& ((abOnEngage && (GlobalUsePoisons[GLOBAL_POISONS_MAIN] > 0 || GlobalUsePoisons[GLOBAL_POISONS_BOW] > 0 || GlobalUsePoisons[GLOBAL_POISONS_OFFHAND] > 0)) \
+			|| (!abOnEngage && (GlobalUsePoisons[GLOBAL_POISONS_MAIN] > 1 || GlobalUsePoisons[GLOBAL_POISONS_BOW] > 1 || GlobalUsePoisons[GLOBAL_POISONS_OFFHAND] > 1)))
 endFunction
 
 function RefreshCombatTarget(string asState, Actor akTarget, bool abForPoisons)
@@ -938,9 +941,9 @@ bool function ShouldUseCombatPoisons(string asState, int aiLHItem, int aiRHItem)
 		return false
 	endIf
 	if (EnemyPoisonable == -1)
-		if (!MyEnemy || EnemyLvlDiff <= LvlDiffTrigger)
+		if (!MyEnemy); || EnemyLvlDiff <= LvlDiffTrigger)
 			EnemyPoisonable = 0
-			AliasDebug2(asState + " - no enemy or not enough level", true)
+			AliasDebug2(asState + " - no enemy", true)
 			return false
 		endIf
 		if (MyEnemy.GetActorValue("PoisonResist") > 90)
@@ -983,9 +986,22 @@ bool function AttemptPoisonChain(string asState, int aiHand, int aiEquippedItemT
 		AliasDebug2(asState + " - no enemy", true)
 		return false
 	endIf
-	if (MyTotalPoisonCount < 1)
-		AliasDebug2(asState + " - no poisons", true)
-		WarnNoItems(asState, EFFECT_HARMFUL, "any poison", true)
+	int threshold = 2
+	if (abOnEngage)
+		threshold = 1
+	endIf
+	if (aiHand == C_HAND_RIGHT)
+		if (IsBowItem(aiEquippedItemType))
+			if (GlobalUsePoisons[GLOBAL_POISONS_BOW] < threshold)
+				AliasDebug2(asState + " - poisons disabled for bows", true)
+				return false
+			endIf
+		elseIf (GlobalUsePoisons[GLOBAL_POISONS_MAIN] < threshold)
+			AliasDebug2(asState + " - poisons disabled for main hand", true)
+			return false
+		endIf
+	elseIf (GlobalUsePoisons[GLOBAL_POISONS_OFFHAND] < threshold)
+		AliasDebug2(asState + " - poisons disabled for off-hand", true)
 		return false
 	endIf
 	if (!EquippedItemPoisonable(aiHand, aiEquippedItemType))
@@ -1474,7 +1490,35 @@ Function ShowInfo()
 	string msg = "State: " + GetState() + "\n"
 	msg += "Total potions: " + MyTotalPotionCount + "\n"
 	msg += "Total poisons: " + MyTotalPoisonCount + "\n"
-;	msg += "\n"
+	if (GlobalUsePoisons[0] > 0)
+		msg += "\n"
+		msg += "Use poisons:"
+		msg += "\nMain: "
+		if (GlobalUsePoisons[1] > 1)
+			msg += "Always"
+		elseIf (GlobalUsePoisons[1] > 0)
+			msg += "On combat start"
+		else
+			msg += "Never"
+		endIf
+		msg += "\nBows: "
+		if (GlobalUsePoisons[2] > 1)
+			msg += "Always"
+		elseIf (GlobalUsePoisons[2] > 0)
+			msg += "On combat start"
+		else
+			msg += "Never"
+		endIf
+		msg += "\nOff-hand: "
+		if (GlobalUsePoisons[3] > 1)
+			msg += "Always"
+		elseIf (GlobalUsePoisons[3] > 0)
+			msg += "On combat start"
+		else
+			msg += "Never"
+		endIf
+	endIf
+
 ;	msg += "Restore Potions: " + GetPotionReport(potionListRestoreHealth) + GetPotionReport(potionListRestoreStamina) + GetPotionReport(potionListRestoreMagicka)
 ;	msg += "\n"
 ;	msg += "Fortify Potions: " + GetPotionReport(MyFortifyPotions)
@@ -1813,6 +1857,7 @@ Function SetDefaults()
 	TriggerRaces = FPPQuest.GetDefaultTriggerRaces()
 
 	UsePotionOfType = FPPQuest.GetDefaultUsePotionsOfTypes()
+	GlobalUsePoisons = FPPQuest.GetDefaultGlobalUsePoisons()
 	UsePoisonOfType = FPPQuest.GetDefaultUsePoisonsOfTypes()
 	
 	IdentifyPotionEffects = FPPQuest.DefaultIdentifyPotionEffects
