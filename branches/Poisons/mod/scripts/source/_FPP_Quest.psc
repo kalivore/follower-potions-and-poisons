@@ -227,10 +227,11 @@ float[] Property DefaultWarningIntervals Auto
 float[] Property DefaultStatLimitsInCombat Auto
 float[] Property DefaultStatLimitsNonCombat Auto
 
-float Property DefaultLvlDiffTrigger Auto
+int Property DefaultLvlDiffTrigger Auto
 bool[] Property DefaultTriggerRaces Auto
-
 bool[] Property DefaultUsePotionOfType Auto
+
+int Property DefaultLvlDiffTriggerPoison Auto
 int[] Property DefaultGlobalUsePoisons Auto
 bool[] Property DefaultUsePoisonOfType Auto
 
@@ -930,16 +931,16 @@ Function SetProperties()
 	PoisonEffectsSpecial[6] = EFFECT_DRAININTELLIGENCE
 	PoisonEffectsSpecial[7] = EFFECT_DRAINSTRENGTH
 	
-	PoisonEffectsStats = new int[3]
-	PoisonEffectsStats[0] = EFFECT_DAMAGEHEALTH
-	PoisonEffectsStats[1] = EFFECT_DAMAGESTAMINA
-	PoisonEffectsStats[2] = EFFECT_DAMAGEMAGICKA
-	
 	PoisonEffectsWeakness = new int[4]
 	PoisonEffectsWeakness[0] = EFFECT_WEAKNESSFIRE
 	PoisonEffectsWeakness[1] = EFFECT_WEAKNESSFROST
 	PoisonEffectsWeakness[2] = EFFECT_WEAKNESSSHOCK
 	PoisonEffectsWeakness[3] = EFFECT_WEAKNESSMAGIC
+	
+	PoisonEffectsStats = new int[3]
+	PoisonEffectsStats[0] = EFFECT_DAMAGEHEALTH
+	PoisonEffectsStats[1] = EFFECT_DAMAGESTAMINA
+	PoisonEffectsStats[2] = EFFECT_DAMAGEMAGICKA
 	
 	PoisonEffectsGeneric = new int[1]
 	PoisonEffectsGeneric[0] = EFFECT_HARMFUL
@@ -1061,10 +1062,11 @@ Function SetDefaults()
 	DefaultStatLimitsNonCombat[EFFECT_RESTORESTAMINA] = 0.3
 	DefaultStatLimitsNonCombat[EFFECT_RESTOREMAGICKA] = 0.3
 
-	DefaultLvlDiffTrigger = 5.0
+	DefaultLvlDiffTrigger = 5
 	SetDefaultTriggerRaces()
-
 	SetDefaultUsePotionsOfTypes()
+
+	DefaultLvlDiffTriggerPoison = 2
 	SetDefaultGlobalUsePoisons()
 	SetDefaultUsePoisonsOfTypes()
 	

@@ -28,8 +28,9 @@ float[] Property StatLimitsNonCombat Auto
 
 int Property LvlDiffTrigger Auto
 bool[] Property TriggerRaces Auto
-
 bool[] Property UsePotionOfType Auto
+
+int Property LvlDiffTriggerPoison Auto
 int[] Property GlobalUsePoisons Auto
 bool[] Property UsePoisonOfType Auto
 
@@ -926,7 +927,7 @@ function RefreshCombatTarget(string asState, Actor akTarget, bool abForPoisons)
 		if (EnemyIsBoss)
 			msg += " boss"
 		endIf
-		msg += " " + MyEnemy.GetLeveledActorBase().GetName() + " (" + MyEnemy.GetFormId() + ", diff " + EnemyLvlDiff + ", trigger " + LvlDiffTrigger + ")"
+		msg += " " + MyEnemy.GetLeveledActorBase().GetName() + " (" + MyEnemy.GetFormId() + ", diff " + EnemyLvlDiff + ", triggers: " + LvlDiffTrigger + "/" + LvlDiffTriggerPoison + ")"
 	endIf
 	EnemyPoisonable = -1
 	AliasDebug2(msg, abForPoisons)
@@ -940,10 +941,14 @@ bool function ShouldUseCombatPoisons(string asState, int aiLHItem, int aiRHItem)
 		WarnNoItems(asState, EFFECT_HARMFUL, "any poison", true)
 		return false
 	endIf
+	if (!MyEnemy)
+		AliasDebug2(asState + " - no enemy", true)
+		return false
+	endIf
 	if (EnemyPoisonable == -1)
-		if (!MyEnemy); || EnemyLvlDiff <= LvlDiffTrigger)
+		if (EnemyLvlDiff <= LvlDiffTriggerPoison)
 			EnemyPoisonable = 0
-			AliasDebug2(asState + " - no enemy", true)
+			AliasDebug2(asState + " - enemy not enough level", true)
 			return false
 		endIf
 		if (MyEnemy.GetActorValue("PoisonResist") > 90)
@@ -1426,7 +1431,7 @@ bool function TryFirstPoisonThatExists(string asState, int aiEffectType, int aiH
 				int arrayCount = MyPoisonCounts[itemIndex]
 				msg += ", have " + itemCount + " (" + arrayCount + "/" + HasItemOfType[aiEffectType] + "/" + MyTotalPoisonCount + ")"
 				if (itemCount > 0)
-					msg += ", try use " + thisItem.GetName() + " poison on " + MyActor.GetEquippedWeapon(aiHand == C_HAND_LEFT).GetName() + " in " + GetHand(aiHand) + ": "
+					msg += ", try use " + thisItem.GetName() + " poison on " + GetHand(aiHand) + ": "
 					int ret = _Q2C_Functions.WornObjectSetPoison(MyActor, aiHand, 0, thisItem, 1)
 					if (ret < 0)
 						msg += "fail (for unknown reason)"
@@ -1853,10 +1858,11 @@ Function SetDefaults()
 	StatLimitsInCombat = FPPQuest.GetDefaultStatLimits(true)
 	StatLimitsNonCombat = FPPQuest.GetDefaultStatLimits(false)
 
-	LvlDiffTrigger = FPPQuest.DefaultLvlDiffTrigger as int
+	LvlDiffTrigger = FPPQuest.DefaultLvlDiffTrigger
 	TriggerRaces = FPPQuest.GetDefaultTriggerRaces()
-
 	UsePotionOfType = FPPQuest.GetDefaultUsePotionsOfTypes()
+
+	LvlDiffTriggerPoison = FPPQuest.DefaultLvlDiffTriggerPoison
 	GlobalUsePoisons = FPPQuest.GetDefaultGlobalUsePoisons()
 	UsePoisonOfType = FPPQuest.GetDefaultUsePoisonsOfTypes()
 	
