@@ -18,6 +18,7 @@ endProperty
 
 float Property UpdateIntervalInCombat Auto
 float Property UpdateIntervalNonCombat Auto
+bool Property EnableWarningNoPotions Auto
 float Property UpdateIntervalNoPotions Auto
 
 bool[] Property EnableWarnings Auto
@@ -360,7 +361,7 @@ Event OnItemAdded(Form akBaseItem, int aiItemCount, ObjectReference akItemRefere
 	if (!thisPotion)
 		return
 	endIf
-	FPPQuest.FPPThreadManager.IdentifyPotionAsync(true, MyActorName, thisPotion, aiItemCount, IdentifyPotionEffects, true)
+	FPPQuest.FPPThreadManager.IdentifyPotionAsync(true, MyActorName, thisPotion, aiItemCount, IdentifyPotionEffects, DebugToFile)
 	FPPQuest.FPPThreadManager.WaitAny()
 	;AliasDebug("OnItemAdded - " + aiItemCount + " of " + thisPotion.GetName() + " sent for identification")
 endEvent
@@ -406,7 +407,7 @@ Event OnItemRemoved(Form akBaseItem, int aiItemCount, ObjectReference akItemRefe
 			MyTotalPotionCount -= aiItemCount
 		endIf
 	endIf
-	AliasDebug2("OnItemRemoved - " + aiItemCount + " of " + itemName + "; " + itemCountActual + " (" + (itemCountTracked - aiItemCount) + ") remaining, updated " + listsAffected + " lists (ref " + refId + ", dest " + destId + ")", isPoisonItem)
+	AliasDebug("OnItemRemoved - " + aiItemCount + " of " + itemName + "; " + itemCountActual + " (" + (itemCountTracked - aiItemCount) + ") remaining, updated " + listsAffected + " lists (ref " + refId + ", dest " + destId + ")")
 endEvent
 
 Event OnPotionRegister(Form akSender, string asActorName, Form akPotion, int aiPotionCount, int aiEffectsFound, bool abIsPoison, \
@@ -630,7 +631,7 @@ State HaveNoPotions
 		string newState = DetermineState()
 		if (newState == "HaveNoPotions")
 			AliasDebug("HaveNoPotions::OnUpdate - still no useful potions")
-			if (EnableWarnings[5])
+			if (EnableWarningNoPotions)
 				AliasDebug("", MyActorName + " has no useful potions at all!", true)
 			endIf
 			RegisterForSingleUpdate(UpdateIntervalNoPotions)
@@ -732,15 +733,15 @@ bool function HandleUpdate(string asState)
 	
 	; check & try to replenish Health, Stamina, Magicka in that order. Only return false if you didn't need any of them
 	bool neededHealth = UsePotionOfType[EFFECT_RESTOREHEALTH] && currStatHealth < CurrentStatLimits[EFFECT_RESTOREHEALTH]
-	if (neededHealth && UsePotionIfPossible(asState, EFFECT_RESTOREHEALTH))
+	if (neededHealth && UseItemIfPossible(asState, false, EFFECT_RESTOREHEALTH))
 		return true
 	endIf
 	bool neededStamina = UsePotionOfType[EFFECT_RESTORESTAMINA] && currStatStamina < CurrentStatLimits[EFFECT_RESTORESTAMINA]
-	if (neededStamina && UsePotionIfPossible(asState, EFFECT_RESTORESTAMINA))
+	if (neededStamina && UseItemIfPossible(asState, false, EFFECT_RESTORESTAMINA))
 		return true
 	endIf
 	bool neededMagicka = UsePotionOfType[EFFECT_RESTOREMAGICKA] && currStatMagicka < CurrentStatLimits[EFFECT_RESTOREMAGICKA]
-	if (neededMagicka && UsePotionIfPossible(asState, EFFECT_RESTOREMAGICKA))
+	if (neededMagicka && UseItemIfPossible(asState, false, EFFECT_RESTOREMAGICKA))
 		return true
 	endIf
 	return neededHealth || neededStamina || neededMagicka
@@ -755,7 +756,7 @@ bool function HandleHit(string asState)
 		return false
 	endIf
 	AliasDebug(msg)
-	return currStat < CurrentStatLimits[EFFECT_RESTOREHEALTH] && UsePotionIfPossible(asState + "::HandleHit", EFFECT_RESTOREHEALTH)
+	return currStat < CurrentStatLimits[EFFECT_RESTOREHEALTH] && UseItemIfPossible(asState + "::HandleHit", false, EFFECT_RESTOREHEALTH)
 endFunction
 
 bool function HandleAnimEvent(string asState)
@@ -767,7 +768,7 @@ bool function HandleAnimEvent(string asState)
 		return false
 	endIf
 	AliasDebug(msg)
-	return currStat < CurrentStatLimits[EFFECT_RESTORESTAMINA] && UsePotionIfPossible(asState + "::HandleAnimEvent", EFFECT_RESTORESTAMINA)
+	return currStat < CurrentStatLimits[EFFECT_RESTORESTAMINA] && UseItemIfPossible(asState + "::HandleAnimEvent", false, EFFECT_RESTORESTAMINA)
 endFunction
 
 bool function HandleSpellCast(string asState, Spell akSpellCast)
@@ -785,7 +786,7 @@ bool function HandleSpellCast(string asState, Spell akSpellCast)
 		return false
 	endIf
 	AliasDebug(msg)
-	return currStat < CurrentStatLimits[EFFECT_RESTOREMAGICKA] && UsePotionIfPossible(asState+ "::HandleSpellCast", EFFECT_RESTOREMAGICKA)
+	return currStat < CurrentStatLimits[EFFECT_RESTOREMAGICKA] && UseItemIfPossible(asState+ "::HandleSpellCast", false, EFFECT_RESTOREMAGICKA)
 endFunction
 
 
@@ -819,7 +820,7 @@ Function RefreshPotions()
 			Potion foundPotion = _Q2C_Functions.GetNthFormOfType(MyActor, 46, iFormIndex) as Potion
 			if (foundPotion != None)
 				int potionCount = MyActor.GetItemCount(foundPotion)
-				FPPQuest.FPPThreadManager.IdentifyPotionAsync(false, MyActorName, foundPotion, potionCount, IdentifyPotionEffects, true)
+				FPPQuest.FPPThreadManager.IdentifyPotionAsync(false, MyActorName, foundPotion, potionCount, IdentifyPotionEffects, DebugToFile)
 			endIf
 			iFormIndex += 1
 		EndWhile
@@ -858,17 +859,17 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 	msg += "LH: " + lhItem + ", RH: " + rhItem + "; "
 	
 	if (PoisonsEnabled(true) && ShouldUseCombatPoisons(asState, lhItem, rhItem))
-		AliasDebug2(msg + "use poisons", true)
+		msg += "use poisons; "
 		if (AttemptPoisonChain(asState, C_HAND_RIGHT, rhItem, true))
 			Utility.Wait(0.3)
 		endIf
 		AttemptPoisonChain(asState, C_HAND_LEFT, lhItem, true)
 	else
-		AliasDebug2(msg + "don't use poisons", true)
+		msg += "don't use poisons; "
 	endIf
 
 	if (ShouldUseCombatPotions())
-		AliasDebug(msg + "use potions")
+		msg += "use potions"
 		; chain these ones as an AND, since you want to keep going through (using potions)
 		; until any one returns false (ie because you're not in combat any more)
 		UseCombatPotionsFortifyStats(asState) \
@@ -876,8 +877,9 @@ function HandleCombatStateChange(string asState, Actor akTarget)
 			&& UseCombatPotionsMage(asState) \
 			&& UseCombatPotionsResist(asState)
 	else
-		AliasDebug(msg + "don't use potions")
+		msg += "don't use potions"
 	endIf
+	AliasDebug(msg)
 	IgnoreCombatStateEvents = false
 endFunction
 
@@ -889,7 +891,6 @@ endFunction
 
 function RefreshCombatTarget(string asState, Actor akTarget, bool abForPoisons)
 	if (TargetUpdateLock)
-		AliasDebug2("TargetUpdate locked", abForPoisons)
 		return
 	endIf
 	TargetUpdateLock = true
@@ -898,7 +899,7 @@ function RefreshCombatTarget(string asState, Actor akTarget, bool abForPoisons)
 	endIf
 	string msg = asState + "::RefreshCombatTarget"
 	if (akTarget == MyEnemy)
-		AliasDebug2(msg + " - not changed", abForPoisons)
+		AliasDebug(msg + " - not changed")
 		TargetUpdateLock = false
 		return
 	endIf
@@ -930,30 +931,30 @@ function RefreshCombatTarget(string asState, Actor akTarget, bool abForPoisons)
 		msg += " " + MyEnemy.GetLeveledActorBase().GetName() + " (" + MyEnemy.GetFormId() + ", diff " + EnemyLvlDiff + ", triggers: " + LvlDiffTrigger + "/" + LvlDiffTriggerPoison + ")"
 	endIf
 	EnemyPoisonable = -1
-	AliasDebug2(msg, abForPoisons)
+	AliasDebug(msg)
 	TargetUpdateLock = false
 endFunction
 
 bool function ShouldUseCombatPoisons(string asState, int aiLHItem, int aiRHItem)
 	asState += "::ShouldUseCombatPoisons"
 	if (MyTotalPoisonCount < 1)
-		AliasDebug2(asState + " - no poisons", true)
+		AliasDebug(asState + " - no poisons")
 		WarnNoItems(asState, EFFECT_HARMFUL, "any poison", true)
 		return false
 	endIf
 	if (!MyEnemy)
-		AliasDebug2(asState + " - no enemy", true)
+		AliasDebug(asState + " - no enemy")
 		return false
 	endIf
 	if (EnemyPoisonable == -1)
-		if (EnemyLvlDiff <= LvlDiffTriggerPoison)
+		if (EnemyLvlDiff < LvlDiffTriggerPoison)
 			EnemyPoisonable = 0
-			AliasDebug2(asState + " - enemy not enough level", true)
+			AliasDebug(asState + " - enemy not enough level")
 			return false
 		endIf
 		if (MyEnemy.GetActorValue("PoisonResist") > 90)
 			EnemyPoisonable = 0
-			AliasDebug2(asState + " - enemy too resistant", true)
+			AliasDebug(asState + " - enemy too resistant")
 			return false
 		endIf
 		int i = PoisonImmunityKeywords.Length
@@ -961,7 +962,7 @@ bool function ShouldUseCombatPoisons(string asState, int aiLHItem, int aiRHItem)
 			i -= 1
 			if (Math.LogicalAnd(PoisonImmunityMappings[EFFECT_HARMFUL], Math.Pow(2, i) as int) != 0 && MyEnemy.HasKeyword(PoisonImmunityKeywords[i]))
 				EnemyPoisonable = 0
-				AliasDebug2(asState + " - enemy has total immunity keyword " + PoisonImmunityKeywords[i], true)
+				AliasDebug(asState + " - enemy has total immunity keyword " + PoisonImmunityKeywords[i])
 				return false
 			endIf
 		endWhile
@@ -988,7 +989,7 @@ endFunction
 bool function AttemptPoisonChain(string asState, int aiHand, int aiEquippedItemType, bool abOnEngage)
 	asState += "::AttemptPoisonChain"
 	if (!MyEnemy)
-		AliasDebug2(asState + " - no enemy", true)
+		AliasDebug(asState + " - no enemy")
 		return false
 	endIf
 	int threshold = 2
@@ -998,23 +999,23 @@ bool function AttemptPoisonChain(string asState, int aiHand, int aiEquippedItemT
 	if (aiHand == C_HAND_RIGHT)
 		if (IsBowItem(aiEquippedItemType))
 			if (GlobalUsePoisons[GLOBAL_POISONS_BOW] < threshold)
-				AliasDebug2(asState + " - poisons disabled for bows", true)
+				AliasDebug(asState + " - poisons disabled for bows")
 				return false
 			endIf
 		elseIf (GlobalUsePoisons[GLOBAL_POISONS_MAIN] < threshold)
-			AliasDebug2(asState + " - poisons disabled for main hand", true)
+			AliasDebug(asState + " - poisons disabled for main hand")
 			return false
 		endIf
 	elseIf (GlobalUsePoisons[GLOBAL_POISONS_OFFHAND] < threshold)
-		AliasDebug2(asState + " - poisons disabled for off-hand", true)
+		AliasDebug(asState + " - poisons disabled for off-hand")
 		return false
 	endIf
 	if (!EquippedItemPoisonable(aiHand, aiEquippedItemType))
-		AliasDebug2(asState + " - " + GetHand(aiHand) + " is not poisonable", true)
+		AliasDebug(asState + " - " + GetHand(aiHand) + " is not poisonable")
 		return false
 	endIf
 	if (WornObject.GetPoison(MyActor, aiHand, 0) != None)
-		AliasDebug2(asState + " - " + MyActor.GetEquippedWeapon(aiHand == C_HAND_LEFT).GetName() + " in " + GetHand(aiHand) + " already poisoned", true)
+		AliasDebug(asState + " - " + MyActor.GetEquippedWeapon(aiHand == C_HAND_LEFT).GetName() + " in " + GetHand(aiHand) + " already poisoned")
 		return false
 	endIf
 
@@ -1025,10 +1026,10 @@ bool function AttemptPoisonChain(string asState, int aiHand, int aiEquippedItemT
 		|| UseCombatPoisonsWeaknessMagic(asState, aiHand, aiEquippedItemType, enemyRHItem, abOnEngage) \
 		|| UseCombatPoisonsDamageStats(asState, aiHand, aiEquippedItemType, enemyRHItem, abOnEngage) \
 		|| UseCombatPoisonsGeneric(asState, aiHand, aiEquippedItemType, enemyRHItem, abOnEngage))
-		AliasDebug2(asState + " (" + MyTotalPoisonCount + " poisons) - used poison for " + GetHand(aiHand), true)
+		AliasDebug(asState + " (" + MyTotalPoisonCount + " poisons) - used poison for " + GetHand(aiHand))
 		return true
 	endIf
-	AliasDebug2(asState + " (" + MyTotalPoisonCount + " poisons) - didn't use poisons for " + GetHand(aiHand), true)
+	AliasDebug(asState + " (" + MyTotalPoisonCount + " poisons) - didn't use poisons for " + GetHand(aiHand))
 	return false
 endFunction
 
@@ -1055,7 +1056,7 @@ bool function UseCombatPoisonsSpecial(string asState, int aiHand, int aiEquipped
 	int i = PoisonEffectsSpecial.Length
 	while (i)
 		i -= 1
-		if (UsePoisonOfType[PoisonEffectsSpecial[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsSpecial[i]) && UsePoisonIfPossible(asState + "::UseCombatPoisonsSpecial", PoisonEffectsSpecial[i], aiHand))
+		if (UsePoisonOfType[PoisonEffectsSpecial[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsSpecial[i]) && UseItemIfPossible(asState + "::UseCombatPoisonsSpecial", true, PoisonEffectsSpecial[i], aiHand))
 			return true
 		endIf
 	endWhile
@@ -1070,7 +1071,7 @@ bool function UseCombatPoisonsDamageStats(string asState, int aiHand, int aiEqui
 	int i = PoisonEffectsStats.Length
 	while (i)
 		i -= 1
-		if (UsePoisonOfType[PoisonEffectsStats[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsStats[i]) && UsePoisonIfPossible(asState + "::UseCombatPoisonsDamageStats", PoisonEffectsStats[i], aiHand))
+		if (UsePoisonOfType[PoisonEffectsStats[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsStats[i]) && UseItemIfPossible(asState + "::UseCombatPoisonsDamageStats", true, PoisonEffectsStats[i], aiHand))
 			return true
 		endIf
 	endWhile
@@ -1086,7 +1087,7 @@ bool function UseCombatPoisonsWeaknessMagic(string asState, int aiHand, int aiEq
 	int i = PoisonEffectsWeakness.Length
 	while (i)
 		i -= 1
-		if (UsePoisonOfType[PoisonEffectsWeakness[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsWeakness[i]) && UsePoisonIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", PoisonEffectsWeakness[i], aiHand))
+		if (UsePoisonOfType[PoisonEffectsWeakness[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsWeakness[i]) && UseItemIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", true, PoisonEffectsWeakness[i], aiHand))
 			return true
 		endIf
 	endWhile
@@ -1097,7 +1098,7 @@ bool function UseCombatPoisonsGeneric(string asState, int aiHand, int aiEquipped
 	int i = PoisonEffectsGeneric.Length
 	while (i)
 		i -= 1
-		if (UsePoisonOfType[PoisonEffectsGeneric[i]] && UsePoisonIfPossible(asState + "::UseCombatPoisonsGeneric", PoisonEffectsGeneric[i], aiHand))
+		if (UsePoisonOfType[PoisonEffectsGeneric[i]] && UseItemIfPossible(asState + "::UseCombatPoisonsGeneric", true, PoisonEffectsGeneric[i], aiHand))
 			return true
 		endIf
 	endWhile
@@ -1112,7 +1113,7 @@ bool function EnemyImmune(string asState, int aiEffectType)
 	while (i)
 		i -= 1
 		if (Math.LogicalAnd(PoisonImmunityMappings[aiEffectType], Math.Pow(2, i) as int) != 0 && MyEnemy && MyEnemy.HasKeyword(PoisonImmunityKeywords[i]))
-			AliasDebug2(asState + " - enemy has immunity keyword " + PoisonImmunityKeywords[i] + " to " + EffectNames[aiEffectType], true)
+			AliasDebug(asState + " - enemy has immunity keyword " + PoisonImmunityKeywords[i] + " to " + EffectNames[aiEffectType])
 			return true
 		endIf
 	endWhile
@@ -1128,7 +1129,7 @@ bool function UseCombatPotionsFortifyStats(string asState)
 	int i = FortifyEffectsStats.Length
 	while (i)
 		i -= 1
-		if (UsePotionOfType[FortifyEffectsStats[i]] && UsePotionIfPossible(asState + "::UseCombatPotionsFortifyStats", FortifyEffectsStats[i]))
+		if (UsePotionOfType[FortifyEffectsStats[i]] && UseItemIfPossible(asState + "::UseCombatPotionsFortifyStats", false, FortifyEffectsStats[i]))
 			Utility.Wait(1)
 			if (!MyEnemy || !MyActor.IsInCombat())
 				AliasDebug(msgNofight)
@@ -1155,7 +1156,7 @@ bool function UseCombatPotionsWarrior(string asState, int aiLHItem, int aiRHItem
 	int i = FortifyEffectsWarrior.Length
 	while (i)
 		i -= 1
-		if (UsePotionOfType[FortifyEffectsWarrior[i]] && effectConditions[i] && UsePotionIfPossible(asState + "::UseCombatPotionsWarrior", FortifyEffectsWarrior[i]))
+		if (UsePotionOfType[FortifyEffectsWarrior[i]] && effectConditions[i] && UseItemIfPossible(asState + "::UseCombatPotionsWarrior", false, FortifyEffectsWarrior[i]))
 			Utility.Wait(1)
 			if (!MyEnemy || !MyActor.IsInCombat())
 				AliasDebug(msgNofight)
@@ -1181,7 +1182,7 @@ bool function UseCombatPotionsMage(string asState)
 	int i = FortifyEffectsMage.Length
 	while (i)
 		i -= 1
-		if (UsePotionOfType[FortifyEffectsMage[i]] && _Q2C_Functions.ActorHasSpell(MyActor, None, spellSchools[i]) && UsePotionIfPossible(asState + "::UseCombatPotionsMage", FortifyEffectsMage[i]))
+		if (UsePotionOfType[FortifyEffectsMage[i]] && _Q2C_Functions.ActorHasSpell(MyActor, None, spellSchools[i]) && UseItemIfPossible(asState + "::UseCombatPotionsMage", false, FortifyEffectsMage[i]))
 			Utility.Wait(1)
 			if (!MyEnemy || !MyActor.IsInCombat())
 				AliasDebug(msgNofight)
@@ -1208,7 +1209,7 @@ bool function UseCombatPotionsResist(string asState)
 	int i = ResistEffects.Length
 	while (i)
 		i -= 1
-		if (UsePotionOfType[ResistEffects[i]] && effectConditions[i] && UsePotionIfPossible(asState + "::UseCombatPotionsResist", ResistEffects[i]))
+		if (UsePotionOfType[ResistEffects[i]] && effectConditions[i] && UseItemIfPossible(asState + "::UseCombatPotionsResist", false, ResistEffects[i]))
 			Utility.Wait(1)
 			if (!MyEnemy || !MyActor.IsInCombat())
 				AliasDebug(msgNofight)
@@ -1233,18 +1234,18 @@ Function RegisterPotion(Potion akPotion, int aiPotionCount, bool abIsPoison, \
 		if (freeIndex > -1)
 			potionList[freeIndex] = akPotion
 			UpdateItemCounts(freeIndex, aiPotionCount, abIsPoison, aiEffectTypesRestore, aiEffectTypesFortifyStats, aiEffectTypesFortifyWarrior, aiEffectTypesFortifyMage, aiEffectTypesResist, aiEffectTypesSpecial, aiEffectTypesDamageStats, aiEffectTypesWeakness, aiEffectTypesGenericHarmful)
-			;if (DebugToFile)
-				AliasDebug2("RegisterPotion - Added " + aiPotionCount + " of " + itemName + " (Id " + akPotion.GetFormId() + ") at index " + freeIndex, abIsPoison)
-			;endIf
+			if (DebugToFile)
+				AliasDebug("RegisterPotion - Added " + aiPotionCount + " of " + itemName + " (Id " + akPotion.GetFormId() + ") at index " + freeIndex)
+			endIf
 		else
 			AliasDebug("RegisterPotion - No more room in potions array for " + itemName + "! (Id " + akPotion.GetFormId() + ")", \
 						MyActorName + " - can't add " + itemName + " potion; no more room for this type of potion!", true)
 		endIf
 	else
 		UpdateItemCounts(potionIndex, aiPotionCount, abIsPoison, aiEffectTypesRestore, aiEffectTypesFortifyStats, aiEffectTypesFortifyWarrior, aiEffectTypesFortifyMage, aiEffectTypesResist, aiEffectTypesSpecial, aiEffectTypesDamageStats, aiEffectTypesWeakness, aiEffectTypesGenericHarmful)
-		;if (DebugToFile)
-			AliasDebug2("RegisterPotion - Increased " + aiPotionCount + " of " + itemName + " (Id " + akPotion.GetFormId() + ") at index " + potionIndex, abIsPoison)
-		;endIf
+		if (DebugToFile)
+			AliasDebug("RegisterPotion - Increased " + aiPotionCount + " of " + itemName + " (Id " + akPotion.GetFormId() + ") at index " + potionIndex)
+		endIf
 	endIf
 endFunction
 
@@ -1261,7 +1262,7 @@ Function UpdateItemCounts(int aiPotionIndex, int aiPotionCount, bool abIsPoison,
 		MyTotalPotionCount += aiPotionCount
 		newTotal += MyPotionCounts[aiPotionIndex]
 		MyPotionCounts[aiPotionIndex] = newTotal
-		AliasDebug2("UpdateItemCounts - increment by " + aiPotionCount + ": MyTotalPotionCount = " + MyTotalPotionCount + ", MyPotionCounts[" + aiPotionIndex + "] = " + newTotal, abIsPoison)
+		AliasDebug("UpdateItemCounts - increment by " + aiPotionCount + ": MyTotalPotionCount = " + MyTotalPotionCount + ", MyPotionCounts[" + aiPotionIndex + "] = " + newTotal)
 	else
 		UpdateEffectCounts(PoisonEffectsSpecial, aiEffectTypesSpecial, aiPotionCount, aiPotionIndex, abIsPoison)
 		UpdateEffectCounts(PoisonEffectsStats, aiEffectTypesDamageStats, aiPotionCount, aiPotionIndex, abIsPoison)
@@ -1270,7 +1271,7 @@ Function UpdateItemCounts(int aiPotionIndex, int aiPotionCount, bool abIsPoison,
 		MyTotalPoisonCount += aiPotionCount
 		newTotal += MyPoisonCounts[aiPotionIndex]
 		MyPoisonCounts[aiPotionIndex] = newTotal
-		AliasDebug2("UpdateItemCounts - increment by " + aiPotionCount + ": MyTotalPoisonCount = " + MyTotalPoisonCount + ", MyPoisonCounts[" + aiPotionIndex + "] = " + newTotal, abIsPoison)
+		AliasDebug("UpdateItemCounts - increment by " + aiPotionCount + ": MyTotalPoisonCount = " + MyTotalPoisonCount + ", MyPoisonCounts[" + aiPotionIndex + "] = " + newTotal)
 	endIf
 endFunction
 
@@ -1284,58 +1285,46 @@ Function UpdateEffectCounts(int[] akEffectTypesArray, int aiEffectTypesFound, in
 			int newTotal = HasItemOfType[effectType] + aiPotionCount
 			HasItemOfType[effectType] = newTotal
 			trackerList[aiPotionIndex] = true
-			AliasDebug2("UpdateEffectCounts - set HasItemOfType[" + effectType + "] to " + newTotal + ", and array" + effectType + "[" + aiPotionIndex + "] to true ", abIsPoison)
+			AliasDebug("UpdateEffectCounts - set HasItemOfType[" + effectType + "] to " + newTotal + ", and array" + effectType + "[" + aiPotionIndex + "] to true ")
 		else
 			trackerList[aiPotionIndex] = false
 		endIf
 	endWhile
 endFunction
 
-bool function UsePotionIfPossible(string asState, int aiEffectType)
-	asState += "::UsePotionIfPossible"
-	string effectName = EffectNames[aiEffectType]
-	string msg = asState + " (" + aiEffectType + ": " + effectName + ") - "
-	bool itemUsed = false
-	if (HasItemOfType[aiEffectType] < 1)
-		WarnNoItems(asState, aiEffectType, effectName, false)
-		msg += "no " + effectName + " potions"
-	elseif (IsInCooldown(aiEffectType, MyActor))
-		msg += effectName + " potion still taking effect"
-	else
-		bool itemWorked = TryFirstPotionThatExists(asState, aiEffectType)
-		if (itemWorked)
-			msg += "used " + effectName  + " potion from array" + aiEffectType
-			itemUsed = true
-		else
-			WarnNoItems(asState, aiEffectType, effectName, false)
-			msg += "failed to use " + effectName  + " potion (something out of sync?)"
-		endIf
+bool function UseItemIfPossible(string asState, bool abIsPoison, int aiEffectType, int aiHand = -1)
+	string itemType = "potion"
+	Actor subject = MyActor
+	if (abIsPoison)
+		itemType = "poison"
+		subject = MyEnemy
 	endIf
-	AliasDebug(msg)
-	return itemUsed
-endFunction
-
-bool function UsePoisonIfPossible(string asState, int aiEffectType, int aiHand)
-	asState += "::UsePoisonIfPossible"
 	string effectName = EffectNames[aiEffectType]
-	string msg = asState + " (" + aiEffectType + ": " + effectName + ") - "
+	string msg = asState + "::UseItemIfPossible (" + itemType + ", " + aiEffectType + ": " + effectName + ") - "
 	bool itemUsed = false
 	if (HasItemOfType[aiEffectType] < 1)
-		;WarnNoItems(asState, aiEffectType, effectName, true)
-		msg += "no " + effectName + " poisons"
-	elseif (IsInCooldown(aiEffectType, MyEnemy))
-		msg += effectName + " poison still taking effect"
-		AliasDebug2(msg, true)
+		if (!abIsPoison)
+			WarnNoItems(asState, aiEffectType, effectName, abIsPoison)
+		endIf
+		msg += "no " + effectName + " " + itemType + " items"
+	elseif (IsInCooldown(aiEffectType, subject))
+		msg += effectName + " " + itemType + " still taking effect"
 	else
-		bool itemWorked = TryFirstPoisonThatExists(asState, aiEffectType, aiHand)
+		bool itemWorked = false
+		if (abIsPoison)
+			itemWorked = TryFirstPoisonThatExists(asState, aiEffectType, aiHand)
+		else
+			itemWorked = TryFirstPotionThatExists(asState, aiEffectType)
+		endIf
 		if (itemWorked)
-			msg += "used " + effectName  + " poison from array" + aiEffectType
+			msg += "used " + effectName  + " " + itemType + " from array" + aiEffectType
 			itemUsed = true
 		else
-			;WarnNoItems(asState, aiEffectType, effectName, true)
-			msg += "failed to use " + effectName  + " poison (something out of sync?)"
+			if (!abIsPoison)
+				WarnNoItems(asState, aiEffectType, effectName, abIsPoison)
+			endIf
+			msg += "failed to use " + effectName  + " " + itemType + " (something out of sync?)"
 		endIf
-		AliasDebug2(msg, true)
 	endIf
 	AliasDebug(msg)
 	return itemUsed
@@ -1346,7 +1335,7 @@ function WarnNoItems(string asState, int aiEffectType, string asEffectName, bool
 	int index
 	string itemName
 	if (abIsPoison)
-		index = 6 ; 5 is used for 'no potions at all'
+		index = 5
 		itemName = "poisons"
 	else
 		if (RestoreEffects.Find(aiEffectType) > -1)
@@ -1362,16 +1351,16 @@ function WarnNoItems(string asState, int aiEffectType, string asEffectName, bool
 		itemName += " potions"
 	endIf
 	if (!EnableWarnings[index])
-		AliasDebug2(asState + " - warnings disabled for " + asEffectName, abIsPoison)
+		AliasDebug(asState + " - warnings disabled for " + asEffectName)
 		return
 	endIf
 	float currentHoursPassed = Game.GetRealHoursPassed()
 	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
 	if (currentHoursPassed >= nextWarning)
-		AliasDebug2(asState + " - " + itemName + " warning (for " + asEffectName + ") updated to " + currentHoursPassed, abIsPoison, MyActorName + " needs more " + itemName, false)
+		AliasDebug(asState + " - " + itemName + " warning (for " + asEffectName + ") updated to " + currentHoursPassed, MyActorName + " needs more " + itemName, false)
 		MyPotionWarningTimes[index] = currentHoursPassed
 	else
-		AliasDebug2(asState + " - no " + itemName + " (for " + asEffectName + "; last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")", abIsPoison)
+		AliasDebug(asState + " - no " + itemName + " (for " + asEffectName + "; last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
 	endif
 endFunction
 
@@ -1395,11 +1384,11 @@ bool function TryFirstPotionThatExists(string asState, int aiEffectType)
 					UpdateCountsAndArrays(asState, false, itemIndex, 1, itemCount == 1)
 					MyTotalPotionCount -= 1
 					msg += ", use " + thisItem.GetName() + " (" + thisItem.GetFormId() + "), " + (itemCount - 1) + " remaining"
-					AliasDebug2(msg)
+					AliasDebug(msg)
 					return true
 				else
 					UpdateCountsAndArrays(asState, false, itemIndex, 0, true)
-					AliasDebug2(msg + " - removed from arrays SHOUND'T HAPPEN!")
+					AliasDebug(msg + " - removed from arrays SHOUND'T HAPPEN!")
 				endif
 			endIf
 		endIf
@@ -1435,19 +1424,19 @@ bool function TryFirstPoisonThatExists(string asState, int aiEffectType, int aiH
 					int ret = _Q2C_Functions.WornObjectSetPoison(MyActor, aiHand, 0, thisItem, 1)
 					if (ret < 0)
 						msg += "fail (for unknown reason)"
-						AliasDebug2(msg, true)
+						AliasDebug(msg)
 					else
 						MyPoisonCounts[itemIndex] = arrayCount - 1
 						MyActor.RemoveItem(thisItem)
 						UpdateCountsAndArrays(asState, true, itemIndex, 1, itemCount == 1)
 						MyTotalPoisonCount -= 1
 						msg += "success, " + (itemCount - 1) + " remaining"
-						AliasDebug2(msg, true)
+						AliasDebug(msg)
 						return true
 					endIf
 				else
 					UpdateCountsAndArrays(asState, true, itemIndex, 0, true)
-					AliasDebug2(msg + " - removed from arrays SHOUND'T HAPPEN!", true)
+					AliasDebug(msg + " - removed from arrays SHOUND'T HAPPEN!")
 				endIf
 			endIf
 		endIf
@@ -1492,57 +1481,59 @@ Function ShowInfo()
 	if (!MyActor)
 		return
 	endIf
-	string msg = "State: " + GetState() + "\n"
-	msg += "Total potions: " + MyTotalPotionCount + "\n"
-	msg += "Total poisons: " + MyTotalPoisonCount + "\n"
-	if (GlobalUsePoisons[0] > 0)
-		msg += "\n"
-		msg += "Use poisons:"
-		msg += "\nMain: "
-		if (GlobalUsePoisons[1] > 1)
-			msg += "Always"
-		elseIf (GlobalUsePoisons[1] > 0)
-			msg += "On combat start"
-		else
-			msg += "Never"
-		endIf
-		msg += "\nBows: "
-		if (GlobalUsePoisons[2] > 1)
-			msg += "Always"
-		elseIf (GlobalUsePoisons[2] > 0)
-			msg += "On combat start"
-		else
-			msg += "Never"
-		endIf
-		msg += "\nOff-hand: "
-		if (GlobalUsePoisons[3] > 1)
-			msg += "Always"
-		elseIf (GlobalUsePoisons[3] > 0)
-			msg += "On combat start"
-		else
-			msg += "Never"
-		endIf
-	endIf
-
-;	msg += "Restore Potions: " + GetPotionReport(potionListRestoreHealth) + GetPotionReport(potionListRestoreStamina) + GetPotionReport(potionListRestoreMagicka)
+	string msg = MyActorName
+	msg += "\n"
+	msg += "State: " + GetState()
+	msg += "\n\n"
+	msg += "Total potions: " + MyTotalPotionCount
+	msg += "\n\n"
+	msg += "Restore Potions: " + GetPotionReport(potionListRestoreHealth, false) + GetPotionReport(potionListRestoreStamina, false) + GetPotionReport(potionListRestoreMagicka, false)
 ;	msg += "\n"
 ;	msg += "Fortify Potions: " + GetPotionReport(MyFortifyPotions)
 ;	msg += "\n"
 ;	msg += "Resist Potions: " + GetPotionReport(MyResistPotions)
-;	msg += "\n\n"
-;	msg += "Poisons: " + GetPotionReport(potionListDamageHealth) + GetPotionReport(potionListDamageStamina) + GetPotionReport(potionListDamageMagicka) + GetPotionReport(potionListHarmful)
-	AliasDebug2(msg)
-	Debug.MessageBox(MyActorName + "\n" + msg)
+	Debug.TraceUser("FollowerPotions", msg)
+	Debug.MessageBox(msg)
+	msg = ""
+	msg += "Total poisons: " + MyTotalPoisonCount
+	msg += "\n\n"
+	msg += "Poisons: " + GetPotionReport(potionListDamageHealth, true) + GetPotionReport(potionListDamageStamina, true) + GetPotionReport(potionListDamageMagicka, true) + GetPotionReport(potionListHarmful, true)
+	msg += "\n\n"
+	msg += "Use poisons:"
+	if (GlobalUsePoisons[0] > 0)
+		msg += "\n" + GetPoisonOptions("Main", 1) + "\n" + GetPoisonOptions("Bows", 2) + "\n" + GetPoisonOptions("Off-hand", 3)
+	else
+		msg += "Never"
+	endIf
+	Debug.TraceUser("FollowerPotions", msg)
+	Debug.MessageBox(msg)
 endFunction
 
-string Function GetPotionReport(Potion[] akPotionList)
-	int i = akPotionList.Length
+string Function GetPoisonOptions(string asWeaponType, int aiIndex)
+	string msg = asWeaponType + ": "
+	if (GlobalUsePoisons[aiIndex] > 1)
+		msg += "Always"
+	elseIf (GlobalUsePoisons[aiIndex] > 0)
+		msg += "On combat start"
+	else
+		msg += "Never"
+	endIf
+	return msg
+endFunction
+
+string Function GetPotionReport(bool[] akTrackerList, bool abIsPoison)
+	Potion[] itemList = MyPotionList
+	int[] itemCountList = MyPotionCounts
+	if (abIsPoison)
+		itemList = MyPoisonList
+		itemCountList = MyPoisonCounts
+	endIf
+	int i = akTrackerList.Length
 	string potionReport = ""
 	while (i)
 		i -= 1
-		Potion thisPotion = akPotionList[i]
-		if (thisPotion)
-			potionReport += thisPotion.GetName() + " (" + MyActor.GetItemCount(thisPotion) + "); "
+		if (akTrackerList[i])
+			potionReport += itemList[i].GetName() + " (" + itemCountList[i] + " tracked, " + MyActor.GetItemCount(itemList[i]) + " actual); "
 		endIf
 	endWhile
 	return potionReport
@@ -1633,7 +1624,7 @@ bool[] function GetTrackerList(int aiEffectType)
 	elseIf (aiEffectType == EFFECT_HARMFUL)
 		return potionListHarmful
 	endIf
-	AliasDebug2("Can't find list for " + aiEffectType + ", return empty")
+	AliasDebug("Can't find list for " + aiEffectType + ", return empty")
 	return new bool[1]
 endFunction
 
@@ -1703,9 +1694,6 @@ int function UpdateCountsAndArrays(string asState, bool abIsPoison, int aiIndex,
 		affected += UpdateCountAndArray(aiIndex, potionListWeaknessMagic, EFFECT_WEAKNESSMAGIC, aiCount, abSetToNone, abIsPoison)
 		affected += UpdateCountAndArray(aiIndex, potionListHarmful, EFFECT_HARMFUL, aiCount, abSetToNone, abIsPoison)
 	endIf
-;float ftimeEnd = Utility.GetCurrentRealTime()
-;msg += (ftimeEnd - ftimeStart) + "s"
-;AliasDebug2(msg, abIsPoison)
 	return affected
 endFunction
 
@@ -1850,6 +1838,7 @@ endFunction
 Function SetDefaults()
 	UpdateIntervalInCombat = FPPQuest.DefaultUpdateIntervalInCombat
 	UpdateIntervalNonCombat = FPPQuest.DefaultUpdateIntervalNonCombat
+	EnableWarningNoPotions = FPPQuest.DefaultEnableWarningNoPotions
 	UpdateIntervalNoPotions = FPPQuest.DefaultUpdateIntervalNoPotions
 
 	EnableWarnings = FPPQuest.GetDefaultEnableWarnings()
@@ -1945,22 +1934,6 @@ endFunction
 function AliasDebug(string asLogMsg, string asScreenMsg = "", bool abFpPrefix = false)
 	if (DebugToFile && asLogMsg != "")
 		Debug.TraceUser("FollowerPotions", MyActorName + ": " + asLogMsg)
-	endIf
-	if (asScreenMsg != "")
-		if (abFpPrefix)
-			asScreenMsg = "Follower Potions - " + asScreenMsg
-		endIf
-		Debug.Notification(asScreenMsg)
-	endIf
-endFunction
-
-function AliasDebug2(string asLogMsg, bool abIsPoison = false, string asScreenMsg = "", bool abFpPrefix = false)
-	string logName = "FollowerPotions"
-	if (abIsPoison)
-		logName = "FollowerPoisons"
-	endIf
-	if (asLogMsg != "")
-		Debug.TraceUser(logName, MyActorName + ": " + asLogMsg)
 	endIf
 	if (asScreenMsg != "")
 		if (abFpPrefix)

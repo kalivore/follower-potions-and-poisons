@@ -219,6 +219,7 @@ int[] Property PoisonEffectsGeneric Auto
 
 float Property DefaultUpdateIntervalInCombat Auto
 float Property DefaultUpdateIntervalNonCombat Auto
+bool Property DefaultEnableWarningNoPotions Auto
 float Property DefaultUpdateIntervalNoPotions Auto
 
 bool[] Property DefaultEnableWarnings Auto
@@ -392,10 +393,14 @@ function Update()
 			bool[] oldValsB = GetDefaultEnableWarnings()
 			SetDefaultEnableWarnings()
 			UpdateInPlaceBools(oldValsB, DefaultEnableWarnings)
+			DefaultEnableWarningNoPotions = DefaultEnableWarnings[5]
+			DefaultEnableWarnings[5] = true
 			
 			float[] oldValsF = GetDefaultWarningIntervals()
 			SetDefaultWarningIntervals()
 			UpdateInPlaceFloats(oldValsF, DefaultWarningIntervals)
+			DefaultUpdateIntervalNoPotions = DefaultWarningIntervals[5]
+			DefaultWarningIntervals[5] = 30.0
 		
 			; thread manager now has its own quest, so we don't need this event listener
 			UnregisterForModEvent("_FPP_Trigger_IdentifyPotion")
@@ -425,10 +430,14 @@ function Update()
 					oldValsB = followerScript.EnableWarnings
 					followerScript.EnableWarnings = GetDefaultEnableWarnings()
 					UpdateInPlaceBools(oldValsB, followerScript.EnableWarnings)
+					followerScript.EnableWarningNoPotions = followerScript.EnableWarnings[5]
+					followerScript.EnableWarnings[5] = true
 
 					oldValsF = followerScript.WarningIntervals
 					followerScript.WarningIntervals = GetDefaultWarningIntervals()
 					UpdateInPlaceFloats(oldValsF, followerScript.WarningIntervals)
+					followerScript.UpdateIntervalNoPotions = followerScript.WarningIntervals[5]
+					followerScript.WarningIntervals[5] = 30.0
 					
 				endIf
 				i += 1
@@ -1047,6 +1056,7 @@ endFunction
 Function SetDefaults()
 	DefaultUpdateIntervalInCombat = 1.0
 	DefaultUpdateIntervalNonCombat = 10.0
+	DefaultEnableWarningNoPotions = true
 	DefaultUpdateIntervalNoPotions = 180.0
 
 	SetDefaultEnableWarnings()
@@ -1151,14 +1161,13 @@ float[] function GetDefaultWarningIntervals()
 endFunction
 
 function SetDefaultWarningIntervals()
-	DefaultWarningIntervals = new float[7]
+	DefaultWarningIntervals = new float[6]
 	DefaultWarningIntervals[EFFECT_RESTOREHEALTH] = 30.0
 	DefaultWarningIntervals[EFFECT_RESTORESTAMINA] = 30.0
 	DefaultWarningIntervals[EFFECT_RESTOREMAGICKA] = 30.0
 	DefaultWarningIntervals[3] = 180.0
 	DefaultWarningIntervals[4] = 180.0
-	DefaultWarningIntervals[5] = 30.0 ; dummy value, placeholder for 'have no potions'
-	DefaultWarningIntervals[6] = 30.0
+	DefaultWarningIntervals[5] = 30.0
 endFunction
 
 bool[] function GetDefaultTriggerRaces()
@@ -1186,7 +1195,7 @@ bool[] function GetDefaultEnableWarnings()
 endFunction
 
 function SetDefaultEnableWarnings()
-	DefaultEnableWarnings = CreateBoolArray(7, true)
+	DefaultEnableWarnings = CreateBoolArray(6, true)
 endFunction
 
 
