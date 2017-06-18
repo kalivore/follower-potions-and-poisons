@@ -4,6 +4,8 @@ Scriptname _FPP_Quest extends Quest Conditional
 float Property CurrentVersion = 2.0001 AutoReadonly
 float previousVersion
 
+UILIB_1 SkyUILib
+
 bool DawnguardLoaded
 bool DragonbornLoaded
 
@@ -274,6 +276,8 @@ int followerCount
 
 event OnInit()
 
+	SkyUILib = (self as Form) as UILIB_1 ; SkyUILib script attached to this Quest
+
 	SetDefaults()
 
 	DebugStuff("Follower Potions is started")
@@ -382,6 +386,8 @@ function Update()
 		
 		if (iPreviousVersion < 200010)
 		
+			SkyUILib = (self as Form) as UILIB_1 ; SkyUILib script attached to this Quest
+		
 			SetDefaultGlobalUsePoisons()
 			SetDefaultUsePoisonsOfTypes()
 			SetAvailablePoisonImmunityKeywords()
@@ -449,14 +455,18 @@ function Update()
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 		; notify current version
-		string msg = "Follower Potions"
+		string logMsg = "Follower Potions"
+		string screenMsg = ""
 		if (PreviousVersion > 0)
-			msg += " updated from v" + GetVersionAsString(PreviousVersion) + " to "
+			logMsg += " updated from v" + GetVersionAsString(PreviousVersion) + " to "
+			screenMsg += "$FPPUpdatedMsg{$FPPModName}{" + GetVersionAsString(PreviousVersion) + "}"
 		else
-			msg += " running "
+			logMsg += " running "
+			screenMsg += "$FPPRunningMsg{$FPPModName}"
 		endIf
-		msg += "v" + GetVersionAsString(CurrentVersion)
-		DebugStuff(msg, msg, true)
+		logMsg += "v" + GetVersionAsString(CurrentVersion)
+		screenMsg += "{" + GetVersionAsString(CurrentVersion) + "}"
+		DebugStuff(logMsg, screenMsg)
 
 		PreviousVersion = CurrentVersion
 	endIf
@@ -596,7 +606,7 @@ bool function AddFollower(Actor akFollower)
 		i += 1
 	endWhile
 
-	DebugStuff("AddFollower - failed to add", "couldn't add new follower", true)
+	DebugStuff("AddFollower - failed to add", "$FppNotsCannotAddFollower")
 	return false
 
 endFunction
@@ -661,7 +671,7 @@ function RemoveAllFollowers()
 	endWhile
 	
 	UpdateNoMoreRoom()
-	DebugStuff("RemoveAllFollowers - complete", "All followers removed", true)
+	DebugStuff("RemoveAllFollowers - complete", "$FppNotsAllFollowersRemoved")
 
 endFunction
 
@@ -691,7 +701,7 @@ bool function RemoveFollower(Actor akFollower)
 		i += 1
 	endWhile
 
-	DebugStuff("RemoveFollower - failed to remove", "couldn't remove follower", true)
+	DebugStuff("RemoveFollower - failed to remove", "$FppNotsCannotRemoveFollower")
 	return false
 
 endFunction
@@ -748,18 +758,19 @@ string function GetVersionAsString(float afVersion)
 	return major + "." + minor + "." + revsn
 endFunction
 
-function DebugStuff(string asLogMsg, string asScreenMsg = "", bool abFpPrefix = false)
+function DebugStuff(string asLogMsg, string asScreenMsg = "")
 
 	if (DebugToFile)
 		Debug.TraceUser("FollowerPotions", asLogMsg)
 	endIf
 	if (asScreenMsg != "")
-		if (abFpPrefix)
-			asScreenMsg = "Follower Potions - " + asScreenMsg
-		endIf
-		Debug.Notification(asScreenMsg)
+		SkyUILib.ShowNotification(asScreenMsg)
 	endIf
 
+endFunction
+
+function UINotification(string asScreenMsg)
+	SkyUILib.ShowNotification(asScreenMsg)
 endFunction
 
 Function SetProperties()

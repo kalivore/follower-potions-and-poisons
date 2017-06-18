@@ -281,7 +281,7 @@ endFunction
 
 Function FinishInit()
 	Maintenance()
-	AliasDebug("Assigned to " + MyName, "recognised " + MyActorName, true)
+	AliasDebug("Assigned to " + MyName, "$FPPNotsRecognised{" + MyActorName + "}")
 endFunction
 
 Function Maintenance()
@@ -310,7 +310,7 @@ Function DeInit()
 	UnregisterForAnimationEvent(MyActor, "arrowRelease")
 	UnregisterForModEvent("_FPP_Callback_RegisterPotion")
 	UnregisterForModEvent("_FPP_Callback_PotionIdentified")
-	AliasDebug("DeInit - Complete", "removed " + MyActorName, true)
+	AliasDebug("DeInit - Complete", "$FPPNotsRemoved{" + MyActorName + "}")
 	MyActor = None
 	MyActorName = None
 endFunction
@@ -632,7 +632,7 @@ State HaveNoPotions
 		if (newState == "HaveNoPotions")
 			AliasDebug("HaveNoPotions::OnUpdate - still no useful potions")
 			if (EnableWarningNoPotions)
-				AliasDebug("", MyActorName + " has no useful potions at all!", true)
+				AliasDebug("", "$FPPNoPotions{" + MyActorName + "}")
 			endIf
 			RegisterForSingleUpdate(UpdateIntervalNoPotions)
 		else
@@ -688,7 +688,7 @@ State RefreshingPotions
 			AliasDebug("RefreshingPotions::OnPotionIdentified - all potions identified, finish Init")
 			FinishInit()
 		else
-			AliasDebug("", MyActorName + " finished refreshing potions", true)
+			AliasDebug("", "$FPPNotsFinishedRefresh{" + MyActorName + "}")
 			GoToDeterminedState("RefreshingPotions::OnPotionIdentified - Complete, all potions identified, send _FPP_Event_FollowerPotionRefreshComplete")
 			int handleComplete = ModEvent.Create("_FPP_Event_FollowerPotionRefreshComplete")
 			if (handleComplete)
@@ -831,7 +831,7 @@ Function RefreshPotions()
 			AliasDebug("RefreshPotions - Complete, no potions found to identify, finishing Init immediately")
 			FinishInit()
 		else
-			AliasDebug("", MyActorName + " has no potions to refresh", true)
+			AliasDebug("", "$FPPNotsNoPotionsToIdent{" + MyActorName + "}")
 			GoToDeterminedState("RefreshPotions - Complete, no potions found to identify, sending _FPP_Event_FollowerPotionRefreshComplete immediately")
 			int handleComplete = ModEvent.Create("_FPP_Event_FollowerPotionRefreshComplete")
 			if (handleComplete)
@@ -1239,7 +1239,7 @@ Function RegisterPotion(Potion akPotion, int aiPotionCount, bool abIsPoison, \
 			endIf
 		else
 			AliasDebug("RegisterPotion - No more room in potions array for " + itemName + "! (Id " + akPotion.GetFormId() + ")", \
-						MyActorName + " - can't add " + itemName + " potion; no more room for this type of potion!", true)
+						"$FPPNotsNoRoomForItem{" + MyActorName + "}{" + itemName + "}")
 		endIf
 	else
 		UpdateItemCounts(potionIndex, aiPotionCount, abIsPoison, aiEffectTypesRestore, aiEffectTypesFortifyStats, aiEffectTypesFortifyWarrior, aiEffectTypesFortifyMage, aiEffectTypesResist, aiEffectTypesSpecial, aiEffectTypesDamageStats, aiEffectTypesWeakness, aiEffectTypesGenericHarmful)
@@ -1357,7 +1357,7 @@ function WarnNoItems(string asState, int aiEffectType, string asEffectName, bool
 	float currentHoursPassed = Game.GetRealHoursPassed()
 	float nextWarning = MyPotionWarningTimes[index] + (WarningIntervals[index] / 3600.0)
 	if (currentHoursPassed >= nextWarning)
-		AliasDebug(asState + " - " + itemName + " warning (for " + asEffectName + ") updated to " + currentHoursPassed, MyActorName + " needs more " + itemName, false)
+		AliasDebug(asState + " - " + itemName + " warning (for " + asEffectName + ") updated to " + currentHoursPassed, "$FPPNotsNeedsMoreItem{" + MyActorName + "}{" + itemName + "}")
 		MyPotionWarningTimes[index] = currentHoursPassed
 	else
 		AliasDebug(asState + " - no " + itemName + " (for " + asEffectName + "; last warning " + MyPotionWarningTimes[index] + ", currently " + currentHoursPassed + ", next " + nextWarning + ")")
@@ -1931,14 +1931,11 @@ string function GetHand(int aiHand)
 	return "unknown hand"
 endFunction
 
-function AliasDebug(string asLogMsg, string asScreenMsg = "", bool abFpPrefix = false)
+function AliasDebug(string asLogMsg, string asScreenMsg = "")
 	if (DebugToFile && asLogMsg != "")
 		Debug.TraceUser("FollowerPotions", MyActorName + ": " + asLogMsg)
 	endIf
 	if (asScreenMsg != "")
-		if (abFpPrefix)
-			asScreenMsg = "Follower Potions - " + asScreenMsg
-		endIf
-		Debug.Notification(asScreenMsg)
+		FPPQuest.UINotification(asScreenMsg)
 	endIf
 endFunction

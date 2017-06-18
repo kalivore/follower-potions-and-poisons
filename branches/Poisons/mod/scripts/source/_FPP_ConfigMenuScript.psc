@@ -228,6 +228,7 @@ string[] toggleAllOptions
 string[] poisonOptions
 
 _FPP_FollowerScript follower
+bool configOpen
 
 
 ; INITIALIZATION ----------------------------------------------------------------------------------
@@ -262,9 +263,11 @@ Event OnConfigOpen()
 	;FPPQuest.DebugStuff("MCM::OnConfigOpen")
 	RegisterForModEvent("_FPP_Event_FollowerPotionRefreshCountUpdated", "OnPotionCountUpdated")
 	RegisterForModEvent("_FPP_Event_FollowerPotionRefreshComplete", "OnPotionRefreshComplete")
+	configOpen = true
 EndEvent
 
 Event OnConfigClose()
+	configOpen = false
 	follower = None
 	UnregisterForModEvent("_FPP_Event_FollowerPotionRefreshCountUpdated")
 	UnregisterForModEvent("_FPP_Event_FollowerPotionRefreshComplete")
@@ -1202,7 +1205,9 @@ Function RefreshFollowerPotions(_FPP_FollowerScript akFppFollower)
 	Actor followerActor = (akFppFollower as ReferenceAlias).GetReference() as Actor
 	if (followerActor)
 		updatingFollowerPotions = true
-		DisableFollowerOptions()
+		if (configOpen)
+			DisableFollowerOptions()
+		endIf
 		FPPQuest.RefreshFollowerPotions(followerActor)
 	endIf
 
