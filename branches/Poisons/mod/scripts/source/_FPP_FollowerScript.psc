@@ -1477,63 +1477,26 @@ bool function IsBowItem(int aiItemType)
 	return aiItemType == C_ITEM_BOW || aiItemType == C_ITEM_CROSSBOW
 endFunction
 
-Function ShowInfo()
+Function ShowItems(bool abShowPoisons)
 	if (!MyActor)
 		return
 	endIf
-	string msg = MyActorName
-	msg += "\n"
-	msg += "State: " + GetState()
-	msg += "\n\n"
-	msg += "Total potions: " + MyTotalPotionCount
-	msg += "\n\n"
-	msg += "Restore Potions: " + GetPotionReport(potionListRestoreHealth, false) + GetPotionReport(potionListRestoreStamina, false) + GetPotionReport(potionListRestoreMagicka, false)
-;	msg += "\n"
-;	msg += "Fortify Potions: " + GetPotionReport(MyFortifyPotions)
-;	msg += "\n"
-;	msg += "Resist Potions: " + GetPotionReport(MyResistPotions)
-	Debug.TraceUser("FollowerPotions", msg)
-	Debug.MessageBox(msg)
-	msg = ""
-	msg += "Total poisons: " + MyTotalPoisonCount
-	msg += "\n\n"
-	msg += "Poisons: " + GetPotionReport(potionListDamageHealth, true) + GetPotionReport(potionListDamageStamina, true) + GetPotionReport(potionListDamageMagicka, true) + GetPotionReport(potionListHarmful, true)
-	msg += "\n\n"
-	msg += "Use poisons:"
-	if (GlobalUsePoisons[0] > 0)
-		msg += "\n" + GetPoisonOptions("Main", 1) + "\n" + GetPoisonOptions("Bows", 2) + "\n" + GetPoisonOptions("Off-hand", 3)
-	else
-		msg += "Never"
-	endIf
-	Debug.TraceUser("FollowerPotions", msg)
+	string msg = GetPotionReport(abShowPoisons)
+	AliasDebug(msg)
 	Debug.MessageBox(msg)
 endFunction
 
-string Function GetPoisonOptions(string asWeaponType, int aiIndex)
-	string msg = asWeaponType + ": "
-	if (GlobalUsePoisons[aiIndex] > 1)
-		msg += "Always"
-	elseIf (GlobalUsePoisons[aiIndex] > 0)
-		msg += "On combat start"
-	else
-		msg += "Never"
-	endIf
-	return msg
-endFunction
-
-string Function GetPotionReport(bool[] akTrackerList, bool abIsPoison)
+string Function GetPotionReport(bool abShowPoisons)
 	Potion[] itemList = MyPotionList
-	int[] itemCountList = MyPotionCounts
-	if (abIsPoison)
+	if (abShowPoisons)
 		itemList = MyPoisonList
-		itemCountList = MyPoisonCounts
 	endIf
-	int i = akTrackerList.Length
+	int i = itemList.Length
 	string potionReport = ""
 	while (i)
 		i -= 1
-		if (akTrackerList[i])
-			potionReport += itemList[i].GetName() + " (" + itemCountList[i] + " tracked, " + MyActor.GetItemCount(itemList[i]) + " actual); "
+		if (itemList[i])
+			potionReport += itemList[i].GetName() + " (" + MyActor.GetItemCount(itemList[i]) + "); "
 		endIf
 	endWhile
 	return potionReport
