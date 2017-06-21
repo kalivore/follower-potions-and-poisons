@@ -180,13 +180,13 @@ Keyword Property MagicDamageShock Auto
 
 Keyword Property MagicParalysis Auto
 Keyword Property MagicSlow Auto
-Keyword Property MagicFear Auto							; xx	- created
-Keyword Property MagicFrenzy Auto						; xx	- created
+Keyword Property MagicFear Auto							; xx01256F	- created
+Keyword Property MagicFrenzy Auto						; xx012570	- created
 
 Keyword Property MagicAlchSilence_CACO Auto				; xx07A150
 Keyword Property MagicAlchFatigue_CACO Auto				; xx07A153
 Keyword Property MagicAlchDrainInt_CACO Auto			; xx25B701
-Keyword Property MagicAlchDrainStr_CACO Auto			; xx	- created
+Keyword Property MagicAlchDrainStr_CACO Auto			; xx	- needs creating on CACO
 
 Keyword Property ActorTypeDaedra Auto					; Fear, Frenzy; all when CACO
 Keyword Property ActorTypeDragon Auto					; Fear, Frenzy; all when CACO
@@ -1011,6 +1011,7 @@ Function AddCACOKeywords()
 	; MagicFear = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 	; MagicFrenzy = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 	; MagicAlchDrainStr_CACO = Game.GetFormFromFile(0x00, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
+	CACO_ImmunePoisonUndead = Game.GetFormFromFile(0x0084b243, "Complete Alchemy & Cooking Overhaul.esp") as Keyword
 endFunction
 
 
@@ -1025,7 +1026,7 @@ Function SetAvailablePoisonImmunityKeywords()
 	PoisonImmunityKeywords[6] = ImmuneParalysis
 	PoisonImmunityKeywords[7] = Dummy
 	
-	; immunities: for each effect, bitmask-true the indices of keywords taht grant immunity
+	; immunities: for each effect, bitmask-true the indices of keywords that grant immunity
 	PoisonImmunityMappings = Utility.CreateIntArray(127)
 	; eg dwarven things (index 2) immune to Stamina damage, so bitmask 2^2 to true
 	PoisonImmunityMappings[EFFECT_DAMAGESTAMINA] = Math.Pow(2, 2) as int
@@ -1035,12 +1036,10 @@ Function SetAvailablePoisonImmunityKeywords()
 	int fearFrenzyImmunes = 15 ; (2^0 through 2^3)
 	PoisonImmunityMappings[EFFECT_FEAR] = fearFrenzyImmunes
 	PoisonImmunityMappings[EFFECT_FRENZY] = fearFrenzyImmunes
-	
-	PoisonImmunityMappings[3] = fearFrenzyImmunes
 endFunction
 
 Function AddCACOPoisonImmunityKeywords()
-	PoisonImmunityKeywords[7] = Game.GetFormFromFile(0x0084b243, "Complete Alchemy & Cooking Overhaul.esp") as Keyword ; CACO_ImmunePoisonUndead
+	PoisonImmunityKeywords[7] = CACO_ImmunePoisonUndead
 	; with CACO, Undead, Ghost or Vampire keywords (or the CACO-specific CACO_ImmunePoisonUndead) give immunity to most things
 	int CACOImmunities = 184 ; (2^3 through 2^5, plus 2^7)
 	; setting it on the generic 'harmful' effect should be enough
