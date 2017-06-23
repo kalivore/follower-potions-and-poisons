@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 2.0001 AutoReadonly
+float Property CurrentVersion = 2.0000 AutoReadonly
 float previousVersion
 
 UILIB_1 SkyUILib

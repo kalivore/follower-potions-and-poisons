@@ -193,7 +193,12 @@ int			_toggleAllOID_M
 ; State
 bool modDebug
 bool xflAddOnFollow
-bool updatingFollowerPotions
+float[] sliderVals
+bool[] boolVals
+bool[] enableWarningsBoolVals
+bool[] triggerRaceVals
+int[] poisonOptionVals
+int potionIdentIndex
 
 
 ; Internal
@@ -215,20 +220,17 @@ int   Property _defaultPotionIdent = 0						Autoreadonly
 
 _FPP_Quest Property FPPQuest Auto
 
-float[] sliderVals
-bool[] boolVals
-bool[] enableWarningsBoolVals
-bool[] triggerRaceVals
-int[] poisonOptionVals
-int potionIdentIndex
+bool configOpen
+bool updatingFollowerPotions
+int[] currentFollowerRefreshCount
+_FPP_FollowerScript follower
+
 
 string[] actionOptions
 string[] potionIdentOptions
 string[] toggleAllOptions
 string[] poisonOptions
 
-_FPP_FollowerScript follower
-bool configOpen
 
 
 ; INITIALIZATION ----------------------------------------------------------------------------------
@@ -252,6 +254,8 @@ event OnConfigInit()
 	triggerRaceVals = new bool[4]
 
 	poisonOptionVals = new int[3]
+
+	currentFollowerRefreshCount = new int[15]
 
 	RedrawFollowerPages()
 endEvent
@@ -685,7 +689,7 @@ event OnOptionMenuAccept(int a_option, int a_index)
 			endIf
 		elseIf (a_index == 2)
 			if ShowMessage(C_CONFIRM_REFRESH_SINGLE)
-				RefreshFollowerPotions(thisFollower)
+				RefreshFollowerPotions(thisFollower, followerIndex)
 			endIf	
 		elseIf (a_index == 3)
 			if ShowMessage(C_CONFIRM_REMOVE_SINGLE)
@@ -1148,16 +1152,22 @@ event OnOptionSliderAccept(int a_option, float a_value)
 	endIf
 endEvent
 
-Event OnPotionCountUpdated(string asActorName, int aiIndex, int aiRefreshedPotionCount, int aiTotalPotionCount)
-	if (!updatingFollowerPotions)
+Event OnPotionCountUpdated(string asActorName, int aiIndex, int aiPotionNumber, int aiTotalPotionCount)
+	if (!configOpen || !updatingFollowerPotions)
 		return
 	endIf
-	string progress = ((aiRefreshedPotionCount * 100.0 / aiTotalPotionCount) as int) + "%"
+	int currentCount = currentFollowerRefreshCount[aiIndex]
+	currentCount += 1
+	currentFollowerRefreshCount[aiIndex] = currentCount
+	string progress = ((currentCount * 100.0 / aiTotalPotionCount) as int) + "%"
 	SetMenuOptionValue(_followerOID_M[aiIndex], progress)
-	;FPPQuest.DebugStuff("MCM::OnPotionCountUpdated (" + asActorName + ") - " + aiRefreshedPotionCount + " of " + aiTotalPotionCount + " (" + progress + ")")
+	;FPPQuest.DebugStuff("MCM::OnPotionCountUpdated (" + asActorName + ") - potion " + aiPotionNumber + " (" + currentCount + " of " + aiTotalPotionCount + ", " + progress + ")")
 endEvent
 
 Event OnPotionRefreshComplete(string asActorName, int aiIndex)
+	if (!configOpen || !updatingFollowerPotions)
+		return
+	endIf
 	updatingFollowerPotions = false
 	SetMenuOptionValue(_followerOID_M[aiIndex], "100%")
 	EnableFollowerOptions()
@@ -1192,19 +1202,23 @@ Function RefreshAllFollowerPotions()
 	int followerIndex = 0
 	while (followerIndex < FPPQuest.AllFollowers.Length)
 		if (FPPQuest.AllFollowers[followerIndex])
-			RefreshFollowerPotions(FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript)
+			RefreshFollowerPotions(FPPQuest.AllFollowers[followerIndex] as _FPP_FollowerScript, followerIndex)
 			Utility.WaitMenuMode(0.5)
+			if (updatingFollowerPotions)
+				Utility.WaitMenuMode(0.5)
+			endIf
 		endIf
 		followerIndex += 1
 	endWhile
 
 endFunction
 
-Function RefreshFollowerPotions(_FPP_FollowerScript akFppFollower)
+Function RefreshFollowerPotions(_FPP_FollowerScript akFppFollower, int aiFollowerIndex)
 
 	Actor followerActor = (akFppFollower as ReferenceAlias).GetReference() as Actor
 	if (followerActor)
 		updatingFollowerPotions = true
+		currentFollowerRefreshCount[aiFollowerIndex] = 0
 		if (configOpen)
 			DisableFollowerOptions()
 		endIf

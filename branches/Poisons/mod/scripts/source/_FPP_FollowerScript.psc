@@ -669,18 +669,19 @@ State RefreshingPotions
 			;AliasDebug("RefreshingPotions::OnPotionIdentified - for " + asActorName + ", not me!")
 			return
 		endIf
-		_refreshedItemCount += 1
+		int currentCount = _refreshedItemCount + 1
+		_refreshedItemCount = currentCount
 		int handleUpdated = ModEvent.Create("_FPP_Event_FollowerPotionRefreshCountUpdated")
 		if (handleUpdated)
 			ModEvent.PushString(handleUpdated, MyActorName)
 			ModEvent.PushInt(handleUpdated, MyIndex)
-			ModEvent.PushInt(handleUpdated, _refreshedItemCount)
+			ModEvent.PushInt(handleUpdated, currentCount)
 			ModEvent.PushInt(handleUpdated, _totalItemCount)
 			ModEvent.Send(handleUpdated)
 		endIf
 		
-		if (_refreshedItemCount < _totalItemCount)
-			AliasDebug("RefreshingPotions::OnPotionIdentified - not enough potions yet (" + _refreshedItemCount + " of " + _totalItemCount + ")")
+		if (currentCount < _totalItemCount)
+			AliasDebug("RefreshingPotions::OnPotionIdentified (" + currentCount + " of " + _totalItemCount + ") - not enough potions yet")
 			return
 		endIf
 		
