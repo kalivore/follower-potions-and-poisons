@@ -11,7 +11,7 @@ int i = 0
 int iMax = FPP_Quest.AllFollowers.Length
 while (i < iMax)
 	if (FPP_Quest.AllFollowers[i] && (FPP_Quest.AllFollowers[i].GetReference() as Actor) == akSpeaker)
-		(FPP_Quest.AllFollowers[i] as _FPP_FollowerScript).ShowInfo()
+		(FPP_Quest.AllFollowers[i] as _FPP_FollowerScript).ShowItems(false)
 	endIf
 	i += 1
 endWhile

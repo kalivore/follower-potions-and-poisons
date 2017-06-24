@@ -30,13 +30,20 @@ public class FollowerPotionsPatcher implements SUM {
      * customize the import to what you need.
      */
     GRUP_TYPE[] importRequests = new GRUP_TYPE[]{
-	GRUP_TYPE.NPC_
+	GRUP_TYPE.NPC_,
+        GRUP_TYPE.MGEF,
+        GRUP_TYPE.KYWD,
+        GRUP_TYPE.QUST
     };
     public static String myPatchName = "Follower Potions Patcher";
     public static String authorName = "Kalivore";
-    public static String version = "1.0";
-    public static String welcomeText = "This patcher applies the PerkSkillBoosts and AlchemySkillBoosts Perks to all NPCs, allowing them to benefit from the effects of Fortify enchantments and potions";
-    public static String descriptionToShowInSUM = "Applies the PerkSkillBoosts and AlchemySkillBoosts Perks to all NPCs, allowing them to benefit from the effects of Fortify enchantments and potions";
+    public static String version = "2.0";
+    public static String welcomeText = "This patcher applies the PerkSkillBoosts and AlchemySkillBoosts Perks to all NPCs, allowing them to benefit from the effects of Fortify enchantments and potions."+
+                "\n"+
+                "Also adds vanilla (but unused) MagicAlchDamageHealth, MagicAlchDamageMagicka and MagicAlchDamageStamina keywords to relevant poison Magic Effects, so followers can identify and use them.";
+    public static String descriptionToShowInSUM = "Applies the PerkSkillBoosts and AlchemySkillBoosts Perks to all NPCs, allowing them to benefit from the effects of Fortify enchantments and potions."+
+                "\n"+
+                "Also adds vanilla (but unused) MagicAlchDamageHealth, MagicAlchDamageMagicka and MagicAlchDamageStamina keywords to relevant poison Magic Effects, so followers can identify and use them.";
     public static Color headerColor = new Color(66, 181, 184);  // Teal
     public static Color settingsColor = new Color(72, 179, 58);  // Green
     public static Font settingsFont = new Font("Serif", Font.BOLD, 15);
@@ -184,7 +191,9 @@ public class FollowerPotionsPatcher implements SUM {
 
     @Override
     public String description() {
-	return "Applies the PerkSkillBoosts and AlchemySkillBoosts Perks to all NPCs, allowing them to benefit from the effects of Fortify enchantments and potions";
+	return "Applies the PerkSkillBoosts and AlchemySkillBoosts Perks to all NPCs, allowing them to benefit from the effects of Fortify enchantments and potions."+
+                "\n"+
+                "Also adds vanilla (but unused) MagicAlchDamageHealth, MagicAlchDamageMagicka and MagicAlchDamageStamina keywords to relevant poison Magic Effects, so followers can identify and use them.";
     }
 
     // This is where you should write the bulk of your code.
@@ -198,10 +207,84 @@ public class FollowerPotionsPatcher implements SUM {
 	Mod merger = new Mod(getName() + "Merger", false);
 	merger.addAsOverrides(SPGlobal.getDB());
 
-	// Write your changes to the patch here.
+        // Write your changes to the patch here.
+        
+        FormID mgefFearFormId = new FormID("73F20", "Skyrim.esm");
+        FormID mgefFrenzyFormId = new FormID("73F29", "Skyrim.esm");
+        
+        MGEF fear = (MGEF)merger.getMajor(mgefFearFormId, GRUP_TYPE.MGEF);
+        MGEF frenzy = (MGEF)merger.getMajor(mgefFrenzyFormId, GRUP_TYPE.MGEF);
+        
+        FormID cacoQuestFormId = new FormID("0A2A3F", "Complete Alchemy & Cooking Overhaul.esp");
+        QUST cacoQuest = (QUST)merger.getMajor(cacoQuestFormId, GRUP_TYPE.QUST);
+        if (cacoQuest == null)
+        {
+            SPGlobal.logMain("SPGlobal", "CACO not present - adding MagicAlchDamage keywords to effects");
+
+            FormID mgefDamageHealthFormId = new FormID("3EB42", "Skyrim.esm");
+            FormID mgefDamageMagickaFormId = new FormID("3A2B6", "Skyrim.esm");
+            FormID mgefDamageStaminaFormId = new FormID("3A2C6", "Skyrim.esm");
+            
+            FormID alchDamageHealthFormId = new FormID("10F9DD", "Skyrim.esm");
+            FormID alchDamageMagickaFormId = new FormID("10F9DE", "Skyrim.esm");
+            FormID alchDamageStaminaFormId = new FormID("10F9DC", "Skyrim.esm");
+            FormID alchHarmfulFormId = new FormID("42509", "Skyrim.esm");
+
+            MGEF damageHealth = (MGEF)merger.getMajor(mgefDamageHealthFormId, GRUP_TYPE.MGEF);
+            damageHealth.getKeywordSet().addKeywordRef(alchDamageHealthFormId);
+            patch.addRecord(damageHealth);
+
+            MGEF damageMagicka = (MGEF)merger.getMajor(mgefDamageMagickaFormId, GRUP_TYPE.MGEF);
+            damageMagicka.getKeywordSet().addKeywordRef(alchDamageMagickaFormId);
+            patch.addRecord(damageMagicka);
+
+            MGEF damageStamina = (MGEF)merger.getMajor(mgefDamageStaminaFormId, GRUP_TYPE.MGEF);
+            damageStamina.getKeywordSet().addKeywordRef(alchDamageStaminaFormId);
+            patch.addRecord(damageStamina);
+            
+            fear.getKeywordSet().addKeywordRef(alchHarmfulFormId);
+            frenzy.getKeywordSet().addKeywordRef(alchHarmfulFormId);
+        }
+        else
+        {
+            SPGlobal.logMain("SPGlobal", "CACO present - MagicAlchDamage keywords already on effects");
+
+//            FormID alchSilenceCacoFormId = new FormID("07A150", "Complete Alchemy & Cooking Overhaul.esp");
+//            FormID alchFatigueCacoFormId = new FormID("07A153", "Complete Alchemy & Cooking Overhaul.esp");
+//            FormID alchDrainIntCacoFormId = new FormID("25B701", "Complete Alchemy & Cooking Overhaul.esp");
+//                
+        }
+
+        FormID fppMagicFearFormId = new FormID("01256F", "FollowerPotions.esp");
+        KYWD kywdFear = (KYWD)merger.getMajor(fppMagicFearFormId, GRUP_TYPE.KYWD);
+        if (kywdFear != null)
+        {
+            SPGlobal.logMain("SPGlobal", "Adding FPP MagicFear keyword");
+            fear.getKeywordSet().addKeywordRef(fppMagicFearFormId);
+            patch.addRecord(fear);
+        }
+        else if (cacoQuest == null)
+        {
+            patch.addRecord(fear);
+        }
+        
+        FormID fppMagicFrenzyFormId = new FormID("012570", "FollowerPotions.esp");
+        KYWD kywdFrenzy = (KYWD)merger.getMajor(fppMagicFrenzyFormId, GRUP_TYPE.KYWD);
+        if (kywdFrenzy != null)
+        {
+            SPGlobal.logMain("SPGlobal", "Adding FPP MagicFrenzy keyword");
+            frenzy.getKeywordSet().addKeywordRef(fppMagicFrenzyFormId);
+            patch.addRecord(frenzy);
+        }
+        else if (cacoQuest == null)
+        {
+            patch.addRecord(frenzy);
+        }
+        
+        
+        // add perks for NPCs
         FormID enchPerkID = new FormID("cf788", "Skyrim.esm");
         FormID alchPerkID = new FormID("a725c", "Skyrim.esm");
-        //FormID fFactionId = new FormID("5c84d", "Skyrim.esm");
 
         for (NPC_ n : merger.getNPCs())
         {
@@ -214,7 +297,6 @@ public class FollowerPotionsPatcher implements SUM {
                 continue;
             }
             
-            boolean added = false;
             ArrayList<SubFormInt> factions = n.getFactions();
             for (SubFormInt f : factions)
             {
@@ -235,15 +317,10 @@ public class FollowerPotionsPatcher implements SUM {
                     SPGlobal.logMain("SPGlobal", "NPC " + n.getName() + " is in Cur Follower faction");
                 }
                 
-                if (added)
-                {
-                    continue;
-                }
-                
                 n.addPerk(enchPerkID, 1);
                 n.addPerk(alchPerkID, 1);
                 patch.addRecord(n);
-                added = true;
+                break;
             }
         }
     }

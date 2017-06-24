@@ -2,7 +2,9 @@ scriptname _FPP_IdentifyPotionThreadManager extends Quest
  
 Quest property IdentifyPotionQuest auto
 {The name of the thread management quest.}
- 
+
+int iCurrentVersion = 0
+
 _FPP_IdentifyPotionThread01 thread01
 _FPP_IdentifyPotionThread02 thread02
 _FPP_IdentifyPotionThread03 thread03
@@ -27,7 +29,7 @@ _FPP_IdentifyPotionThread20 thread20
 bool blocked = false
  
 Event OnInit()
-    ;Let's cast our threads to local variables so things are less cluttered in our code
+    ; Let's cast our threads to local variables so things are less cluttered in our code
     thread01 = IdentifyPotionQuest as _FPP_IdentifyPotionThread01
     thread02 = IdentifyPotionQuest as _FPP_IdentifyPotionThread02
     thread03 = IdentifyPotionQuest as _FPP_IdentifyPotionThread03
@@ -49,50 +51,70 @@ Event OnInit()
     thread19 = IdentifyPotionQuest as _FPP_IdentifyPotionThread19
     thread20 = IdentifyPotionQuest as _FPP_IdentifyPotionThread20
 EndEvent
+
+function Update(int aiCurrentVersion)
+
+	if (iCurrentVersion != aiCurrentVersion)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; version-specific updates
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; end version-specific updates
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		iCurrentVersion = aiCurrentVersion
+	endIf
+	
+	Maintenance()
+
+endFunction
+
+function Maintenance()
+	; used by the Thread Manager which extends Quest
+    RegisterForModEvent("_FPP_Trigger_IdentifyPotion", "OnIdentifyPotion")
+endFunction
  
 ;The 'public-facing' function that our scripts will interact with.
-function IdentifyPotionAsync(bool waitForAny, bool abDebug, string asActorName, Potion akPotion, Keyword[] akEffectKeywords, int[] akRestoreEffects, int[] akFortifyEffectsStats, int[] akFortifyEffectsWarrior, int[] akFortifyEffectsMage, int[] akResistEffects, \
-							int aiIdentifyPotionEffects, int aiC_IDENTIFY_RESTORE, int aiC_IDENTIFY_FORTIFY, int aiC_IDENTIFY_RESIST, int aiC_IDENTIFY_FIRST, int aiC_IDENTIFY_SECOND, int aiC_IDENTIFY_THIRD)
+function IdentifyPotionAsync(bool waitForAny, string asActorName, Potion akPotion, int aiPotionCount, int aiIdentifyPotionEffects, bool abDebugToFile)
     if (!thread01.Queued())
-        thread01.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread01.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread02.Queued())
-        thread02.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread02.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread03.Queued())
-        thread03.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread03.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread04.Queued())
-        thread04.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread04.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread05.Queued())
-        thread05.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread05.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread06.Queued())
-        thread06.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread06.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread07.Queued())
-        thread07.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread07.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread08.Queued())
-        thread08.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread08.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread09.Queued())
-        thread09.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread09.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread10.Queued())
-        thread10.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread10.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread11.Queued())
-        thread11.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread11.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread12.Queued())
-        thread12.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread12.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread13.Queued())
-        thread13.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread13.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread14.Queued())
-        thread14.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread14.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread15.Queued())
-        thread15.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread15.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread16.Queued())
-        thread16.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread16.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread17.Queued())
-        thread17.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread17.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread18.Queued())
-        thread18.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread18.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread19.Queued())
-        thread19.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread19.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     elseif (!thread20.Queued())
-        thread20.GetAsync(abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        thread20.GetAsync(asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
     else
 		; All threads are queued; start all threads, wait, and try again.
 		blocked = true
@@ -103,7 +125,7 @@ function IdentifyPotionAsync(bool waitForAny, bool abDebug, string asActorName, 
 			;Debug.TraceUser("FollowerPotions", "IdentifyPotionThreadManager - All threads queued when calling IdentifyPotionAsync for " + asActorName + " - raising event and waiting for all", 1)
 			WaitAll()
 		endIf
-        IdentifyPotionAsync(waitForAny, abDebug, asActorName, akPotion, akEffectKeywords, akRestoreEffects, akFortifyEffectsStats, akFortifyEffectsWarrior, akFortifyEffectsMage, akResistEffects, aiIdentifyPotionEffects, aiC_IDENTIFY_RESTORE, aiC_IDENTIFY_FORTIFY, aiC_IDENTIFY_RESIST, aiC_IDENTIFY_FIRST, aiC_IDENTIFY_SECOND, aiC_IDENTIFY_THIRD)
+        IdentifyPotionAsync(waitForAny, asActorName, akPotion, aiPotionCount, aiIdentifyPotionEffects, abDebugToFile)
 	endif
 endFunction
  
