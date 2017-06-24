@@ -632,7 +632,7 @@ State HaveNoPotions
 		if (newState == "HaveNoPotions")
 			AliasDebug("HaveNoPotions::OnUpdate - still no useful potions")
 			if (EnableWarningNoPotions)
-				AliasDebug("", "$FPPNoPotions{" + MyActorName + "}")
+				AliasDebug("", "$FPPNotsNoPotions{" + MyActorName + "}")
 			endIf
 			RegisterForSingleUpdate(UpdateIntervalNoPotions)
 		else
@@ -1064,21 +1064,6 @@ bool function UseCombatPoisonsSpecial(string asState, int aiHand, int aiEquipped
 	return false
 endFunction
 
-bool function UseCombatPoisonsDamageStats(string asState, int aiHand, int aiEquippedItemType, int aiEnemyRHItem, bool abOnEngage)
-	bool[] effectConditions = new bool[3]
-	effectConditions[0] = true
-	effectConditions[1] = !EnemyHasMagic || (aiEnemyRHItem != C_ITEM_SPELL && aiEnemyRHItem != C_ITEM_STAFF)
-	effectConditions[2] = EnemyHasMagic
-	int i = PoisonEffectsStats.Length
-	while (i)
-		i -= 1
-		if (UsePoisonOfType[PoisonEffectsStats[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsStats[i]) && UseItemIfPossible(asState + "::UseCombatPoisonsDamageStats", true, PoisonEffectsStats[i], aiHand))
-			return true
-		endIf
-	endWhile
-	return false
-endFunction
-
 bool function UseCombatPoisonsWeaknessMagic(string asState, int aiHand, int aiEquippedItemType, int aiEnemyRHItem, bool abOnEngage)
 	bool[] effectConditions = new bool[4]
 	effectConditions[0] = true ; AllyHasFire
@@ -1089,6 +1074,21 @@ bool function UseCombatPoisonsWeaknessMagic(string asState, int aiHand, int aiEq
 	while (i)
 		i -= 1
 		if (UsePoisonOfType[PoisonEffectsWeakness[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsWeakness[i]) && UseItemIfPossible(asState + "::UseCombatPoisonsWeaknessMagic", true, PoisonEffectsWeakness[i], aiHand))
+			return true
+		endIf
+	endWhile
+	return false
+endFunction
+
+bool function UseCombatPoisonsDamageStats(string asState, int aiHand, int aiEquippedItemType, int aiEnemyRHItem, bool abOnEngage)
+	bool[] effectConditions = new bool[3]
+	effectConditions[0] = true
+	effectConditions[1] = !EnemyHasMagic || (aiEnemyRHItem != C_ITEM_SPELL && aiEnemyRHItem != C_ITEM_STAFF)
+	effectConditions[2] = EnemyHasMagic
+	int i = PoisonEffectsStats.Length
+	while (i)
+		i -= 1
+		if (UsePoisonOfType[PoisonEffectsStats[i]] && effectConditions[i] && !EnemyImmune(asState, PoisonEffectsStats[i]) && UseItemIfPossible(asState + "::UseCombatPoisonsDamageStats", true, PoisonEffectsStats[i], aiHand))
 			return true
 		endIf
 	endWhile
