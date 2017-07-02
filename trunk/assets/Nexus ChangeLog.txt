@@ -1,3 +1,11 @@
+Version 2.00.01b
+
+Changed SkyProc patcher to (hopefully!) avoid errors when importing mods
+(it was the 'QUST' record type that I was importing which was causing errors - I only used it to check if CACO was present, so I'm now checking for a different record type and it's running OK for me, even with mods which previously caused errors)
+
+Also found that it was double-adding perks(!), so stopped it doing that!
+
+
 Version 2.00.00b
 
 Beta release with support for follower Poisons! :D  See main page for full details of how to enable/customise poisoning behaviour.

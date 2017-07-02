@@ -32,8 +32,7 @@ public class FollowerPotionsPatcher implements SUM {
     GRUP_TYPE[] importRequests = new GRUP_TYPE[]{
 	GRUP_TYPE.NPC_,
         GRUP_TYPE.MGEF,
-        GRUP_TYPE.KYWD,
-        GRUP_TYPE.QUST
+        GRUP_TYPE.KYWD
     };
     public static String myPatchName = "Follower Potions Patcher";
     public static String authorName = "Kalivore";
@@ -215,9 +214,10 @@ public class FollowerPotionsPatcher implements SUM {
         MGEF fear = (MGEF)merger.getMajor(mgefFearFormId, GRUP_TYPE.MGEF);
         MGEF frenzy = (MGEF)merger.getMajor(mgefFrenzyFormId, GRUP_TYPE.MGEF);
         
-        FormID cacoQuestFormId = new FormID("0A2A3F", "Complete Alchemy & Cooking Overhaul.esp");
-        QUST cacoQuest = (QUST)merger.getMajor(cacoQuestFormId, GRUP_TYPE.QUST);
-        if (cacoQuest == null)
+        // get the 'BasicNeedsSleepRested' keyword
+        FormID cacoKeywordFormId = new FormID("5D2183", "Complete Alchemy & Cooking Overhaul.esp");
+        KYWD cacoKeyword = (KYWD)merger.getMajor(cacoKeywordFormId, GRUP_TYPE.KYWD);
+        if (cacoKeyword == null)
         {
             SPGlobal.logMain("SPGlobal", "CACO not present - adding MagicAlchDamage keywords to effects");
 
@@ -263,7 +263,7 @@ public class FollowerPotionsPatcher implements SUM {
             fear.getKeywordSet().addKeywordRef(fppMagicFearFormId);
             patch.addRecord(fear);
         }
-        else if (cacoQuest == null)
+        else if (cacoKeyword == null)
         {
             patch.addRecord(fear);
         }
@@ -276,7 +276,7 @@ public class FollowerPotionsPatcher implements SUM {
             frenzy.getKeywordSet().addKeywordRef(fppMagicFrenzyFormId);
             patch.addRecord(frenzy);
         }
-        else if (cacoQuest == null)
+        else if (cacoKeyword == null)
         {
             patch.addRecord(frenzy);
         }
@@ -288,12 +288,16 @@ public class FollowerPotionsPatcher implements SUM {
 
         for (NPC_ n : merger.getNPCs())
         {
+            ArrayList<SubFormInt> npcPerks = n.getPerks();
+            ArrayList<FormID> npcPerkForms = new ArrayList<>(npcPerks.size());
+            npcPerks.forEach((s) -> npcPerkForms.add(s.getForm()));
+            
             if (!save.getBool(Settings.ONLY_ADD_FOLLOWERS))
             {
-                n.addPerk(enchPerkID, 1);
-                n.addPerk(alchPerkID, 1);
-                patch.addRecord(n);
-                SPGlobal.logMain("SPGlobal", "NPC " + n.getName() + " added as we're adding all NPCs");
+                if (needsPerks(npcPerkForms, enchPerkID, alchPerkID, n)) {
+                    patch.addRecord(n);
+                    SPGlobal.logMain("SPGlobal", "NPC " + n.getName() + " added as we're adding all NPCs");
+                }
                 continue;
             }
             
@@ -312,17 +316,34 @@ public class FollowerPotionsPatcher implements SUM {
                 {
                     SPGlobal.logMain("SPGlobal", "NPC " + n.getName() + " is in Pot Follower faction");
                 }
-                if (curFollower)
+                else if (curFollower)
                 {
                     SPGlobal.logMain("SPGlobal", "NPC " + n.getName() + " is in Cur Follower faction");
                 }
                 
-                n.addPerk(enchPerkID, 1);
-                n.addPerk(alchPerkID, 1);
-                patch.addRecord(n);
+                if (needsPerks(npcPerkForms, enchPerkID, alchPerkID, n)) {
+                    patch.addRecord(n);
+                }
                 break;
             }
         }
+    }
+    
+    private boolean needsPerks(ArrayList<FormID> npcPerkForms, FormID enchPerkID, FormID alchPerkID, NPC_ n) {
+        
+        boolean altered = false;
+        
+        if (!npcPerkForms.contains(enchPerkID)) {
+            n.addPerk(enchPerkID, 1);
+            altered = true;
+        }
+        
+        if (!npcPerkForms.contains(enchPerkID)) {
+            n.addPerk(alchPerkID, 1);
+            altered = true;
+        }
+        
+        return altered;
     }
 
 }

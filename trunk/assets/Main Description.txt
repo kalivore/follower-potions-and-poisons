@@ -14,7 +14,11 @@ As in, please [b]ONLY[/b] install it on a savegame you are happy to revert if n
 and definitel keep a backup of your save from before installing it!
 
 No special update procedure required - just remove v1.3, drop in v2b, run the included SkyProc patcher and activate the resulting "Follower Potions Patcher.esp" 
-(like any SkyProc-produced plugin, keep it near the end of your load order). 
+(like any SkyProc-produced plugin, keep it near the end of your load order).
+
+[color=#ea9999][b]NOTE[/b] - if you get errors when running the patcher, please inform me (in the Bugs or the Logs) and include a copy of your Debug log (from the SkyProcDebug folder that gets created) either in spoiler tags, or in a pastebin link.  If you also can narrow it to a specific plugin that causes the error, that will be even better.  See the bug from [url=http://www.nexusmods.com/skyrim/users/9296331]Avastgard[/url] for a first-class example (many thanks to them).[/color]
+
+
 When you next load your game, [b]ALL[/b] followers will immediately re-check all their inventory, so make sure you save somewhere quiet first!
 [/center]
 [line]
