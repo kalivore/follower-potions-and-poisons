@@ -10,9 +10,10 @@ ScriptName _FPP_ConfigMenuScript extends SKI_ConfigBase
 ; 4 - Added Trigger Races for when to use potions
 ; 5 - Added toggle options for Warning Intervals
 ; 6 - Added Poisons functionality
+; 7 - Added force-add option
 
 int function GetVersion()
-	return 6
+	return 7
 endFunction
 
 
@@ -86,6 +87,7 @@ string Property C_OPTION_LABEL_MAGICKA_IN_COMBAT = "$FPPOptionLabelMagickaInComb
 string Property C_OPTION_LABEL_MAGICKA_NON_COMBAT = "$FPPOptionLabelMagickaNonCombat"						Autoreadonly
 string Property C_OPTION_LABEL_TOGGLE_ALL = "$FPPOptionLabelToggleAll"										Autoreadonly
 string Property C_OPTION_LABEL_ENEMY_OVER = "$FPPOptionLabelEnemyOver"										Autoreadonly
+string Property C_OPTION_LABEL_FORCE_ADD = "$FPPOptionLabelForceAdd"										Autoreadonly
 string Property C_OPTION_LABEL_POTION_IDENT = "$FPPOptionLabelPotionIdent"									Autoreadonly
 string Property C_OPTION_LABEL_DUMMY_TRIGGER_RACES = "$FPPOptionLabelDummyTriggerRaces"						Autoreadonly
 string Property C_OPTION_LABEL_TRIGGER_RACE_DRAGON = "$FPPOptionLabelTriggerRaceDragon"						Autoreadonly
@@ -114,6 +116,7 @@ string Property C_INFO_TEXT_MAGICKA_IN_COMBAT = "$FPPInfoTextMagickaInCombat"			
 string Property C_INFO_TEXT_MAGICKA_NON_COMBAT = "$FPPInfoTextMagickaNonCombat"								Autoreadonly
 string Property C_INFO_TEXT_ENEMY_OVER = "$FPPInfoTextEnemyOver"											Autoreadonly
 string Property C_INFO_TEXT_ENEMY_OVER_POISON = "$FPPInfoTextEnemyOverPoison"								Autoreadonly
+string Property C_INFO_TEXT_FORCE_ADD = "$FPPInfoTextForceAdd"												Autoreadonly
 string Property C_INFO_TEXT_POTION_IDENT = "$FPPInfoTextPotionIdent"										Autoreadonly
 string Property C_INFO_TEXT_TOGGLE_ALL = "$FPPInfoTextToggleAll"											Autoreadonly
 string Property C_CONFIRM_RESET_SINGLE = "$FPPConfirmResetSingle"											Autoreadonly
@@ -124,6 +127,9 @@ string Property C_CONFIRM_REFRESH_SINGLE = "$FPPConfirmRefreshSingle"										A
 string Property C_CONFIRM_REFRESH_ALL = "$FPPConfirmRefreshAll"												Autoreadonly
 string Property C_CONFIRM_ADD_POTIONS_SINGLE = "$FPPConfirmAddPotionsSingle"								Autoreadonly
 string Property C_CONFIRM_ADD_POTIONS_ALL = "$FPPConfirmAddPotionsAll"										Autoreadonly
+string Property C_CONFIRM_FORCE_ADD = "$FPPConfirmForceAdd"													Autoreadonly
+string Property C_MSG_FORCE_ADD_SUCCESS = "$FPPMsgForceAddSuccess"											Autoreadonly
+string Property C_MSG_FORCE_ADD_FAILURE = "$FPPMsgForceAddFailure"											Autoreadonly
 
 ; PRIVATE VARIABLES -------------------------------------------------------------------------------
 ; OIDs (T:Text B:Toggle S:Slider M:Menu, C:Color, K:Key)
@@ -186,6 +192,7 @@ int			_triggerRaceDragonPriestOID_B
 int			_triggerRaceGiantOID_B
 int			_triggerRaceVampLordOID_B
 int			_lvlDiffTriggerPoisonOID_S
+int			_forceAddOID_T
 int			_potionIdentOID_M
 int			_toggleAllOID_M
 
@@ -306,6 +313,13 @@ event OnPageReset(string a_page)
 		_debugOID_B	= AddToggleOption(C_OPTION_LABEL_DEBUG, FPPQuest.DebugToFile)
 		_recruitXflOID_B = AddToggleOption(C_OPTION_LABEL_ADD_ON_FOLLOW, FPPQuest.XflAddOnFollow)
 		
+		Actor crosshairActor = Game.GetCurrentCrosshairRef() as Actor
+		if (crosshairActor)
+			_forceAddOID_T = AddTextOption(C_OPTION_LABEL_FORCE_ADD, crosshairActor.GetDisplayName())
+		else
+			_forceAddOID_T = AddTextOption(C_OPTION_LABEL_FORCE_ADD, C_PAGE_NOT_SET, OPTION_FLAG_DISABLED)
+		endIf
+		
 		AddEmptyOption()
 		
 		AddHeaderOption(C_HEADER_LABEL_POTION_IDENT)
@@ -313,7 +327,6 @@ event OnPageReset(string a_page)
 		_potionIdentOID_M = AddMenuOption(C_OPTION_LABEL_POTION_IDENT, potionIdentOptions[potionIdentIndex])
 		
 		; enough empty options to put Version at the bottom of the left-hand pane (can't be bothered to figure out the SetCursorPosition!)
-		AddEmptyOption()
 		AddEmptyOption()
 		AddEmptyOption()
 		AddEmptyOption()
@@ -562,6 +575,8 @@ event OnOptionHighlight(int a_option)
 		SetInfoText(C_INFO_TEXT_POISON)
 	elseIf (a_option == _usePoisonsOffHandOID_M)
 		SetInfoText(C_INFO_TEXT_POISON)
+	elseIf (a_option == _forceAddOID_T)
+		SetInfoText(C_INFO_TEXT_FORCE_ADD)
 	elseIf (a_option == _potionIdentOID_M)
 		SetInfoText(C_INFO_TEXT_POTION_IDENT)
 	elseIf (a_option == _toggleAllOID_M)
@@ -717,6 +732,17 @@ event OnOptionSelect(int a_option)
 		xflAddOnFollow = !xflAddOnFollow
 		SetToggleOptionValue(a_option, xflAddOnFollow)
 		FPPQuest.XflAddOnFollow = xflAddOnFollow
+
+	elseIf (a_option == _forceAddOID_T)
+		Actor crosshairActor = Game.GetCurrentCrosshairRef() as Actor
+		if (crosshairActor && ShowMessage(C_CONFIRM_FORCE_ADD + "{" + crosshairActor.GetDisplayName() + "}"))
+			bool success = FPPQuest.AddFollower(crosshairActor)
+			if (success)
+				ShowMessage(C_MSG_FORCE_ADD_SUCCESS + "{" + crosshairActor.GetDisplayName() + "}")
+			else
+				ShowMessage(C_MSG_FORCE_ADD_FAILURE + "{" + crosshairActor.GetDisplayName() + "}")
+			endIf
+		endIf
 
 	elseIf (a_option == _usePotionRestoreHealthOID_B)
 		SetOptionAndDisplay(_usePotionRestoreHealthOID_B, 0, !boolVals[0])

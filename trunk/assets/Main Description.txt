@@ -2,31 +2,15 @@
 
 How about all those Fortify and Resist potions that you cook up for your followers, which they totally ignore?  How annoying is it when they charge straight into battle, blissfully unaware of the advantage you've tried to provide?
 
-This mod aims to change all that, allowing followers to use their potions intelligently, and keep them in the fight longer.
+While we're at it, what about the deadly poisons that you can find/craft/buy/steal?  How come you - the player - are the only one capable of putting poison on a weapon?
 
-[line]
-[center][font=Georgia][size=3][b][color=#ee0000]NEW IN v2b - [/color][color=#00dd00]POISONS![/color][/b][/size][/font]
+This mod aims to change all that, allowing followers to use their potions intelligently, and keep them in the fight longer.  They will also use any poisons you give them, whihc can make a life-saving difference in a scrap.
 
-I'm very happy to announce that poison support for followers is [i]finally[/i] available! :D
-
-This is the first release with this in, so please try it out, but consider it a 'beta' version for now. 
-As in, please [b]ONLY[/b] install it on a savegame you are happy to revert if necessary, 
-and definitel keep a backup of your save from before installing it!
-
-No special update procedure required - just remove v1.3, drop in v2b, run the included SkyProc patcher and activate the resulting "Follower Potions Patcher.esp" 
-(like any SkyProc-produced plugin, keep it near the end of your load order).
-
-[color=#ea9999][b]NOTE[/b] - if you get errors when running the patcher, please inform me (in the Bugs or the Logs) and include a copy of your Debug log (from the SkyProcDebug folder that gets created) either in spoiler tags, or in a pastebin link.  If you also can narrow it to a specific plugin that causes the error, that will be even better.  See the bug from [url=http://www.nexusmods.com/skyrim/users/9296331]Avastgard[/url] for a first-class example (many thanks to them).[/color]
-
-
-When you next load your game, [b]ALL[/b] followers will immediately re-check all their inventory, so make sure you save somewhere quiet first!
-[/center]
-[line]
 
 
 [font=Georgia][color=#8e7cc3][size=3][b]Installing[/b][/size][/color][/font]
 
-No special procedure - install normally with a mod manager (I recommend [url=http://www.nexusmods.com/skyrim/mods/1334/]Mod Organizer[/url]), or manually if that's how you roll.  Of course, as with any mod, for the love of Talos, make (and keep!) a backup of your save before installing this.
+No special procedure - install normally with a mod manager (I recommend [url=http://www.nexusmods.com/skyrim/mods/1334/]Mod Organizer[/url]), or manually if that's how you roll.  Of course, as with any mod, for the love of Talos, make (and keep!) a backup of your savegame before installing this.
 
 [b]Requires:[/b]
 
@@ -44,6 +28,7 @@ Any NPC in the Current Follower Faction will have a new dialogue option: "[i]Con
 
 By default, animal followers (eg dogs and horses) are excluded, as they don't tend to have potions.  Or inventories.  Or, y'know, opposable thumbs..  If you definitely do want your animal to swig potions with the rest, there is a means to do this (see the Compatibility section below).
 
+If all else fails, there is also an option in the MCM (on the 'Config and Status' page) to 'force-add' any actor the to tracking system.  This is handy for followers who operate outside the vanilla follower system.
 
 
 [center][font=Georgia][color=#8e7cc3][size=5][b]What This Does[/b][/size][/color][/font][/center]

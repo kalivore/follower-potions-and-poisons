@@ -1,7 +1,7 @@
 Scriptname _FPP_Quest extends Quest Conditional
 
 
-float Property CurrentVersion = 2.0000 AutoReadonly
+float Property CurrentVersion = 2.0200 AutoReadonly
 float previousVersion
 
 UILIB_1 SkyUILib
@@ -384,7 +384,7 @@ function Update()
 		
 		endIf
 		
-		if (iPreviousVersion < 200010)
+		if (iPreviousVersion < 200000)
 		
 			SkyUILib = (self as Form) as UILIB_1 ; SkyUILib script attached to this Quest
 		
@@ -407,7 +407,7 @@ function Update()
 			UpdateInPlaceFloats(oldValsF, DefaultWarningIntervals)
 			DefaultUpdateIntervalNoPotions = DefaultWarningIntervals[5]
 			DefaultWarningIntervals[5] = 30.0
-		
+			
 			; thread manager now has its own quest, so we don't need this event listener
 			UnregisterForModEvent("_FPP_Trigger_IdentifyPotion")
 			FPPThreadManager.Start()

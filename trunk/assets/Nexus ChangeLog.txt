@@ -1,3 +1,9 @@
+Version 2.00.02
+
+Full release with Poisoning support
+Added 'force add' option to MCM, to grab followers for whom the dialogue option doesn't appear
+
+
 Version 2.00.01b
 
 Changed SkyProc patcher to (hopefully!) avoid errors when importing mods
