@@ -1,3 +1,0 @@
-Allows followers to use potions more intelligently - no more waiting til they're nearly dead to chug that Restore Health potion!
-Followers can also use Fortify and Resist potions, to give them that edge in dangerous battles.
-Additionally, then can now use poisons that you give them, to make them even more formidable and useful!

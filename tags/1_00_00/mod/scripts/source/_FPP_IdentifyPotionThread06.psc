@@ -1,1 +1,0 @@
-Scriptname _FPP_IdentifyPotionThread06 extends _FPP_IdentifyPotionThread

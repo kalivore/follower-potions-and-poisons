@@ -1,5 +1,0 @@
-
-# Add the names of ESPs you want the patcher to skip here
-
-==MOD BLOCKS==
-# example-mod.esp
